@@ -82,7 +82,7 @@ services:
       - M2SETUP_USE_SAMPLE_DATA=true
 
   cron:
-    hostname: magento2-cron.docker
+    hostname: cron.magento2.docker
     image: meanbee/magento2-php:7.2-cli
     command: run-cron
     environment:

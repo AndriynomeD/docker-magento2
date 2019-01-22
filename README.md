@@ -20,7 +20,7 @@ Make directory `magento` & `/persistent/mysql/mariadb10` inside root directory
 
 Fill `composer.env` with you data
 
-In `docker-compose.yml` file replace string `magento2.docker` with you're {{site_domain}} (example: magento230.site)
+In `docker-compose.yml` file & update `VIRTUAL_HOST`, `M2SETUP_BASE_URL`, `M2SETUP_SECURE_BASE_URL` from  `magento2.docker` with you're {{site_domain}} (example: magento230.site). Also need update `hostname:` by unique value
 
 Add you're {{site_domain}} to `/etc/hosts` file:
 ```
