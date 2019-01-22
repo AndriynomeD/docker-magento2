@@ -30,6 +30,11 @@ Add you're {{site_domain}} to `/etc/hosts` file:
 To run it:
 
     $ docker-compose up
+   
+Magento insted of `php bin/magento` use `magento-command`:
+
+    $ docker-compose run cli magento-command deploy:mode:show 
+    
     
 ### Problem
 
