@@ -29,7 +29,7 @@ services:
 
   fpm:
     hostname: fpm.magento2.docker
-    image: meanbee/magento2-php:7.0-fpm
+    image: meanbee/magento2-php:7.2-fpm
     ports:
       - 9000
     links:
@@ -46,7 +46,7 @@ services:
     volumes_from:
       - dbdata
     environment:
-      - MYSQL_ROOT_PASSWORD=magento2
+      - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=magento2
       - MYSQL_USER=magento2
       - MYSQL_PASSWORD=magento2
@@ -54,7 +54,7 @@ services:
 
   cli:
     hostname: cli.magento2.docker
-    image: meanbee/magento2-php:7.0-cli
+    image: meanbee/magento2-php:7.2-cli
     links:
       - db
     volumes:
@@ -77,24 +77,22 @@ services:
       - M2SETUP_ADMIN_LASTNAME=User
       - M2SETUP_ADMIN_EMAIL=dummy@gmail.com
       - M2SETUP_ADMIN_USER=admin
-      - M2SETUP_ADMIN_PASSWORD=password1
-      - M2SETUP_VERSION=2.1.*
-      # - M2SETUP_USE_SAMPLE_DATA=true
+      - M2SETUP_ADMIN_PASSWORD=admin123
+      - M2SETUP_VERSION=2.3.*
+      - M2SETUP_USE_SAMPLE_DATA=true
 
   cron:
-    image: meanbee/magento2-php:7.0-cli
     hostname: magento2-cron.docker
+    image: meanbee/magento2-php:7.2-cli
     command: run-cron
-    env_file:
-      - ./global.env    
     environment:
-      - ENABLE_SENDMAIL=true
+      - ENABLE_SENDMAIL=false
+    env_file:
+      - ./global.env
     volumes_from:
       - appdata
     links:
       - db
-    env_file:
-      - ./global.env      
 
   appdata:
     image: tianon/true
@@ -104,4 +102,9 @@ services:
   dbdata:
     image: tianon/true
     volumes:
-      - /var/lib/mysql
+      - ./persistent/mysql/mariadb10:/var/lib/mysql
+
+networks:
+  default:
+    external:
+      name: nginx-proxy

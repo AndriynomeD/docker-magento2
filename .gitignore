@@ -1,2 +1,4 @@
 /composer.env
 /magento
+/.idea
+/persistent
