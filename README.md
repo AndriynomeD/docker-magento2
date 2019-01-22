@@ -31,7 +31,7 @@ To run it:
 
     $ docker-compose up
    
-Magento insted of `php bin/magento` use `magento-command`:
+P.S. Instead of `php bin/magento` use `magento-command`:
 
     $ docker-compose run cli magento-command deploy:mode:show 
     
