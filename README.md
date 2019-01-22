@@ -13,6 +13,10 @@ This repo is fork of [meanbee/docker-magento2][origin-repo] so you need read ori
 
 Also this docker-compose services required [nginx-proxy][nginx-proxy]
 
+For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html
+
+Also [install/delete/reinstall docker/docker-compose][https://gist.github.com/AndriynomeD/292e7bac37133aa1aad75f16c2f14ca4]
+
 ### Usage
 
 Install [nginx-proxy][nginx-proxy]
@@ -47,7 +51,7 @@ Also:
 2. docker-compose run cli magerun2 list - no working (Incompatibility with Magento 2.3.0)
 3. Email sending not workin for me so I disabled it by default
 
-### Maybe usefull
+### Maybe useful
 
 1. For debug inside container:
 
