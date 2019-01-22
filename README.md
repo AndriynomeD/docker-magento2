@@ -15,7 +15,7 @@ Also this docker-compose services required [nginx-proxy][nginx-proxy]
 
 For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html
 
-Also [install/delete/reinstall docker/docker-compose][https://gist.github.com/AndriynomeD/292e7bac37133aa1aad75f16c2f14ca4]
+Also [install/delete/reinstall docker/docker-compose][https://gist.github.com/AndriynomeD/0d61773efef2408b3785f2f91aceae12]
 
 ### Usage
 
