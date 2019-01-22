@@ -9,7 +9,7 @@ A collection of Docker images for running Magento 2 through nginx and on the com
 
 ### Origin Repository
 
-This repo is for of [meanbee/docker-magento2][origin-repo] so you need read origin md file
+This repo is fork of [meanbee/docker-magento2][origin-repo] so you need read origin md file
 
 Also this docker-compose services required [nginx-proxy][nginx-proxy]
 
@@ -51,8 +51,11 @@ Also:
 
 
     $ sudo apt-get install nano
+    
     $ sudo apt-get install telnet
+    
     $ sudo apt-get install dnsutils
+    
     $ sudo apt-get install iputils-ping
 
 2. Mysql:
