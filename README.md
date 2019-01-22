@@ -1,10 +1,5 @@
 # Magento 2 Docker
 
-[![Build Status][ico-travis]][link-travis]
-[![Docker Build Status][ico-dockerbuild]][link-dockerhub]
-[![Docker Pulls][ico-downloads]][link-dockerhub]
-[![Docker Stars][ico-dockerstars]][link-dockerhub]
-
 A collection of Docker images for running Magento 2 through nginx and on the command line.
 
 ### Origin Repository
