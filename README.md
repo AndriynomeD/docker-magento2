@@ -17,6 +17,8 @@ Also this docker-compose services required [nginx-proxy][nginx-proxy]
 
 Install [nginx-proxy][nginx-proxy]
 
+Make directory `magento` & `/persistent/mysql/mariadb10` inside root directory
+
 Fill `composer.env` with you data
 
 In `docker-compose.yml` file replace string `magento2.docker` with you're {{site_domain}} (example: magento230.site)
