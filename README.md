@@ -10,7 +10,7 @@ Also this docker-compose services required [nginx-proxy][nginx-proxy]
 
 For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html
 
-Also [install/delete/reinstall docker/docker-compose][https://gist.github.com/AndriynomeD/0d61773efef2408b3785f2f91aceae12]
+Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/AndriynomeD/0d61773efef2408b3785f2f91aceae12)
 
 ### Usage
 
@@ -43,8 +43,8 @@ Fix problem with owner (P.S. In you're system user `9933` can be another):
 
 Also:
 1. mageconfigsync diff function not work (but load/save work)
-2. docker-compose run cli magerun2 list - no working (Incompatibility with Magento 2.3.0)
-3. Email sending not workin for me so I disabled it by default
+2. docker-compose run cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
+3. Email sending not working for me so I disabled it by default
 
 ### Maybe useful
 
