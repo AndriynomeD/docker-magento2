@@ -1,19 +1,5 @@
 version: "2"
 services:
-  varnish:
-    image: meanbee/magento2-varnish:latest
-    environment:
-      - VIRTUAL_HOST=magento2.docker
-      - VIRTUAL_PORT=80
-      - HTTPS_METHOD=noredirect
-    ports:
-      - 80
-    links:
-      - web
-    networks:
-      - default
-      - nginx-proxy
-
   web:
     image: meanbee/magento2-nginx:1.9
     ports:
@@ -25,10 +11,10 @@ services:
       - appdata
     env_file:
       - ./global.env
-    #environment:
-      #- VIRTUAL_HOST=magento2.docker
-      #- VIRTUAL_PORT=80
-      #- HTTPS_METHOD=noredirect
+    environment:
+      - VIRTUAL_HOST=magento2.docker
+      - VIRTUAL_PORT=80
+      - HTTPS_METHOD=noredirect
     networks:
       - default
       - nginx-proxy
@@ -97,24 +83,6 @@ services:
       - M2SETUP_ADMIN_PASSWORD=admin123
       - M2SETUP_VERSION=2.3.*
       - M2SETUP_USE_SAMPLE_DATA=true
-    networks:
-      - default
-      - elastic-net
-
-  cron:
-    hostname: cron.magento2.docker
-    image: meanbee/magento2-php:7.2-cli
-    links:
-      - db
-    external_links:
-      - elasticsearch
-    command: run-cron
-    environment:
-      - ENABLE_SENDMAIL=false
-    env_file:
-      - ./global.env
-    volumes_from:
-      - appdata
     networks:
       - default
       - elastic-net

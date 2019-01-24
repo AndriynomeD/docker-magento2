@@ -22,6 +22,8 @@ Fill `composer.env` with you data
 
 In `docker-compose.yml` file & update `VIRTUAL_HOST`, `M2SETUP_BASE_URL`, `M2SETUP_SECURE_BASE_URL` from  `magento2.docker` with you're {{site_domain}} (example: magento230.site). Also need update `hostname:` by unique value
 
+P.S. Use unique db name with pattern: `{{project-name}}_{{dump-date}}` (example: magento230_20190107). 
+
 Add you're {{site_domain}} to `/etc/hosts` file:
 ```
 127.0.0.1 {{site_domain}}
@@ -40,6 +42,7 @@ P.S. Instead of `php bin/magento` use `magento-command`:
 
 If you can't edit magento file in Phpstorm try it:
 
+    $ sudo usermod -aG www-data {{user}}
     $ sudo chmod -R g+w magento
 
 Fix problem with owner (P.S. In you're system user `9933` can be another):
