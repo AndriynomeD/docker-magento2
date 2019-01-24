@@ -62,16 +62,21 @@ Also:
 
     $ sudo apt-get install nano
     
+    
     $ sudo apt-get install telnet
+    
     
     $ sudo apt-get install dnsutils
     
+    
     $ sudo apt-get install iputils-ping
+
 
 2. For debug inside 'alpine' container (docker exec -it {{container}} sh):
 
 
     $ yum install iputils
+    
     
 3. In Mysql:
 ```
