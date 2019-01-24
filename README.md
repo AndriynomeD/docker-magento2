@@ -37,7 +37,8 @@ P.S. Instead of `php bin/magento` use `magento-command`:
 
     $ docker-compose run cli magento-command deploy:mode:show 
     
-    
+Or inside container run `php bin/magento` from user `www-data` (for example see `7.2-cli/bin/magento-command`)
+
 ### Problem
 
 If you can't edit magento file in Phpstorm try it:
@@ -56,7 +57,7 @@ Also:
 
 ### Maybe useful
 
-1. For debug inside container:
+1. For debug inside 'ubuntu' container (docker exec -it {{container}} bash):
 
 
     $ sudo apt-get install nano
@@ -67,7 +68,12 @@ Also:
     
     $ sudo apt-get install iputils-ping
 
-2. Mysql:
+2. For debug inside 'alpine' container (docker exec -it {{container}} sh):
+
+
+    $ yum install iputils
+    
+3. In Mysql:
 ```
 show databases;
 ```
