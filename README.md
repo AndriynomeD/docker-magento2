@@ -67,6 +67,16 @@ Then in bash of cli-container got to magento root directory and use standard gru
     $ grunt watch   Tracks the changes in the source files, recompiles .css files, and reloads the page in the browser.
 ```
 
+Rename (create renamed copy) the following files in your Magento root directory:
+1. package.json.sample to package.json
+2. Gruntfile.js.sample to Gruntfile.js
+Rename (create renamed copy) the following file:
+3. {{magento_root}}/dev/tools/grunt/configs/themes.js to {{magento_root}}/dev/tools/grunt/configs/local-themes.js
+4. Update local-themes.js by include your local site theme
+
+Reloads the page in the browser not working.
+Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to continue.` - it's magento native bug. 
+
 ### PphStorm
 
 1. `Add Configuration` or `Edit Configuration`
