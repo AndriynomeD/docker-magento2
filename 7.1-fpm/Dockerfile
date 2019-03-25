@@ -37,6 +37,9 @@ RUN docker-php-ext-install \
   bcmath \ 
   mcrypt
 
+# Install & Configure php calendar for use easter_days function
+RUN docker-php-ext-install calendar && docker-php-ext-configure calendar
+
 # Install Xdebug (but don't enable)
 RUN pecl install -o -f xdebug
 

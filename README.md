@@ -55,6 +55,35 @@ Also:
 2. docker-compose run cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
 3. Email sending not working for me so I disabled it by default
 
+### Grunt
+
+For use grunt need use in cli-container build for instead of image (example instead of `meanbee/magento2-php:7.2-cli` use `build: context: 7.2-cli/` ). For cron-container can still use image.
+
+Then in bash of cli-container got to magento root directory and use standard grunt command:
+```
+    $ grunt clean   Removes the theme related static files in the pub/static and var directories.
+    $ grunt exec    Republishes symlinks to the source files to the pub/static/frontend/ directory.
+    $ grunt less    Compiles .css files using the symlinks published in the pub/static/frontend/ directory.
+    $ grunt watch   Tracks the changes in the source files, recompiles .css files, and reloads the page in the browser.
+```
+
+### PphStorm
+
+1. `Add Configuration` or `Edit Configuration`
+2. Add `PHP remote debug`
+```
+Name: Configuration
+IDE key(s): PHPSTORM
+Server: 
+    Name: Configuration
+    host: localhost
+    port: 80
+    Debuger: Xdebug
+    Use path mapping: Yes
+        map magento folder in left column to path `/var/www/magento` inside container
+```
+3. Apply this config
+
 ### Maybe useful
 
 1. For debug inside 'ubuntu' container (docker exec -it {{container}} bash):
@@ -90,6 +119,14 @@ UPDATE mysql.user SET Password=PASSWORD('root') WHERE User='root';
 FLUSH PRIVILEGES;
 ```
 
+4. PphStorm & Database
+
+Get real db host & port (this info can be find using next command):
+```
+    $ docker ps -a
+```
+
+Next use it when connected to db by PphStorm
 
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
