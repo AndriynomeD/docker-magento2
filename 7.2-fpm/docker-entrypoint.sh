@@ -35,7 +35,9 @@ chown www-data:www-data $MAGENTO_ROOT
 
 # Configure Sendmail if required
 if [ "$ENABLE_SENDMAIL" == "true" ]; then
-    /etc/init.d/sendmail start
+    echo "${POSTFIX_SASL_PASSWD}" > /etc/postfix/sasl_passwd
+    postmap /etc/postfix/sasl_passwd
+    /etc/init.d/postfix restart
 fi
 
 # Substitute in php.ini values

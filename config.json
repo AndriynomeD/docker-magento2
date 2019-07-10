@@ -29,6 +29,7 @@
       "bin/run-cron": {
         "executable": true
       },
+      "etc/postfix/config.cf": {},
       "etc/mail.ini": {},
       "etc/php-cli.ini": {},
       "etc/php-xdebug.ini": {}
@@ -44,6 +45,7 @@
       "docker-entrypoint.sh": {
         "executable": true
       },
+      "etc/postfix/config.cf": {},
       "etc/mail.ini": {},
       "etc/php-fpm.ini": {},
       "etc/php-xdebug.ini": {},
@@ -82,6 +84,7 @@
       "bin/run-cron": {
         "executable": true
       },
+      "etc/postfix/config.cf": {},
       "etc/mail.ini": {},
       "etc/php-cli.ini": {},
       "etc/php-xdebug.ini": {}
@@ -97,6 +100,7 @@
       "docker-entrypoint.sh": {
         "executable": true
       },
+      "etc/postfix/config.cf": {},
       "etc/mail.ini": {},
       "etc/php-fpm.ini": {},
       "etc/php-xdebug.ini": {},
@@ -135,6 +139,7 @@
       "bin/run-cron": {
         "executable": true
       },
+      "etc/postfix/config.cf": {},
       "etc/mail.ini": {},
       "etc/php-cli.ini": {},
       "etc/php-xdebug.ini": {}
@@ -150,6 +155,7 @@
       "docker-entrypoint.sh": {
         "executable": true
       },
+      "etc/postfix/config.cf": {},
       "etc/mail.ini": {},
       "etc/php-fpm.ini": {},
       "etc/php-xdebug.ini": {},

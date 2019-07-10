@@ -14,9 +14,7 @@ RUN apt-get update \
     libjpeg62-turbo-dev \ 
     libmcrypt-dev \ 
     libpng-dev \ 
-    libxslt1-dev \ 
-    sendmail-bin \ 
-    sendmail \ 
+    libxslt1-dev \
     sudo \ 
     cron \ 
     rsyslog \ 
@@ -45,7 +43,6 @@ RUN docker-php-ext-install \
 RUN docker-php-ext-install calendar && docker-php-ext-configure calendar
 
 # Install Grunt
-
 RUN apt-get update \
     && apt-get install -y \
     && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
@@ -64,6 +61,17 @@ ENV UPDATE_UID_GID false
 
 ADD etc/php-xdebug.ini /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
 ADD etc/mail.ini /usr/local/etc/php/conf.d/zz-mail.ini
+
+# Install Postfix
+RUN apt-get update \
+  && echo "postfix postfix/mailname string dockerized.site" | debconf-set-selections \
+  && echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections \
+  && apt-get install -y \
+    postfix \
+    libsasl2-modules
+COPY etc/postfix/config.cf /etc/postfix/
+RUN sed -i "s/relayhost =[ ]*$//g" /etc/postfix/main.cf
+RUN cat /etc/postfix/config.cf >> /etc/postfix/main.cf
 
 ADD docker-entrypoint.sh /docker-entrypoint.sh
 

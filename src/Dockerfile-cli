@@ -9,6 +9,13 @@ $imageSpecificPackages = [
 include "Dockerfile";
 ?>
 
+# Install Grunt
+RUN apt-get update \
+    && apt-get install -y \
+    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g grunt-cli
+
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_GITHUB_TOKEN ""
 ENV COMPOSER_MAGENTO_USERNAME ""
