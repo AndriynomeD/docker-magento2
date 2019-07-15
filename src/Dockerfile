@@ -45,6 +45,9 @@ RUN docker-php-ext-install \
   <?php echo join(" \\ \n  ", $phpExtensions) ?>
 
 
+# Install & Configure php calendar for use easter_days function
+RUN docker-php-ext-install calendar && docker-php-ext-configure calendar
+
 # Install Xdebug (but don't enable)
 <?php $xdebugVersion = ($xdebugVersion == 'latest' || $xdebugVersion == '') ? '' : '-' . $xdebugVersion; ?>
 RUN pecl install -o -f <?php printf("xdebug%s\n", $xdebugVersion) ?>

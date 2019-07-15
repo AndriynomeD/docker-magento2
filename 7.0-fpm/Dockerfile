@@ -14,7 +14,7 @@ RUN apt-get update \
     libjpeg62-turbo-dev \ 
     libmcrypt-dev \ 
     libpng-dev \ 
-    libxslt1-dev \
+    libxslt1-dev \ 
     sudo
 
 # Configure the gd library

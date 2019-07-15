@@ -14,7 +14,7 @@ RUN apt-get update \
     libjpeg62-turbo-dev \ 
     libmcrypt-dev \ 
     libpng-dev \ 
-    libxslt1-dev \
+    libxslt1-dev \ 
     sudo \ 
     cron \ 
     rsyslog \ 
@@ -40,13 +40,6 @@ RUN docker-php-ext-install \
 
 # Install & Configure php calendar for use easter_days function
 RUN docker-php-ext-install calendar && docker-php-ext-configure calendar
-
-# Install Grunt
-RUN apt-get update \
-    && apt-get install -y \
-    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g grunt-cli
 
 # Install Xdebug (but don't enable)
 RUN pecl install -o -f xdebug
@@ -77,6 +70,13 @@ ADD docker-entrypoint.sh /docker-entrypoint.sh
 RUN ["chmod", "+x", "/docker-entrypoint.sh"]
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Install Grunt
+RUN apt-get update \
+    && apt-get install -y \
+    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g grunt-cli
 
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_GITHUB_TOKEN ""
