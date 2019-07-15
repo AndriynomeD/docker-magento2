@@ -77,6 +77,10 @@ Example:
 To run it:
 
     $ docker-compose up
+
+Or if not needed varnish & cron:
+
+    $ docker-compose -f docker-compose-min.yml up 
    
 P.S. Instead of `php bin/magento` use `magento-command`:
 
