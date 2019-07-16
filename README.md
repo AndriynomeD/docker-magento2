@@ -75,31 +75,34 @@ Example:
 ```
 
 To run it:
-
+```shell
     $ docker-compose up
-
+```
 Or if not needed varnish & cron:
-
+```shell
     $ docker-compose -f docker-compose-min.yml up 
-   
+```
 P.S. Instead of `php bin/magento` use `magento-command`:
+```shell
+    $ docker-compose run --rm cli magento-command deploy:mode:show 
+```
+NOTE: Please set `--rm` to remove a created container after run.
 
-    $ docker-compose run cli magento-command deploy:mode:show 
-    
 Or inside container run `php bin/magento` from user `www-data` (for example see `7.2-cli/bin/magento-command`)
 
 Import database:
 1) Copy database dump into `{{magento_root}}`.
 2) Go to cli-container & import database dump:
-```
-    $ docker-compose run cli bash
+```shell
+    $ docker-compose run --rm cli bash
     $ cd /var/www/magento/
 ```
-```
+Import dump:
+```shell
     $ mysql -hdb -umagento2 -p {{youre_database_name}} < {{youre_database_dump}}
 ```
-Or 
-```
+Or using source:
+```shell
     $ mysql -hdb -umagento2 -p 
     $ use {{youre_database_name}};
     $ source {{youre_database_dump}}
@@ -116,27 +119,27 @@ In `env.php` file use next config for database:
 ```
 
 Maybe after you want create admin user:
-```
+```shell
     $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
 ```
 ### Problem
 
 If you can't edit magento file in Phpstorm try it:
-
+```shell
     $ sudo usermod -aG www-data {{user}}
     $ sudo chmod -R g+w magento
-
+```
 Fix problem with owner (P.S. In you're system user `9933` can be another):
-
+```shell
     $ sudo chown -R 9933:www-data var/cache
-
+```
 Example of fix permission problem inside cli-container:
-
+```shell
     $ cd /var/www/ && sudo chown -R 9933:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
-
+```
 Also:
 1. mageconfigsync diff function not work (but load/save work)
-2. docker-compose run cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
+2. docker-compose run --rm cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
 3. Email sending not working for me so I disabled it by default
 
 ### Grunt
@@ -150,23 +153,23 @@ Rename (create renamed copy) the following file:
 3. {{magento_root}}/dev/tools/grunt/configs/themes.js to {{magento_root}}/dev/tools/grunt/configs/local-themes.js
 4. Update local-themes.js by include your local site theme
 5. Inside `{{root_directory}}`: 
-```
-   $ docker-compose run cli bash
-   $ cd /var/www/magento/
-   $ npm install
-   $ npm update
+```shell
+    $ docker-compose run --rm cli bash
+    $ cd /var/www/magento/
+    $ npm install
+    $ npm update
 ```
 
 Then in bash of cli-container got to magento root directory and use standard grunt command:
-```
+```shell
     $ sudo -uwww-data grunt clean   Removes the theme related static files in the pub/static and var directories.
     $ sudo -uwww-data grunt exec    Republishes symlinks to the source files to the pub/static/frontend/ directory.
     $ sudo -uwww-data grunt less    Compiles .css files using the symlinks published in the pub/static/frontend/ directory.
     $ sudo -uwww-data grunt watch   Tracks the changes in the source files, recompiles .css files, and reloads the page in the browser.
 ```
 Example of run grunt watch:
-```
-    $ docker-compose run cli bash
+```shell
+    $ docker-compose run --rm cli bash
     $ cd /var/www/magento/
     $ sudo -uwww-data grunt clean && sudo -uwww-data grunt exec && sudo -uwww-data grunt less
     $ sudo -uwww-data grunt watch
@@ -180,7 +183,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 1) Xdebug config:
     1. `Add Configuration` or `Edit Configuration`
     2. Add `PHP remote debug`
-    ```
+    ```shell
     Name: Configuration
     IDE key(s): PHPSTORM
     Server: 
@@ -190,13 +193,13 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
         Debuger: Xdebug
         Use path mapping: Yes
             map magento folder in left column to path `/var/www/magento` inside container
-    ```
+    ```shell
     3. Apply this config
 2) URN config:
    1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
    2. Go to cli-container & generate urn:
-   ```
-       $ docker-compose run cli bash
+   ```shell
+       $ docker-compose run --rm cli bash
        $ cd /var/www/magento/
        $ sudo -uwww-data php bin/magento dev:urn-catalog:generate .idea/misc.xml
    ```
@@ -207,7 +210,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 ### Maybe useful
 
 1. For debug inside 'ubuntu' container (docker exec -it {{container}} bash):
-```
+```shell
     $ sudo apt-get install nano
     $ sudo apt-get install rsyslog
     $ sudo apt-get install telnet
@@ -215,11 +218,11 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     $ sudo apt-get install iputils-ping
 ```
 2. For debug inside 'alpine' container (docker exec -it {{container}} sh):
-```
+```shell
     $ yum install iputils
 ``` 
 3. In Mysql:
-```
+```shell
     $ mysql -hdb -umagento2 -p
 ```
 ```
@@ -246,7 +249,7 @@ FLUSH PRIVILEGES;
 4. PphStorm & Database
 
 Get real db host & port (this info can be find using next command):
-```
+```shell
     $ docker ps -a
 ```
 
