@@ -17,8 +17,8 @@ services:
     networks:
       - default
       - nginx-proxy
-<?php endif; ?>
 
+<?php endif; ?>
   web:
     build:
       context: containers/nginx/
@@ -92,7 +92,7 @@ services:
       - ./global.env
       - ./composer.env
     environment:
-      - M2SETUP_INSTALL_DB=true
+      - M2SETUP_INSTALL_DB=<?php echo $M2SETUP_INSTALL_DB . PHP_EOL ?>
       - M2SETUP_DB_HOST=db
       - M2SETUP_DB_NAME=<?php echo $M2SETUP_DB_NAME . PHP_EOL ?>
       - M2SETUP_DB_USER=magento2
@@ -100,13 +100,13 @@ services:
       - M2SETUP_BASE_URL=<?php echo $M2SETUP_BASE_URL . PHP_EOL ?>
       # - M2SETUP_SECURE_BASE_URL=<?php echo $M2SETUP_SECURE_BASE_URL . PHP_EOL ?>
       - M2SETUP_BACKEND_FRONTNAME=admin
-      - M2SETUP_ADMIN_FIRSTNAME=Admin
-      - M2SETUP_ADMIN_LASTNAME=User
-      - M2SETUP_ADMIN_EMAIL=dummy@gmail.com
+      - M2SETUP_ADMIN_FIRSTNAME=AdminFirstName
+      - M2SETUP_ADMIN_LASTNAME=AdminLastName
+      - M2SETUP_ADMIN_EMAIL=<?php echo $M2SETUP_ADMIN_EMAIL . PHP_EOL ?>
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
-      - M2SETUP_VERSION=2.3.*
-      - M2SETUP_USE_SAMPLE_DATA=true
+      - M2SETUP_VERSION=<?php echo $M2SETUP_VERSION . PHP_EOL ?>
+      - M2SETUP_USE_SAMPLE_DATA=<?php echo $M2SETUP_USE_SAMPLE_DATA . PHP_EOL ?>
     networks:
       - default
       - elastic-net

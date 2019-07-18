@@ -5,6 +5,10 @@
   "M2SETUP_SECURE_BASE_URL": "https://magento2.docker/",
   "M2SETUP_DB_NAME": "magento2_database",
   "M2SETUP_PHP": "7.2",
+  "M2SETUP_VERSION": "2.3.*",
+  "M2SETUP_INSTALL_DB": "true",
+  "M2SETUP_USE_SAMPLE_DATA": "true",
+  "M2SETUP_ADMIN_EMAIL": "dummy@gmail.com",
   "M2SETUP_ADDITIONAL_SERVICES": {
     "varnish": true,
     "cron": true
