@@ -14,81 +14,53 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 
 ### Usage
 
-Install [nginx-proxy][nginx-proxy]
+1) Install [nginx-proxy][nginx-proxy]
 
-Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`. If need clone existing repo with magento into this folder.
+2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`. If need clone existing repo with magento into this folder.
 
-Fill `composer.env`, `global.env` with you data. 
-Example of required field for `composer.env` file:
-```
-COMPOSER_MAGENTO_USERNAME={{repo.magento.com_username}}
-COMPOSER_MAGENTO_PASSWORD={{repo.magento.com_password}}
-``` 
-P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`.
-In `docker-compose.yml` file replace php container needed version (example if need php 7.1: replace all 7.2-fpm => 7.1-fpm & 7.2-cli => 7.1-cli). Available next php version: 7.0, 7.1, 7.2.
+3) Prepare all config files:
+    1) Fill `composer.env`, `global.env` with you data. 
+    Example of required field for `composer.env` file:
+    ```
+    COMPOSER_MAGENTO_USERNAME={{repo.magento.com_username}}
+    COMPOSER_MAGENTO_PASSWORD={{repo.magento.com_password}}
+    ``` 
+    P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`.
+    2) Create renamed copy of following files in your Magento `{{root_directory}}`:
+        1) config.json.sample to config.json. Remove not needed block of php versions.
+        2) docker-compose-config.json.sample to docker-compose-config.json. Fill `docker-compose-config.json` with you data. If `varnish`/`cron` not needed set it to false.
+        `docker-compose-config.json` params:
+        "M2SETUP_PROJECT": {{project_name}}
+        "M2SETUP_VIRTUAL_HOST": {{all_site_domain}} 
+        "M2SETUP_BASE_URL": "http://{{main_domain}}/"
+        "M2SETUP_SECURE_BASE_URL": "https://{{main_domain}}/"
+        "M2SETUP_DB_NAME": {{database_name}}
+        "M2SETUP_PHP": "7.2"
 
-### Single-store
+        {{project_name}} - example: someproject.site
+        {{all_site_domain}} -  see `Single-store` or `Multi-store` section
+        {{main_domain}} - main site domain. see `Single-store` or `Multi-store` section
+        {{database_name}} - Use unique db name with pattern: `{{client}}_{{project-name}}_{{dump-date}}` (example: someclient_someproject_20190710)
 
-1) In `docker-compose.yml` file:
-    1. Replace using ctrl+R string `magento2.docker` by you're {{site_domain}} (example: someproject.site). Also need update `hostname:` by unique value.
-    2. Replace using ctrl+R string `magento2_database` by you're  {{database_name}}. Use unique db name with pattern: `{{client}}_{{project-name}}_{{dump-date}}` (example: someclient_someproject_20190710)
-2) Add you're {{site_domain}} to `/etc/hosts` file:
+Build php containers & `docker-compose.yml`:
+```shell
+    $ php builde.php
+    $ php docker-compose-builder.php
 ```
-# single-store sites (docker):
-...
-127.0.0.1 {{site_domain}}
-...
-# end single-store sites (docker)
-```
-Example:
-```
-# single-store sites (docker):
-127.0.0.1 someanotherproject1.site
-127.0.0.1 someanotherproject2.site
-127.0.0.1 someproject.site
-127.0.0.1 someanotherproject3.site
-# end single-store sites (docker)
-```
+In `examples` folder you can see example of generated `docker-compose.yml`.
 
-### Multi-store
-So you should choose one domain main (example: we have 3 store/website: someproject.site, someproject-vip.site, someproject-retail.site, we choose someproject.site like a {{main_domain}})
-1) In `docker-compose.yml` file:
-    1. Replace using ctrl+R string `magento2.docker` by you're {{main_domain}} (example: someproject.site).
-    2. Replace using ctrl+R string `magento2_database` by you're  {{database_name}}. Use unique db name with pattern: `{{client}}_{{project-name}}_{{dump-date}}` (example: someclient_someproject_20190710)
-    3. Using comma as separator add additional domains config to `VIRTUAL_HOST` field that already have {{main_domain}}. Example: `VIRTUAL_HOST=someproject.site,someproject-vip.site,someproject-retail.site`
-2) In folder `{{root_directory}}/nginx/etc/multi_vhost/` create config file(s) for multi-store. Use file `example_vhost.conf` like example.
-3) Add you're {{site_domain}} to `/etc/hosts` file:
-```
-# multi-store {{unique project name or main_domain or unique number}} (docker):
-127.0.0.1 {{main_domain}}
-127.0.0.1 {{additional_domain_1}}
-127.0.0.1 {{additional_domain_2}}
-# end multi-store {{unique project name or number}} (docker)
-```
-Example:
-```
-# multi-store 9 (docker)
-127.0.0.1 someproject.site
-127.0.0.1 someproject-vip.site
-127.0.0.1 someproject-retail.site
-# end multi-store 9 (docker)
-```
-
-To run it:
+4) Up containers:
 ```shell
     $ docker-compose up
 ```
-Or if not needed varnish & cron:
-```shell
-    $ docker-compose -f docker-compose-min.yml up 
-```
+
 P.S. Instead of `php bin/magento` use `magento-command`:
 ```shell
     $ docker-compose run --rm cli magento-command deploy:mode:show 
 ```
 NOTE: Please set `--rm` to remove a created container after run.
 
-Or inside container run `php bin/magento` from user `www-data` (for example see `7.2-cli/bin/magento-command`)
+Or inside container run `php bin/magento` from user `www-data` (for example see `src/bin/magento-command`)
 
 Import database:
 1) Copy database dump into `{{magento_root}}`.
@@ -122,6 +94,55 @@ Maybe after you want create admin user:
 ```shell
     $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
 ```
+
+
+
+### Single-store
+
+1) `docker-compose-config.json` params:
+    1) {{all_site_domain}} same as {{main_domain}} (example: someproject.site)
+2) Add all you're site domain to `/etc/hosts` file:
+```
+# single-store sites (docker):
+...
+127.0.0.1 {{main_domain}}
+...
+# end single-store sites (docker)
+```
+Example:
+```
+# single-store sites (docker):
+127.0.0.1 someanotherproject1.site
+127.0.0.1 someanotherproject2.site
+127.0.0.1 someproject.site
+127.0.0.1 someanotherproject3.site
+# end single-store sites (docker)
+```
+
+### Multi-store
+Example: we have 3 store/website: someproject.site, someproject-vip.site, someproject-retail.site
+1) `docker-compose-config.json` params:
+    1) {{all_site_domain}} - comma separated all site domains (example: `someproject.site,someproject-vip.site,someproject-retail.site`)
+    2) {{main_domain}} - So you should choose one domain main (example: we choose `someproject.site` like a {{main_domain}})
+2) In folder `{{root_directory}}/nginx/etc/multi_vhost/` create one/multiple own config file(s) for multi-store. Use file `example_vhost.conf` as example.
+3) Add all you're site domain to `/etc/hosts` file:
+```
+# multi-store {{unique project name or main_domain or unique number}} (docker):
+127.0.0.1 {{main_domain}}
+127.0.0.1 {{additional_domain_1}}
+...
+127.0.0.1 {{additional_domain_N}}
+# end multi-store {{unique project name or number}} (docker)
+```
+Example:
+```
+# multi-store 9 (docker)
+127.0.0.1 someproject.site
+127.0.0.1 someproject-vip.site
+127.0.0.1 someproject-retail.site
+# end multi-store 9 (docker)
+```
+
 ### Problem
 
 If you can't edit magento file in Phpstorm try it:

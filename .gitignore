@@ -1,5 +1,5 @@
 /composer.env
 /magento
 /.idea
-/persistent/mysql/mariadb10/*
-!/persistent/mysql/mariadb10/.gitkeep
+/mysql_volumes/mysql/mariadb10/*
+!/mysql_volumes/mariadb10/.gitkeep

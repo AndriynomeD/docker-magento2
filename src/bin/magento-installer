@@ -88,6 +88,8 @@ echo "Fixing file permissions.."
 find $MAGENTO_ROOT/pub -type f -exec chmod 664 {} \;
 find $MAGENTO_ROOT/pub -type d -exec chmod 775 {} \;
 find $MAGENTO_ROOT/var/generation -type d -exec chmod g+s {} \;
+find $MAGENTO_ROOT/var/generated -type d -exec chmod g+s {} \;
+find $MAGENTO_ROOT/generated -type d -exec chmod g+s {} \;
 
 chown -R www-data:www-data $MAGENTO_ROOT
 
