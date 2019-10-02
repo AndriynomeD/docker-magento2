@@ -2,7 +2,7 @@
 $imageSpecificPackages = [
     'cron',
     'rsyslog',
-    'mysql-client',
+    'mariadb-client',
     'git'
 ];
 
