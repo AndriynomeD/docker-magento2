@@ -13,6 +13,7 @@ MAINTAINER Nick Jones <nick@nicksays.co.uk>
         'libmcrypt-dev',
         'libpng-dev',
         'libxslt1-dev',
+        'libzip-dev',
         'sudo'
     ], $imageSpecificPackages ?? [])
 ?>
