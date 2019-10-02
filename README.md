@@ -145,26 +145,6 @@ Example: we have 3 store/website: someproject.site, someproject-vip.site, somepr
     # end multi-store 9 (docker)
     ```
 
-### Problem
-
-If you can't edit magento file in Phpstorm try it:
-```shell
-    $ sudo usermod -aG www-data {{user}}
-    $ sudo chmod -R g+w magento
-```
-Fix problem with owner (P.S. In you're system user `9933` can be another):
-```shell
-    $ sudo chown -R 9933:www-data var/cache
-```
-Example of fix permission problem inside cli-container:
-```shell
-    $ cd /var/www/ && sudo chown -R 9933:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
-```
-Also:
-1. mageconfigsync diff function not work (but load/save work)
-2. docker-compose run --rm cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
-3. Email sending not working for me so I disabled it by default
-
 ### Grunt
 
 For use grunt need prepared magento grunt config file & init npm inside `{{magento_root}}` using cli-container. 
@@ -276,6 +256,25 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     ```
 
 Next use it when connected to db by PphStorm
+
+### Problem
+
+If you can't edit magento file in Phpstorm try it:
+```shell
+    $ sudo usermod -aG www-data {{user}}
+    $ sudo chmod -R g+w magento
+```
+Fix problem with owner (P.S. In you're system user `9933` can be another):
+```shell
+    $ sudo chown -R 9933:www-data var/cache
+```
+Example of fix permission problem inside cli-container:
+```shell
+    $ cd /var/www/ && sudo chown -R 9933:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
+```
+Also:
+1. mageconfigsync diff function not work (but load/save work)
+2. docker-compose run --rm cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
 
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
