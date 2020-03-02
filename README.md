@@ -196,7 +196,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             Debuger: Xdebug
             Use path mapping: Yes
                 map magento folder in left column to path `/var/www/magento` inside container
-        ```shell
+        ```
     3. Apply this config
 2) URN config:
    1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
