@@ -9,6 +9,7 @@
  */
 class Builder2
 {
+    const DEFAULT_CONFIG_KEY = "php-containers";
     const DEFAULT_CONFIG_FILE_NAME = "config.json";
     const DEFAULT_CONFIG_FILE = __DIR__ . DIRECTORY_SEPARATOR . self::DEFAULT_CONFIG_FILE_NAME;
     const DEFAULT_TEMPLATE_DIR = __DIR__ . DIRECTORY_SEPARATOR . "src/";
@@ -116,12 +117,15 @@ class Builder2
         }
 
         $config = json_decode(file_get_contents($file), true);
-        
-        if (!is_array($config)) {
+
+        if (!is_array($config)
+            || (!array_key_exists(static::DEFAULT_CONFIG_KEY, $config)
+                || !is_array($config[static::DEFAULT_CONFIG_KEY]))
+        ) {
             throw new Exception(sprintf("Invalid configuration in %s!", $file));
         }
-        
-        $this->build_config = $config;
+
+        $this->build_config = $config[static::DEFAULT_CONFIG_KEY];
         
         return $this;
     }
