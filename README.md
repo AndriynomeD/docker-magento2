@@ -27,8 +27,9 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
         ``` 
         P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`
     2) Create renamed copy of following files in your Magento `{{root_directory}}`:
-        1) config.json.sample to config.json. Remove not needed block of php versions from `php-containers` section.
-        2) `docker-compose` section with you data. If `varnish`/`cron` not needed set it to false.
+        1) config.json.sample to config.json. 
+        2) Remove not needed block of php versions from `php-containers` section.
+        3) Fill `docker-compose` section with you data. If `varnish`/`cron` not needed set it to false.
             `docker-compose` section params:
             ```
             "M2SETUP_PROJECT": {{project_name}}
