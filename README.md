@@ -4,19 +4,16 @@ A collection of Docker images for running Magento 2 through nginx and on the com
 
 ### Origin Repository
 
-This repo is fork of [meanbee/docker-magento2][origin-repo] so you need read origin md file
-
-Also this docker-compose services required [nginx-proxy][nginx-proxy]
-
-For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html
-
+This repo is fork of [meanbee/docker-magento2][origin-repo] so you need read origin md file  
+Also this docker-compose services required [nginx-proxy][nginx-proxy]  
+For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html  
 Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/AndriynomeD/0d61773efef2408b3785f2f91aceae12)
 
 ### Usage
 
 1) Install [nginx-proxy][nginx-proxy]
 
-2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`. If need clone existing repo with magento into this folder.
+2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`.  If need clone existing repo with magento into this folder.
 
 3) Prepare all config files:
     1) Fill `composer.env`, `global.env` with you data. 
@@ -56,13 +53,11 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     ```shell
         $ docker-compose up
     ```
-    
     P.S. Instead of `php bin/magento` use `magento-command`:
     ```shell
         $ docker-compose run --rm cli magento-command deploy:mode:show 
     ```
-    NOTE: Please set `--rm` to remove a created container after run.
-    
+    NOTE: Please set `--rm` to remove a created container after run.  
     Or inside container run `php bin/magento` from user `www-data` (for example see `src/bin/magento-command`)
 
 6) Import database:
@@ -82,8 +77,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
         $ use {{youre_database_name}};
         $ source {{youre_database_dump}}
     ```
-
-    Copy into right places under `{{magento_root}}` all magento required secure sensitive file like `app/etc/env.php` file.
+    Copy into right places under `{{magento_root}}` all magento required secure sensitive file like `app/etc/env.php` file.  
     In `env.php` file use next config for database:
     ```
     'host' => 'db',
@@ -92,7 +86,6 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     'password' => 'magento2',
     
     ```
-    
     Maybe after you want create admin user:
     ```shell
         $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
@@ -148,7 +141,7 @@ Example: we have 3 store/website: someproject.site, someproject-vip.site, somepr
 
 ### Grunt
 
-For use grunt need prepared magento grunt config file & init npm inside `{{magento_root}}` using cli-container. 
+For use grunt need prepared magento grunt config file & init npm inside `{{magento_root}}` using cli-container.  
 
 Rename (create renamed copy) the following files in your Magento `{{magento_root}}`:
 1. package.json.sample to package.json
@@ -179,12 +172,13 @@ Rename (create renamed copy) the following file:
         $ sudo -uwww-data grunt watch
     ```
 
-Reloads the page in the browser not working.
+Reloads the page in the browser not working.  
 Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to continue.` - it's magento native bug. 
 
 ### PphStorm
 
-1) Xdebug config:
+1) #### Xdebug config:
+
     1. `Add Configuration` or `Edit Configuration`
     2. Add `PHP remote debug`
         ```shell
@@ -196,10 +190,10 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             port: 80
             Debuger: Xdebug
             Use path mapping: Yes
-                map magento folder in left column to path `/var/www/magento` inside container
+                map {{magento_root}} in left column to path `/var/www/magento` inside container
         ```
     3. Apply this config
-2) URN config:
+2) #### URN config:
    1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
    2. Go to cli-container & generate urn:
        ```shell
@@ -208,8 +202,63 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
            $ sudo -uwww-data php bin/magento dev:urn-catalog:generate .idea/misc.xml
        ```
    3. Move file `{{magento_root}}/.idea/misc.xml` to `{{root_directory}}/.idea/misc.xml`.
-   4. Replace in file `{{magento_root}}/.idea/misc.xml` string `/var/www` by `$PROJECT_DIR$`.
+   4. Replace in file `{{magento_root}}/.idea/misc.xml` string `/var/www/magento` or `$PROJECT_DIR$` by `$PROJECT_DIR$/magento` (all path should start with `$PROJECT_DIR$/magento`).
 
+3) #### [Magento Coding Standard][magento-coding-standard]
+    1. Install required packages:
+        1. For Community/Commerce:
+            ```shell
+                composer require --dev magento/magento-coding-standard
+            ```
+        2. For Commerce Cloud:
+             ```shell
+                composer require --dev magento/magento-coding-standard phpmd/phpmd:@stable squizlabs/php_codesniffer:~3.4.0 --sort-packages
+             ```
+    2. Due to security, when installed this way the Magento standard for phpcs cannot be added automatically. You can achieve this by adding the following to your project's `composer.json`:
+        ```json
+        "scripts": {
+          "post-install-cmd": [
+            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
+          ],
+          "post-update-cmd": [
+            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
+          ]
+        }
+        ```
+    3. Config PhpStorm:
+        ```shell
+        Settings->Directories->Excluded files: *Test*
+        P.S. not work with vendor/*
+        ```
+        ```shell
+        Settings->Languages & Frameworks->PHP
+            PHP Language level: 7.3
+            CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
+                Config Remote PHP Interpreter:
+                choose 'Docker Compose'
+                Service: 'cli'
+            Path mapping: map {{magento_root}} in left column to path `/var/www/magento` inside container.
+        ```
+       ```shell
+       Settings->Languages & Frameworks->PHP->Quality tools
+           PHP_CodeSniffer:
+           {{absolute_path}}/vendor/bin/phpcs (file should be a link to ../squizlabs/php_codesniffer/bin/phpcs)
+           {{absolute_path}}/vendor/bin/phpcbf (file should be a link to ../squizlabs/php_codesniffer/bin/phpcbf)
+           PHP Mess Detector:
+           {{absolute_path}}/vendor/bin/phpmd (file should be a link to ../phpmd/phpmd/src/bin/phpmd)
+       ```
+        ```shell
+        Settings->Editor->Inspection
+        PHP->Quality tools
+            ->PHP Mess Detector validation:
+                Choose all 'Options'
+                Add custom ruleset:
+                path: {{absolute_path}}/magento/dev/tests/static/testsuite/Magento/Test/Php/_files/phpmd/ruleset.xml'
+            ->PHP_CodeSniffer validation: 
+                Check files with extensions: 'php,js,css,inc,phtml'
+                Show sniff name: Yes
+                Coding Standard: Magento2 (if not see press reload & scroll up list)
+        ```
 
 ### Maybe useful
 
@@ -221,7 +270,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
         $ sudo apt-get install dnsutils
         $ sudo apt-get install iputils-ping
     ```
-2_ For debug inside 'alpine' container (docker exec -it {{container}} sh):
+2) For debug inside 'alpine' container (docker exec -it {{container}} sh):
     ```shell
         $ yum install iputils
     ``` 
@@ -287,3 +336,4 @@ Also:
 [link-dockerhub]: https://hub.docker.com/r/meanbee/magento2-php
 [origin-repo]: https://github.com/meanbee/docker-magento2
 [nginx-proxy]: https://github.com/AndriynomeD/nginx-proxy
+[magento-coding-standard]: https://github.com/magento/magento-coding-standard
