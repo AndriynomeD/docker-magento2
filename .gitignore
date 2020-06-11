@@ -1,6 +1,17 @@
+# General
+.DS_Store
+
+#whitelist for /folders
+/*/
+!/containers
+!/examples
+!/mysql_volumes
+!/src
+
 /composer.env
-/magento
-/pwa
-/.idea
+/containers/php/*
+!/containers/php/.gitkeep
+/mysql_volumes/*
+!/mysql_volumes/mariadb10/
 /mysql_volumes/mariadb10/*
 !/mysql_volumes/mariadb10/.gitkeep
