@@ -2,6 +2,7 @@
 $imageSpecificPackages = [
     'cron',
     'rsyslog',
+    'iproute2',
     'mariadb-client',
     'git'
 ];
