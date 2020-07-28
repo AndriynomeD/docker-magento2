@@ -193,6 +193,9 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
                 map {{magento_root}} in left column to path `/var/www/magento` inside container
         ```
     3. Apply this config
+    
+    For cli debug set `export XDEBUG_CONFIG="remote_host=host.docker.internal"`
+    
 2) #### URN config:
    1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
    2. Go to cli-container & generate urn:
