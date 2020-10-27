@@ -194,7 +194,14 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
         ```
     3. Apply this config
     
-    For cli debug set `export XDEBUG_CONFIG="remote_host=host.docker.internal"`
+    For cli debug:
+    ```shell
+        sudo su -l www-data -s /bin/bash
+        cd /var/www/magento/ && export XDEBUG_CONFIG="remote_host=host.docker.internal"
+        php bin/magento setup:up    (command for debug example)
+        exit
+    ```
+    
     
 2) #### URN config:
    1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
@@ -317,13 +324,13 @@ If you can't edit magento file in Phpstorm try it:
     $ sudo usermod -aG www-data {{user}}
     $ sudo chmod -R g+w magento
 ```
-Fix problem with owner (P.S. In you're system user `9933` can be another):
+Fix problem with owner:
 ```shell
-    $ sudo chown -R 9933:www-data var/cache
+    $ sudo chown -R www-data:www-data var/cache
 ```
 Example of fix permission problem inside cli-container:
 ```shell
-    $ cd /var/www/ && sudo chown -R 9933:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
+    $ cd /var/www/ && sudo chown -R www-data:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
 Also:
 1. mageconfigsync diff function not work (but load/save work)
