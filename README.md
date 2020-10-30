@@ -321,7 +321,7 @@ Next use it when connected to db by PphStorm
 
 If you can't edit magento file in Phpstorm try it:
 ```shell
-    $ sudo usermod -aG www-data {{user}}
+    $ sudo usermod -aG www-data ${USER}
     $ sudo chmod -R g+w magento
 ```
 Fix problem with owner:
