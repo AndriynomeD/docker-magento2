@@ -9,6 +9,10 @@
 !/src
 
 /composer.env
+/config.json
+/global.env
+/docker-compose.yml
+
 /containers/php/*
 !/containers/php/.gitkeep
 /mysql_volumes/*

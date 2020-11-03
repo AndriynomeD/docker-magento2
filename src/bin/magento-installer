@@ -61,6 +61,10 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         INSTALL_COMMAND="$INSTALL_COMMAND --backend-frontname=$M2SETUP_BACKEND_FRONTNAME"
     fi
 
+    if [ "$(printf '%s\n' "2.4.0" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.4.0" ]; then
+        INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_ELASTIC_SETTINGS"
+    fi
+
     if [ "$M2SETUP_USE_SAMPLE_DATA" = "true" ]; then
 
       $MAGENTO_COMMAND sampledata:deploy

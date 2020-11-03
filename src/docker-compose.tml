@@ -106,6 +106,7 @@ services:
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
       - M2SETUP_VERSION=<?php echo $M2SETUP_VERSION . PHP_EOL ?>
+      - M2SETUP_ELASTIC_SETTINGS=<?php echo $M2SETUP_ELASTIC_SETTINGS . PHP_EOL ?>
       - M2SETUP_USE_SAMPLE_DATA=<?php echo $M2SETUP_USE_SAMPLE_DATA . PHP_EOL ?>
     networks:
       - default

@@ -29,7 +29,8 @@ VOLUME /root/.composer/cache
 ADD etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
 
 # Get composer installed to /usr/local/bin/composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+<?php $composerVersion = ($composerVersion == 'latest' || $composerVersion == '') ? '' : '--version=' . $composerVersion; ?>
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer <?= $composerVersion; ?>
 
 # Install n98-magerun2.phar and move to /usr/local/bin/
 RUN curl -O https://files.magerun.net/n98-magerun2.phar && chmod +x ./n98-magerun2.phar && mv ./n98-magerun2.phar /usr/local/bin/

@@ -78,7 +78,9 @@ class Builder2
                     $variables["version"] = $config["version"];
                     $variables["flavour"] = $config["flavour"];
                     $variables["imageSpecificPhpExtensions"] = $config["phpExtensions"];
+                    $variables["flavourSpecificPackages"] = array_key_exists("flavourPackages", $config) ? $config["flavourPackages"] : [];
                     $variables["xdebugVersion"] = $config["xdebugVersion"];
+                    $variables["composerVersion"] = array_key_exists("composerVersion", $config) ? $config["composerVersion"]: '1.10.17';
 
                     // Determine whether we should load with the template renderer, or whether we should straight up
                     // just load the file from disk.
@@ -149,7 +151,7 @@ class Builder2
         
         foreach ($potential_file_names as $potential_file_name) {
             $path = $this->template_dir . DIRECTORY_SEPARATOR . $potential_file_name;
-            
+
             if (file_exists($path) && is_readable($path)) {
                 return $path;
             }

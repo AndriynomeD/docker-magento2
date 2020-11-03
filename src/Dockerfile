@@ -15,7 +15,7 @@ MAINTAINER Nick Jones <nick@nicksays.co.uk>
         'libxslt1-dev',
         'libzip-dev',
         'sudo'
-    ], $imageSpecificPackages ?? [])
+    ], $flavourSpecificPackages ?? [], $imageSpecificPackages ?? [])
 ?>
 
 # Install dependencies
@@ -26,7 +26,11 @@ RUN apt-get update \
 
 # Configure the gd library
 RUN docker-php-ext-configure \
+<?php if (version_compare($version, '7.4', '>=')): ?>
+  gd --prefix=/usr --with-freetype --with-jpeg
+<?php else: ?>
   gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
+<?php endif; ?>
 
 # Install required PHP extensions
 <?php $phpExtensions = array_merge([
