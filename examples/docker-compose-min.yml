@@ -26,7 +26,7 @@ services:
   fpm:
     hostname: fpm.magento2.docker
     build:
-      context: containers/php/7.2-fpm/
+      context: containers/php/7.4-fpm/
     ports:
       - 9000
     links:
@@ -61,7 +61,7 @@ services:
   cli:
     hostname: cli.magento2.docker
     build:
-      context: containers/php/7.2-cli/
+      context: containers/php/7.4-cli/
     links:
       - db
     external_links:
@@ -82,12 +82,13 @@ services:
       - M2SETUP_BASE_URL=http://magento2.docker/
       # - M2SETUP_SECURE_BASE_URL=https://magento2.docker/
       - M2SETUP_BACKEND_FRONTNAME=admin
-      - M2SETUP_ADMIN_FIRSTNAME=Admin
-      - M2SETUP_ADMIN_LASTNAME=User
+      - M2SETUP_ADMIN_FIRSTNAME=AdminFirstName
+      - M2SETUP_ADMIN_LASTNAME=AdminLastName
       - M2SETUP_ADMIN_EMAIL=dummy@gmail.com
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
-      - M2SETUP_VERSION=2.3.*
+      - M2SETUP_VERSION=2.4.*
+      - M2SETUP_ELASTIC_SETTINGS=--search-engine=elasticsearch7 --elasticsearch-host=elasticsearch --elasticsearch-port=9200 --elasticsearch-index-prefix=magento241sample
       - M2SETUP_USE_SAMPLE_DATA=true
     networks:
       - default
