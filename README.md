@@ -35,6 +35,8 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
             "M2SETUP_SECURE_BASE_URL": "https://{{main_domain}}/"
             "M2SETUP_DB_NAME": {{database_name}}
             "M2SETUP_PHP": "7.2"
+            "M2SETUP_ELASTIC_SETTINGS": {{update elastic settings}} # magento 2.4.0+ used elastic by default
+            "M2SETUP_ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
     
             {{project_name}} - example: someproject.site
             {{all_site_domain}} -  see `Single-store` or `Multi-store` section
