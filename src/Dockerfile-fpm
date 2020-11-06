@@ -1,6 +1,6 @@
 <?php include "Dockerfile"; ?>
 
-ENV MAGENTO_RUN_MODE developer
+#ENV MAGENTO_RUN_MODE developer
 ENV UPLOAD_MAX_FILESIZE 64M
 
 ADD etc/php-fpm.ini /usr/local/etc/php/conf.d/zz-magento.ini
