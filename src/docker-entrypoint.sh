@@ -36,9 +36,15 @@ chown www-data:www-data $MAGENTO_ROOT
 CRON_LOG=/var/log/cron.log
 
 # Setup Magento cron
-echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" > /etc/cron.d/magento
-echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/update/cron.php >> ${MAGENTO_ROOT}/var/log/update.cron.log" >> /etc/cron.d/magento
-echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento setup:cron:run >> ${MAGENTO_ROOT}/var/log/setup.cron.log" >> /etc/cron.d/magento
+echo "#~ MAGENTO START c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
+if [ "$(printf '%s\n' "2.4.0" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.4.0" ]; then
+  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" > /etc/cron.d/magento
+else
+  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" > /etc/cron.d/magento
+  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/update/cron.php >> ${MAGENTO_ROOT}/var/log/update.cron.log" >> /etc/cron.d/magento
+  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento setup:cron:run >> ${MAGENTO_ROOT}/var/log/setup.cron.log" >> /etc/cron.d/magento
+fi
+echo "#~ MAGENTO END c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
 
 # Get rsyslog running for cron output
 touch $CRON_LOG
