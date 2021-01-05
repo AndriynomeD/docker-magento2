@@ -5,7 +5,7 @@
         "M2SETUP_BASE_URL": "http://magento2.docker/",
         "M2SETUP_SECURE_BASE_URL": "https://magento2.docker/",
         "M2SETUP_DB_NAME": "magento2_database",
-        "M2SETUP_ELASTIC_SETTINGS": "--search-engine=elasticsearch7 --elasticsearch-host=elasticsearch --elasticsearch-port=9200 --elasticsearch-index-prefix=magento2docker",
+        "M2SETUP_ELASTIC_SETTINGS": "--elasticsearch-index-prefix=magento2docker --search-engine=elasticsearch7 --elasticsearch-host=elasticsearch --elasticsearch-port=9200",
         "M2SETUP_PHP": "7.4",
         "M2SETUP_VERSION": "2.4.*",
         "M2SETUP_INSTALL_DB": "true",
