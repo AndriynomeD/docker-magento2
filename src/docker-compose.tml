@@ -126,6 +126,8 @@ services:
       - ENABLE_SENDMAIL=false
     env_file:
       - ./global.env
+    environment:
+      - M2SETUP_VERSION=<?php echo $M2SETUP_VERSION . PHP_EOL ?>
     volumes_from:
       - appdata
     networks:
