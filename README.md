@@ -97,7 +97,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 
 ### Single-store
 
-1) `docker-compose-config.json` params:
+1) `config.json` params:
     1) {{all_site_domain}} same as {{main_domain}} (example: someproject.site)
 2) Add all you're site domain to `/etc/hosts` file:
     ```
@@ -119,25 +119,21 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 
 ### Multi-store
 Example: we have 3 store/website: someproject.site, someproject-vip.site, someproject-retail.site
-1) `docker-compose-config.json` params:
+1) `config.json` params:
     1) {{all_site_domain}} - comma separated all site domains (example: `someproject.site,someproject-vip.site,someproject-retail.site`)
     2) {{main_domain}} - So you should choose one domain main (example: we choose `someproject.site` like a {{main_domain}})
 2) In folder `{{root_directory}}/nginx/etc/multi_vhost/` create one/multiple own config file(s) for multi-store. Use file `example_vhost.conf` as example.
-3) Add all you're site domain to `/etc/hosts` file:
+3) Add space separated all you're site domain to `/etc/hosts` file:
     ```
     # multi-store {{unique project name or main_domain or unique number}} (docker):
-    127.0.0.1 {{main_domain}}
-    127.0.0.1 {{additional_domain_1}}
-    ...
-    127.0.0.1 {{additional_domain_N}}
+    127.0.0.1 {{main_domain}} {{additional_domain_1}} ... {{additional_domain_N}}
     # end multi-store {{unique project name or number}} (docker)
     ```
     Example:
     ```
     # multi-store 9 (docker)
-    127.0.0.1 someproject.site
-    127.0.0.1 someproject-vip.site
-    127.0.0.1 someproject-retail.site
+    127.0.0.1 someproject.site someproject-vip.site someproject-retail.site
+    127.0.0.1 someanotherproject2.site someanotherproject2-vip.site someanotherproject2-retail.site
     # end multi-store 9 (docker)
     ```
 
