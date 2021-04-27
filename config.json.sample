@@ -113,7 +113,7 @@
             "flavourPackages": [],
             "phpExtensions": ["mcrypt"],
             "composerVersion": "1.10.17",
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.1-fpm": {
             "version": "7.1",
@@ -131,7 +131,7 @@
             },
             "flavourPackages": [],
             "phpExtensions": ["mcrypt"],
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.2-cli": {
             "version": "7.2",
@@ -171,7 +171,7 @@
             "flavourPackages": [],
             "phpExtensions": [],
             "composerVersion": "1.10.17",
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.2-fpm": {
             "version": "7.2",
@@ -189,7 +189,7 @@
             },
             "flavourPackages": [],
             "phpExtensions": [],
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.3-cli": {
             "version": "7.3",
@@ -229,7 +229,7 @@
             "flavourPackages": [],
             "phpExtensions": [],
             "composerVersion": "1.10.17",
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.3-fpm": {
             "version": "7.3",
@@ -247,7 +247,7 @@
             },
             "flavourPackages": [],
             "phpExtensions": [],
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.4-cli": {
             "version": "7.4",
@@ -287,7 +287,7 @@
             "flavourPackages": ["libonig-dev"],
             "phpExtensions": [],
             "composerVersion": "1.10.17",
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         },
         "7.4-fpm": {
             "version": "7.4",
@@ -305,7 +305,7 @@
             },
             "flavourPackages": ["libonig-dev"],
             "phpExtensions": [],
-            "xdebugVersion": "latest"
+            "xdebugVersion": "2.9.8"
         }
     }
 }

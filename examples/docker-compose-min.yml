@@ -88,7 +88,7 @@ services:
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
       - M2SETUP_VERSION=2.4.*
-      - M2SETUP_ELASTIC_SETTINGS=--search-engine=elasticsearch7 --elasticsearch-host=elasticsearch --elasticsearch-port=9200 --elasticsearch-index-prefix=magento241sample
+      - M2SETUP_ELASTIC_SETTINGS=--search-engine=elasticsearch7 --elasticsearch-host=elasticsearch --elasticsearch-port=9200 --elasticsearch-index-prefix=magento242sample
       - M2SETUP_USE_SAMPLE_DATA=true
     networks:
       - default

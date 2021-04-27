@@ -48,8 +48,8 @@ echo "#~ MAGENTO END c5f9e5ed71cceaabc4d4fd9b3e827a2b" >> /etc/cron.d/magento
 
 # Get rsyslog running for cron output
 touch $CRON_LOG
-echo "cron.* $CRON_LOG" > /etc/rsyslog.d/cron.conf
-service rsyslog start
+#echo "cron.* $CRON_LOG" > /etc/rsyslog.d/cron.conf
+#service rsyslog start
 
 # host registration for use in the debugger configuration (remote_host for cli)
 HOST_DOMAIN="host.docker.internal"
