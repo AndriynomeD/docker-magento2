@@ -322,6 +322,13 @@ Example of fix permission problem inside cli-container:
     $ cd /var/www/ && sudo chown -R www-data:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
 
+### TODO
+1. Implement https functional.
+2. Implement configuration for Magento PWA.
+3. Implement internal elasticsearch service.
+4. Implement gulp for cli.
+5. Implement bash scripts for generate ssl certificate, set default config to env.php
+
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
 [ico-downloads]: https://img.shields.io/docker/pulls/meanbee/magento2-php.svg?style=flat-square
