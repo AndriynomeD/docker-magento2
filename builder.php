@@ -85,6 +85,7 @@ class ConfigBuilder
             'imagick' => false,
             'calendar' => false,
             'ioncube' => false,
+            'grunt' => false,
             'libsodiumfix' => false
         ];
         $defaultFileVariables = [

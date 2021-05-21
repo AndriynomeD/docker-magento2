@@ -9,11 +9,11 @@ Also this docker-compose services required [nginx-proxy][nginx-proxy]
 For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html  
 Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/AndriynomeD/0d61773efef2408b3785f2f91aceae12)
 
-### Usage
+### Usage 
 
-1) Install [nginx-proxy][nginx-proxy]
+1) Install & Configure [nginx-proxy][nginx-proxy]
 
-2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`.  If need clone existing repo with magento into this folder.
+2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`.
 
 3) Prepare all config files:
     1) Fill `composer.env`, `global.env` with you data. 
@@ -23,20 +23,21 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
         COMPOSER_MAGENTO_PASSWORD={{repo.magento.com_password}}
         ``` 
         P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`
-    2) Create renamed copy of following files in your Magento `{{root_directory}}`:
-        1) config.json.sample to config.json. 
-        2) Remove not needed block of php versions from `php-containers` section.
-        3) Fill `docker-compose` section with you data. If `varnish`/`cron` not needed set it to false.
-            `docker-compose` section params:
+    2) Create renamed copy of following files in your `{{root_directory}}`:
+        1) config.json.sample to config.json.         
+        2) Remove not needed block of php versions from `php-containers` section. `grunt` can be available only under cli.
+        3) Update sections with you data (read 'Single-store', 'Multi-store', 'Grunt' sections first):
             ```
-            "M2SETUP_PROJECT": {{project_name}}
-            "M2SETUP_VIRTUAL_HOST": {{all_site_domain}} 
-            "M2SETUP_BASE_URL": "http://{{main_domain}}/"
-            "M2SETUP_SECURE_BASE_URL": "https://{{main_domain}}/"
-            "M2SETUP_DB_NAME": {{database_name}}
-            "M2SETUP_PHP": "7.2"
-            "M2SETUP_ELASTIC_SETTINGS": {{update elastic settings}} # magento 2.4.0+ used elastic by default
-            "M2SETUP_ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
+            "M2_PROJECT": {{project_name}}
+            "M2_VIRTUAL_HOSTS": {{all_site_domain}} 
+            "M2_DB_NAME": {{database_name}}
+            "PHP_VERSION": - php version
+            "M2_INSTALL_DEMO" - section need only for install magento from scratch
+                "BASE_URL": "http://{{main_domain}}/"
+                "SECURE_BASE_URL": "https://{{main_domain}}/"
+                "ELASTICSEARCH_ENABLED" - can disbaled only for < 2.4.0 (magento 2.4.0+ used elastic by default)
+                "ELASTICSEARCH_SETTINGS" - update index-prefix (can be {{project_name}} without TLD
+                "ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
     
             {{project_name}} - example: someproject.site
             {{all_site_domain}} -  see `Single-store` or `Multi-store` section
@@ -47,7 +48,6 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 4) Build php containers & `docker-compose.yml`:
     ```shell
         $ php builder.php
-        $ php docker-compose-builder.php
     ```
     In `examples` folder you can see example of generated `docker-compose.yml`.
 
@@ -55,14 +55,15 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     ```shell
         $ docker-compose up
     ```
-    P.S. Instead of `php bin/magento` use `magento-command`:
-    ```shell
-        $ docker-compose run --rm cli magento-command deploy:mode:show 
-    ```
-    NOTE: Please set `--rm` to remove a created container after run.  
-    Or inside container run `php bin/magento` from user `www-data` (for example see `src/bin/magento-command`)
+    P.S. Instead of `php bin/magento` use `sudo -uwww-data php bin/magento`:
+    NOTE: Please set `--rm` to remove a created container after run.
 
-6) Import database:
+6) Clone existing repo with magento into this folder or run next command for install magento from scratch:
+    ```shell
+        $ docker-compose run --rm cli magento-installer
+    ```
+
+7) If you clone  existing repo import database:
     1) Copy database dump into `{{magento_root}}`.
     2) Go to cli-container & import database dump:
     ```shell
@@ -93,8 +94,6 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
         $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
     ```
 
-
-
 ### Single-store
 
 1) `config.json` params:
@@ -110,10 +109,10 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     Example:
     ```
     # single-store sites (docker):
-    127.0.0.1 someanotherproject1.site
-    127.0.0.1 someanotherproject2.site
+    127.0.0.1 some_anotherproject1.site
+    127.0.0.1 some_anotherproject2.site
     127.0.0.1 someproject.site
-    127.0.0.1 someanotherproject3.site
+    127.0.0.1 some_anotherproject3.site
     # end single-store sites (docker)
     ```
 
@@ -133,7 +132,7 @@ Example: we have 3 store/website: someproject.site, someproject-vip.site, somepr
     ```
     # multi-store 9 (docker)
     127.0.0.1 someproject.site someproject-vip.site someproject-retail.site
-    127.0.0.1 someanotherproject2.site someanotherproject2-vip.site someanotherproject2-retail.site
+    127.0.0.1 some_anotherproject2.site some_anotherproject2-vip.site some_anotherproject2-retail.site
     # end multi-store 9 (docker)
     ```
 
@@ -175,7 +174,10 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
 ### PphStorm
 
-1) #### Xdebug config:
+1) #### PphStorm Magento plugin:
+    1. Install & Enable official Magento plugin for PphStorm.
+   
+2) #### Xdebug config:
 
     1. `Add Configuration` or `Edit Configuration`
     2. Add `PHP remote debug`
@@ -200,17 +202,6 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
         exit
     ```
     
-    
-2) #### URN config:
-   1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
-   2. Go to cli-container & generate urn:
-       ```shell
-           $ docker-compose run --rm cli bash
-           $ cd /var/www/magento/
-           $ sudo -uwww-data php bin/magento dev:urn-catalog:generate .idea/misc.xml
-       ```
-   3. Move file `{{magento_root}}/.idea/misc.xml` to `{{root_directory}}/.idea/misc.xml`.
-   4. Replace in file `{{magento_root}}/.idea/misc.xml` string `/var/www/magento` or `$PROJECT_DIR$` by `$PROJECT_DIR$/magento` (all path should start with `$PROJECT_DIR$/magento`).
 
 3) #### [Magento Coding Standard][magento-coding-standard]
     1. Install required packages:
@@ -218,7 +209,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             ```shell
                 composer require --dev magento/magento-coding-standard
             ```
-        2. For Commerce Cloud:
+       2. ~~For Commerce Cloud:~~ 
              ```shell
                 composer require --dev magento/magento-coding-standard phpmd/phpmd:@stable squizlabs/php_codesniffer:~3.4.0 --sort-packages
              ```
@@ -330,10 +321,6 @@ Example of fix permission problem inside cli-container:
 ```shell
     $ cd /var/www/ && sudo chown -R www-data:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
-Also:
-1. mageconfigsync diff function not work (but load/save work)
-2. docker-compose run --rm cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
-
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square

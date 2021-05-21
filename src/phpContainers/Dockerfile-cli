@@ -20,6 +20,7 @@ switch ($databaseType) {
 
 include "Dockerfile";
 ?>
+<?php if (array_key_exists('grunt', $specificPackages) && $specificPackages['grunt'] !== false): ?>
 ###########################################################################
 # Install Grunt
 ###########################################################################
@@ -30,6 +31,7 @@ RUN apt-get update \
     && apt-get install -y nodejs \
     && npm install -g grunt-cli
 
+<?php endif; ?>
 ###########################################################################
 # Configuring...
 ###########################################################################
