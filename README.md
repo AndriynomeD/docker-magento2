@@ -178,9 +178,10 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     1. Install & Enable official Magento plugin for PphStorm.
    
 2) #### Xdebug config:
-
-    1. `Add Configuration` or `Edit Configuration`
-    2. Add `PHP remote debug`
+    
+    1. Enabled Xdebug in global.env file (PHP_ENABLE_XDEBUG=true).
+    2. `Add Configuration` or `Edit Configuration`
+    3. Add `PHP remote debug`
         ```shell
         Name: Configuration
         IDE key(s): PHPSTORM
@@ -192,7 +193,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             Use path mapping: Yes
                 map {{magento_root}} in left column to path `/var/www/magento` inside container
         ```
-    3. Apply this config
+    4. Apply this config
     
     For cli debug:
     ```shell
