@@ -1,0 +1,65 @@
+<?php
+$flavourPackages = [
+    'cron',
+    'rsyslog',
+    'iproute2'
+];
+
+switch ($databaseType) {
+    case 'mysql':
+    case 'percona':
+        $flavourPackages[] = version_compare($databaseVersion, '7.0', '<=')
+            ? 'mysql-client'
+            : 'default-mysql-client';
+        break;
+    case 'mariadb':
+    default:
+        $flavourPackages[] = 'mariadb-client';
+        break;
+}
+
+include "Dockerfile";
+?>
+###########################################################################
+# Install Grunt
+###########################################################################
+
+RUN apt-get update \
+    && apt-get install -y \
+    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g grunt-cli
+
+###########################################################################
+# Configuring...
+###########################################################################
+
+ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_GITHUB_TOKEN ""
+ENV COMPOSER_MAGENTO_USERNAME ""
+ENV COMPOSER_MAGENTO_PASSWORD ""
+ENV COMPOSER_BITBUCKET_KEY ""
+ENV COMPOSER_BITBUCKET_SECRET ""
+
+VOLUME /root/.composer/cache
+
+ADD etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
+
+###########################################################################
+# Get composer installed to /usr/local/bin/composer
+###########################################################################
+<?php $composerVersion = ($composerVersion === 'latest' || $composerVersion == '') ? '' : '--version=' . $composerVersion; ?>
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer <?= $composerVersion; ?>
+
+###########################################################################
+# Final Configuring
+###########################################################################
+
+ADD bin/* /usr/local/bin/
+
+RUN ["chmod", "+x", "/usr/local/bin/magento-installer"]
+RUN ["chmod", "+x", "/usr/local/bin/run-cron"]
+
+WORKDIR $MAGENTO_ROOT
+
+CMD ["bash"]
