@@ -37,6 +37,9 @@
                 "docker-entrypoint.sh": {
                     "executable": true
                 },
+                "bin/magento-command": {
+                    "executable": true
+                },
                 "bin/magento-installer": {
                     "executable": true
                 },
@@ -88,6 +91,9 @@
             "files": {
                 "Dockerfile": {},
                 "docker-entrypoint.sh": {
+                    "executable": true
+                },
+                "bin/magento-command": {
                     "executable": true
                 },
                 "bin/magento-installer": {
@@ -143,6 +149,9 @@
                 "docker-entrypoint.sh": {
                     "executable": true
                 },
+                "bin/magento-command": {
+                    "executable": true
+                },
                 "bin/magento-installer": {
                     "executable": true
                 },
@@ -196,6 +205,9 @@
                 "docker-entrypoint.sh": {
                     "executable": true
                 },
+                "bin/magento-command": {
+                    "executable": true
+                },
                 "bin/magento-installer": {
                     "executable": true
                 },
@@ -247,6 +259,9 @@
             "files": {
                 "Dockerfile": {},
                 "docker-entrypoint.sh": {
+                    "executable": true
+                },
+                "bin/magento-command": {
                     "executable": true
                 },
                 "bin/magento-installer": {
