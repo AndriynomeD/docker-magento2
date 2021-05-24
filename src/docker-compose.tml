@@ -70,6 +70,9 @@ services:
 <?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
       - rabbitmq
 <?php endif; ?>
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+      - elasticsearch
+<?php endif; ?>
 <?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
     external_links:
       - elasticsearch
@@ -123,6 +126,9 @@ services:
 <?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
       - rabbitmq
 <?php endif; ?>
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+      - elasticsearch
+<?php endif; ?>
 <?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
     external_links:
       - elasticsearch
@@ -169,6 +175,15 @@ services:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
     links:
       - db
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['redis']) && $DOCKER_ADDITIONAL_SERVICES['redis']): ?>
+      - redis
+<?php endif; ?>
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
+      - rabbitmq
+<?php endif; ?>
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+      - elasticsearch
+<?php endif; ?>
 <?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
     external_links:
       - elasticsearch
@@ -188,6 +203,34 @@ services:
 <?php endif; ?>
 <?php endif; ?>
 
+<?php
+//###########################################################################
+//# CRON
+//###########################################################################
+?>
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+  elasticsearch:
+    hostname: elasticsearch.<?= $M2_PROJECT . PHP_EOL ?>
+    build:
+      context: containers/elasticsearch/
+    logging:
+      driver: none
+    ports:
+      - 9200
+    volumes_from:
+      - esdata
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1012m -Xmx1012m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+<?php endif; ?>
 <?php
 //###########################################################################
 //# Redis
@@ -236,6 +279,13 @@ services:
     image: tianon/true
     volumes:
       - ./mysql_volumes/mariadb10:/var/lib/mysql
+
+<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+  esdata:
+    image: tianon/true
+    volumes:
+      - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
+<?php endif; ?>
 
 networks:
 <?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>

@@ -18,3 +18,5 @@
 !/mysql_volumes/mariadb10/
 /mysql_volumes/mariadb10/*
 !/mysql_volumes/mariadb10/.gitkeep
+/volumes/elasticsearch/*
+!/volumes/elasticsearch/.gitkeep
