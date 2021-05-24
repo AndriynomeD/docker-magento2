@@ -21,9 +21,7 @@ services:
       - web
     networks:
       - default
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
       - nginx-proxy
-<?php endif; ?>
 
 <?php endif; ?>
 <?php
@@ -51,9 +49,7 @@ services:
 <?php endif; ?>
     networks:
       - default
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
       - nginx-proxy
-<?php endif; ?>
 
 <?php
 //###########################################################################
