@@ -34,7 +34,6 @@ RUN apt-get update \
 ###########################################################################
 <?php $imagePhpExtensions = array_merge([
   'dom',
-  'gd',
   'intl',
   'mbstring',
   'pdo_mysql',

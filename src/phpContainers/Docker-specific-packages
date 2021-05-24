@@ -11,6 +11,8 @@ RUN docker-php-ext-configure \
   gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
 <?php endif; ?>
 
+RUN docker-php-ext-install gd
+
 <?php endif; ?>
 <?php /** imagick can be false|true|{imagick_version} */ ?>
 <?php if (array_key_exists('imagick', $specificPackages) && $specificPackages['imagick'] !== false): ?>
