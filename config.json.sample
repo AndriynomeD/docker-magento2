@@ -22,6 +22,7 @@
         },
         "DOCKER_ADDITIONAL_SERVICES": {
             "external_elasticsearch": true,
+            "internal_elasticsearch": false,
             "varnish": true,
             "cron": true,
             "redis": false,
