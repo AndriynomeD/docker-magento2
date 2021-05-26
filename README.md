@@ -35,10 +35,10 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
             "M2_INSTALL_DEMO" - section need only for install magento from scratch
                 "BASE_URL": "http://{{main_domain}}/"
                 "SECURE_BASE_URL": "https://{{main_domain}}/"
-                "ELASTICSEARCH_ENABLED" - can disbaled only for < 2.4.0 (magento 2.4.0+ used elastic by default)
-                "ELASTICSEARCH_SETTINGS" - update index-prefix (can be {{project_name}} without TLD
                 "ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
-    
+            "M2_SETTINGS" - section with magento additional services settings (also used by magento-instaler scripts)
+                "ELASTICSEARCH_SETTINGS" - update index-prefix (can be {{project_name}} without TLD
+           
             {{project_name}} - example: someproject.site
             {{all_site_domain}} -  see `Single-store` or `Multi-store` section
             {{main_domain}} - main site domain. see `Single-store` or `Multi-store` section
@@ -324,11 +324,14 @@ Example of fix permission problem inside cli-container:
 ```
 
 ### TODO
-1. Implement https functional.
-2. Implement configuration for Magento PWA.
-3. Implement internal elasticsearch service.
-4. Implement gulp for cli.
-5. Implement bash scripts for generate ssl certificate, set default config to env.php
+- [x] Add additional service configuration (redis, rabbitmq)
+- [ ] Implement https functional. 
+- [ ] Implement configuration for Magento PWA.
+- [x] Implement internal elasticsearch service.
+- [ ] Implement gulp for cli.
+- [ ] Implement bash scripts for generate ssl certificate
+- [x] Implement bash scripts for set/update default services configs to env.php
+- [ ] Implement LiveReload
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square

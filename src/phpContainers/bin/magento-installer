@@ -2,6 +2,35 @@
 
 [ "$DEBUG" = "true" ] && set -x
 
+#from https://stackoverflow.com/a/48487783
+function version_compare() # $1-a $2-op $3-$b
+# Compare a and b as version strings. Rules:
+# R1: a and b : dot-separated sequence of items. Items are numeric. The last item can optionally end with letters, i.e., 2.5 or 2.5a.
+# R2: Zeros are automatically inserted to compare the same number of items, i.e., 1.0 < 1.0.1 means 1.0.0 < 1.0.1 => yes.
+# R3: op can be '=' '==' '!=' '<' '<=' '>' '>=' (lexicographic).
+# R4: Unrestricted number of digits of any item, i.e., 3.0003 > 3.0000004.
+# R5: Unrestricted number of items.
+{
+  local a=$1 op=$2 b=$3 al=${1##*.} bl=${3##*.}
+  while [[ $al =~ ^[[:digit:]] ]]; do al=${al:1}; done
+  while [[ $bl =~ ^[[:digit:]] ]]; do bl=${bl:1}; done
+  local ai=${a%$al} bi=${b%$bl}
+
+  local ap=${ai//[[:digit:]]} bp=${bi//[[:digit:]]}
+  ap=${ap//./.0} bp=${bp//./.0}
+
+  local w=1 fmt=$a.$b x IFS=.
+  for x in $fmt; do [ ${#x} -gt $w ] && w=${#x}; done
+  fmt=${*//[^.]}; fmt=${fmt//./%${w}s}
+  printf -v a $fmt $ai$bp; printf -v a "%s-%${w}s" $a $al
+  printf -v b $fmt $bi$ap; printf -v b "%s-%${w}s" $b $bl
+
+  case $op in
+    '<='|'>=' ) [ "$a" ${op:0:1} "$b" ] || [ "$a" = "$b" ] ;;
+    * )         [ "$a" $op "$b" ] ;;
+  esac
+}
+
 AUTH_JSON_FILE="$(composer -g config data-dir 2>/dev/null)/auth.json"
 
 if [ -f "$AUTH_JSON_FILE" ]; then
@@ -49,7 +78,8 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         --admin-lastname=$M2SETUP_ADMIN_LASTNAME \
         --admin-email=$M2SETUP_ADMIN_EMAIL \
         --admin-user=$M2SETUP_ADMIN_USER \
-        --admin-password=$M2SETUP_ADMIN_PASSWORD"
+        --admin-password=$M2SETUP_ADMIN_PASSWORD \
+        --document-root-is-pub=true"
 
     # Use a separate value for secure base URL, if the variable is set
     if [ -n "$M2SETUP_SECURE_BASE_URL" ]; then
@@ -61,8 +91,20 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         INSTALL_COMMAND="$INSTALL_COMMAND --backend-frontname=$M2SETUP_BACKEND_FRONTNAME"
     fi
 
-    if [ "$(printf '%s\n' "2.4.0" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.4.0" ]; then
-        INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_ELASTIC_SETTINGS"
+    if version_compare $M2SETUP_VERSION '>=' 2.4.0; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2_ELASTIC_SETTINGS"
+    fi
+
+    if version_compare $M2SETUP_VERSION '>=' 2.3.0; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_AMQ_SETTINGS"
+    fi
+
+    if [ -n "$M2SETUP_REDIS_SETTINGS" ]; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_REDIS_SETTINGS"
+    fi
+
+    if [ -n "$M2_VARNISH_SETTINGS" ]; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2_VARNISH_SETTINGS"
     fi
 
     if [ "$M2SETUP_USE_SAMPLE_DATA" = "true" ]; then
@@ -74,8 +116,27 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
     fi
 
     $INSTALL_COMMAND
+    $MAGENTO_COMMAND deploy:mode:set developer
     $MAGENTO_COMMAND index:reindex
     $MAGENTO_COMMAND setup:static-content:deploy -f
+
+    echo "Creates or modifies the system configuration"
+
+    UPDATE_SYSTEM_CONFIG_COMMAND="$MAGENTO_COMMAND config:set --lock-env"
+
+    $UPDATE_SYSTEM_CONFIG_COMMAND web/unsecure/base_url $M2SETUP_BASE_URL
+    if [ -n "$M2SETUP_SECURE_BASE_URL" ]; then
+        $UPDATE_SYSTEM_CONFIG_COMMAND web/secure/base_url $M2SETUP_SECURE_BASE_URL
+    else
+        $UPDATE_SYSTEM_CONFIG_COMMAND web/secure/base_url $M2SETUP_BASE_URL
+    fi
+
+    if [ -n "$M2_VARNISH_SETTINGS" ]; then
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/caching_application 2
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/backend_host web
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/backend_port 80
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/access_list web
+    fi
 
 else
     echo "Skipping DB installation"

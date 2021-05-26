@@ -13,20 +13,20 @@ class ConfigBuilder
     const CONFIG_FILE = __DIR__ . DIRECTORY_SEPARATOR . self::CONFIG_FILE_NAME;
     const TEMPLATE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'src';
     const GENERAL_CONFIG_KEY = 'general-config';
-    
+
     /* Php containers consts */
     const PHP_CONTAINERS_CONFIG_KEY = 'php-containers';
     const PHP_CONTAINERS_TEMPLATE_DIR = 'phpContainers';
     const PHP_CONTAINERS_DESTINATION_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers' . DIRECTORY_SEPARATOR . 'php';
     const DEFAULT_COMPOSERVERSION = '1.10.17';
-    
+
     /* docker-compose consts */
     const DOCKER_COMPOSE_TEMPLATE_FILE = 'docker-compose.tml';
     const DOCKER_COMPOSE_DESTINATION_FILE = __DIR__ . DIRECTORY_SEPARATOR . 'docker-compose.yml';
-    
+
     const DEFAULT_EXECUTABLE_PERMISSIONS = 0755;
     const DEFAULT_VERBOSE_LEVEL = 1;
-    
+
     /**
      * Build targets and their configuration.
      *
@@ -40,7 +40,7 @@ class ConfigBuilder
      * @var int
      */
     protected $executablePermissions;
-    
+
     /**
      * Verbosity level.
      *
@@ -52,7 +52,7 @@ class ConfigBuilder
     {
         $this->executablePermissions = $options['executable_file_permissions'] ?? static::DEFAULT_EXECUTABLE_PERMISSIONS;
         $this->verboseLevel = $options['verbose'] ?? static::DEFAULT_VERBOSE_LEVEL;
-        
+
         $this->loadConfig(static::CONFIG_FILE);
     }
 
@@ -64,7 +64,7 @@ class ConfigBuilder
         $this->buildPhpContainers();
         $this->buildDockerCompose();
     }
-    
+
     /**
      * Build the files described in the loaded config.
      */
@@ -143,7 +143,7 @@ class ConfigBuilder
                 );
                 $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
                 $this->writeFile($destinationFile, $contents);
-                
+
                 if ($variables['executable'] ) {
                     $this->verbose(sprintf("\tUpdating permissions on '%s' to '%o'...", $destinationFile, $this->executablePermissions), 2);
                     $this->setFilePermissions($destinationFile, $this->executablePermissions);
@@ -160,8 +160,9 @@ class ConfigBuilder
             'PHP_VERSION' => '7.4',
             'M2_VERSION' => '2.4.*',
             'M2_INSTALL_DEMO' => [],
+            'M2_SETTINGS' => [],
             'DOCKER_DB' => [],
-            'DOCKER_ADDITIONAL_SERVICES' => []
+            'DOCKER_SERVICES' => []
         ];
         $defaultAdditionalServicesConfig = [
             'external_elasticsearch'=> true,
@@ -181,11 +182,18 @@ class ConfigBuilder
         $contents = '';
         if ($templateFile = $this->getTemplateFile($filename, $templateConfig)) {
             $variables = array_merge($defaultDockerComposeConfig, $generalConfig);
-            $variables['DOCKER_ADDITIONAL_SERVICES'] = array_merge($defaultAdditionalServicesConfig, $variables['DOCKER_ADDITIONAL_SERVICES']);
-
+            $variables['DOCKER_SERVICES'] = array_merge($defaultAdditionalServicesConfig, $variables['DOCKER_SERVICES']);
             /** if external elastic enabled disable internal one  */
-            if ($variables['DOCKER_ADDITIONAL_SERVICES']['external_elasticsearch']) {
-                $variables['DOCKER_ADDITIONAL_SERVICES']['internal_elasticsearch']= false;
+            if ($variables['DOCKER_SERVICES']['external_elasticsearch']) {
+                $variables['DOCKER_SERVICES']['internal_elasticsearch'] = false;
+            }
+
+            $variables['ELASTICSEARCH_AVAILABLE'] = $variables['DOCKER_SERVICES']['external_elasticsearch']
+                || $variables['DOCKER_SERVICES']['internal_elasticsearch'];
+            if (!$variables['ELASTICSEARCH_AVAILABLE']
+                && version_compare(str_replace('*', 9, $variables['M2_VERSION']), '2.4.0', '>=')
+            ) {
+                throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' ."\033[0m");
             }
 
             $contents = $this->renderTemplate($templateFile, $variables);
@@ -224,10 +232,10 @@ class ConfigBuilder
         }
 
         $this->config = $config;
-        
+
         return $this;
     }
-    
+
     /**
      * Return the template file name for the given file.
      * Example:
@@ -256,10 +264,10 @@ class ConfigBuilder
                 return $path;
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Get the destination for the given file.
      *
@@ -276,7 +284,7 @@ class ConfigBuilder
             $filename,
         ]);
     }
-    
+
     /**
      * Render the given template file using the provided variables and return the resulting output.
      *
@@ -289,14 +297,14 @@ class ConfigBuilder
     {
         extract($variables, EXTR_OVERWRITE);
         ob_start();
-        
+
         include $templateFile;
-        
+
         $output = ob_get_clean();
-        
+
         return $output ?: "";
     }
-    
+
     /**
      * Write the contents to the given file.
      *
@@ -309,7 +317,7 @@ class ConfigBuilder
     protected function writeFile($filename, $contents)
     {
         $directory = dirname($filename);
-        
+
         // If the directory doesn't created then try to create the directory.
         if (!is_dir($directory)) {
             // Create the directory, preventing race conditions if another process creates the directory for us.
@@ -317,14 +325,14 @@ class ConfigBuilder
                 throw new Exception(sprintf("Unable to create directory %s!", $directory));
             }
         }
-        
+
         if (file_put_contents($filename, $contents) === false) {
             throw new Exception(sprintf("Failed to write %s!", $filename));
         }
-        
+
         return $this;
     }
-    
+
     /**
      * Update the permissions on the given file.
      *
@@ -336,10 +344,10 @@ class ConfigBuilder
     protected function setFilePermissions($filename, $permissions = 0644)
     {
         chmod($filename, $permissions);
-        
+
         return $this;
     }
-    
+
     /**
      * Print an informational message to the command line.
      *
@@ -354,7 +362,7 @@ class ConfigBuilder
         if ($level <= $this->verboseLevel) {
             printf("%s%s", $message, $newline ? PHP_EOL : "");
         }
-        
+
         return $this;
     }
 }

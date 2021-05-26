@@ -8,7 +8,7 @@ services:
 //# Varnish
 //###########################################################################
 ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['varnish']) && $DOCKER_ADDITIONAL_SERVICES['varnish']): ?>
+<?php if (isset($DOCKER_SERVICES['varnish']) && $DOCKER_SERVICES['varnish']): ?>
   varnish:
     image: meanbee/magento2-varnish:latest
     environment:
@@ -41,7 +41,7 @@ services:
       - appdata
     env_file:
       - ./global.env
-<?php if (!(isset($DOCKER_ADDITIONAL_SERVICES['varnish']) && $DOCKER_ADDITIONAL_SERVICES['varnish'])): ?>
+<?php if (!(isset($DOCKER_SERVICES['varnish']) && $DOCKER_SERVICES['varnish'])): ?>
     environment:
       - VIRTUAL_HOST=<?= $M2_VIRTUAL_HOSTS . PHP_EOL ?>
       - VIRTUAL_PORT=80
@@ -64,16 +64,16 @@ services:
       - 9000
     links:
       - db
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['redis']) && $DOCKER_ADDITIONAL_SERVICES['redis']): ?>
+<?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
       - redis
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
+<?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
       - rabbitmq
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['internal_elasticsearch']) && $DOCKER_SERVICES['internal_elasticsearch']): ?>
       - elasticsearch
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
     external_links:
       - elasticsearch
 <?php endif; ?>
@@ -83,7 +83,7 @@ services:
       - ./global.env
     networks:
       - default
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
       - elastic-net
 <?php endif; ?>
 
@@ -120,16 +120,16 @@ services:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
     links:
       - db
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['redis']) && $DOCKER_ADDITIONAL_SERVICES['redis']): ?>
+<?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
       - redis
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
+<?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
       - rabbitmq
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['internal_elasticsearch']) && $DOCKER_SERVICES['internal_elasticsearch']): ?>
       - elasticsearch
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
     external_links:
       - elasticsearch
 <?php endif; ?>
@@ -155,11 +155,14 @@ services:
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
       - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>
-      - M2SETUP_ELASTIC_SETTINGS=<?= ($M2_INSTALL_DEMO['ELASTICSEARCH_ENABLED'] ? $M2_INSTALL_DEMO['ELASTICSEARCH_SETTINGS'] : '') . PHP_EOL ?>
-      - M2SETUP_USE_SAMPLE_DATA=<?= $M2_INSTALL_DEMO['USE_SAMPLE_DATA'] . PHP_EOL ?>
+      - M2_USE_SAMPLE_DATA=<?= $M2_INSTALL_DEMO['USE_SAMPLE_DATA'] . PHP_EOL ?>
+      - M2_ELASTIC_SETTINGS=<?= ($ELASTICSEARCH_AVAILABLE ? $M2_SETTINGS['ELASTICSEARCH_SETTINGS'] : '') . PHP_EOL ?>
+      - M2_AMQ_SETTINGS=<?= ($DOCKER_SERVICES['rabbitmq'] ? $M2_SETTINGS['AMQ_SETTINGS'] : '') . PHP_EOL ?>
+      - M2_REDIS_SETTINGS=<?= ($DOCKER_SERVICES['redis'] ? $M2_SETTINGS['REDIS_SETTINGS'] : '') . PHP_EOL ?>
+      - M2_VARNISH_SETTINGS=<?= ($DOCKER_SERVICES['varnish'] ? '$M2_SETTINGS['VARNISH_SETTINGS']' : ''). PHP_EOL ?>
     networks:
       - default
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
       - elastic-net
 <?php endif; ?>
 
@@ -168,23 +171,23 @@ services:
 //# CRON
 //###########################################################################
 ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['cron']) && $DOCKER_ADDITIONAL_SERVICES['cron']): ?>
+<?php if (isset($DOCKER_SERVICES['cron']) && $DOCKER_SERVICES['cron']): ?>
   cron:
     hostname: cron.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
     links:
       - db
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['redis']) && $DOCKER_ADDITIONAL_SERVICES['redis']): ?>
+<?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
       - redis
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
+<?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
       - rabbitmq
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['internal_elasticsearch']) && $DOCKER_SERVICES['internal_elasticsearch']): ?>
       - elasticsearch
 <?php endif; ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
     external_links:
       - elasticsearch
 <?php endif; ?>
@@ -198,7 +201,7 @@ services:
       - appdata
     networks:
       - default
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
       - elastic-net
 <?php endif; ?>
 <?php endif; ?>
@@ -208,7 +211,7 @@ services:
 //# CRON
 //###########################################################################
 ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['internal_elasticsearch']) && $DOCKER_SERVICES['internal_elasticsearch']): ?>
   elasticsearch:
     hostname: elasticsearch.<?= $M2_PROJECT . PHP_EOL ?>
     build:
@@ -236,7 +239,7 @@ services:
 //# Redis
 //###########################################################################
 ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['redis']) && $DOCKER_ADDITIONAL_SERVICES['redis']): ?>
+<?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
   redis:
     hostname: redis.<?= $M2_PROJECT . PHP_EOL ?>
     image: 'redis'
@@ -249,7 +252,7 @@ services:
 //# RabbitMQ
 //###########################################################################
 ?>
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['rabbitmq']) && $DOCKER_ADDITIONAL_SERVICES['rabbitmq']): ?>
+<?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
   rabbitmq:
     hostname: rabbitmq.<?= $M2_PROJECT . PHP_EOL ?>
     image: rabbitmq:3.8.9-management
@@ -280,7 +283,7 @@ services:
     volumes:
       - ./mysql_volumes/mariadb10:/var/lib/mysql
 
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['internal_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['internal_elasticsearch']) && $DOCKER_SERVICES['internal_elasticsearch']): ?>
   esdata:
     image: tianon/true
     volumes:
@@ -288,7 +291,7 @@ services:
 <?php endif; ?>
 
 networks:
-<?php if (isset($DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']) && $DOCKER_ADDITIONAL_SERVICES['external_elasticsearch']): ?>
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
   elastic-net:
     external: true
 <?php endif; ?>
