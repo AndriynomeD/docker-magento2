@@ -159,7 +159,7 @@ services:
       - M2_ELASTIC_SETTINGS=<?= ($ELASTICSEARCH_AVAILABLE ? $M2_SETTINGS['ELASTICSEARCH_SETTINGS'] : '') . PHP_EOL ?>
       - M2_AMQ_SETTINGS=<?= ($DOCKER_SERVICES['rabbitmq'] ? $M2_SETTINGS['AMQ_SETTINGS'] : '') . PHP_EOL ?>
       - M2_REDIS_SETTINGS=<?= ($DOCKER_SERVICES['redis'] ? $M2_SETTINGS['REDIS_SETTINGS'] : '') . PHP_EOL ?>
-      - M2_VARNISH_SETTINGS=<?= ($DOCKER_SERVICES['varnish'] ? '$M2_SETTINGS['VARNISH_SETTINGS']' : ''). PHP_EOL ?>
+      - M2_VARNISH_SETTINGS=<?= ($DOCKER_SERVICES['varnish'] ? $M2_SETTINGS['VARNISH_SETTINGS'] : ''). PHP_EOL ?>
     networks:
       - default
 <?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
