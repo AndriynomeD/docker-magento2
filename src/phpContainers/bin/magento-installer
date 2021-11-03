@@ -78,8 +78,11 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         --admin-lastname=$M2SETUP_ADMIN_LASTNAME \
         --admin-email=$M2SETUP_ADMIN_EMAIL \
         --admin-user=$M2SETUP_ADMIN_USER \
-        --admin-password=$M2SETUP_ADMIN_PASSWORD \
-        --document-root-is-pub=true"
+        --admin-password=$M2SETUP_ADMIN_PASSWORD"
+
+    if version_compare $M2SETUP_VERSION '>=' 2.4.1; then
+        INSTALL_COMMAND="$INSTALL_COMMAND --document-root-is-pub=true"
+    fi
 
     # Use a separate value for secure base URL, if the variable is set
     if [ -n "$M2SETUP_SECURE_BASE_URL" ]; then

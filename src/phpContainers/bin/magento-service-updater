@@ -38,8 +38,11 @@ chown -R www-data:www-data $MAGENTO_ROOT
 
 echo "Creates or modifies the deployment configuration"
 
-UPDATE_DEPLOYMENT_CONFIG_COMMAND="$MAGENTO_COMMAND setup:config:set \
-    --document-root-is-pub=true"
+UPDATE_DEPLOYMENT_CONFIG_COMMAND="$MAGENTO_COMMAND"
+
+if version_compare $M2SETUP_VERSION '>=' 2.4.1; then
+    UPDATE_DEPLOYMENT_CONFIG_COMMAND="$UPDATE_DEPLOYMENT_CONFIG_COMMAND setup:config:set --document-root-is-pub=true"
+fi
 
 if version_compare $M2SETUP_VERSION '>=' 2.3.0; then
     UPDATE_DEPLOYMENT_CONFIG_COMMAND="$UPDATE_DEPLOYMENT_CONFIG_COMMAND $M2SETUP_AMQ_SETTINGS"
