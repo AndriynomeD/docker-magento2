@@ -156,7 +156,7 @@ services:
       - M2SETUP_ADMIN_EMAIL=<?= $M2_INSTALL['ADMIN_EMAIL'] . PHP_EOL ?>
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
-<?= if (isset($M2_INSTALL['CRYPT_KEY']) && $M2_INSTALL['CRYPT_KEY']): ?>
+<?php if (isset($M2_INSTALL['CRYPT_KEY']) && $M2_INSTALL['CRYPT_KEY']): ?>
       - M2SETUP_CRYPT_KEY=<?= $M2_INSTALL['CRYPT_KEY'] . PHP_EOL ?>
 <?php endif; ?>
       - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>

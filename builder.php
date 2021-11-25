@@ -99,22 +99,22 @@ class ConfigBuilder
         $variables['DOCKER_SERVICES'] = array_merge($defaultAdditionalServicesConfig, $variables['DOCKER_SERVICES']);
 
         if ($variables['DOCKER_SERVICES']['external_elasticsearch'] && $variables['DOCKER_SERVICES']['internal_elasticsearch']) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'External & internal elasticsearch cann\'t be enabled at same time' ."\033[0m");
+            throw new Exception( "\033[1;37m\033[0;31m" . 'External & internal elasticsearch cann\'t be enabled at same time' . "\033[0m");
         }
         $variables['ELASTICSEARCH_AVAILABLE'] = $variables['DOCKER_SERVICES']['external_elasticsearch']
             || $variables['DOCKER_SERVICES']['internal_elasticsearch'];
         if (!$variables['ELASTICSEARCH_AVAILABLE']
             && version_compare(str_replace('*', 9, $variables['M2_VERSION']), '2.4.0', '>=')
         ) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' ."\033[0m");
+            throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' . "\033[0m");
         }
 
         if ($generalConfig['DOCKER_SERVICES']['venia']) {
             if ($variables['DOCKER_SERVICES']['varnish']) {
-                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA not need Varnish on Magento backend' ."\033[0m");
+                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA not need Varnish on Magento backend' . "\033[0m");
             }
 //            if (!$variables['NGINX_PROXY_PATH']) {
-//                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA required `NGINX_PROXY_PATH`' ."\033[0m");
+//                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA required `NGINX_PROXY_PATH`' . "\033[0m");
 //            }
             if ($variables['M2_INSTALL']['USE_SAMPLE_DATA']) {
                 $variables['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
@@ -122,7 +122,7 @@ class ConfigBuilder
         }
 
         if ($variables['HTTPS_HOST'] && !$variables['NGINX_PROXY_PATH']) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'Https required `NGINX_PROXY_PATH`' ."\033[0m");
+            throw new Exception( "\033[1;37m\033[0;31m" . 'Https required `NGINX_PROXY_PATH`' . "\033[0m");
         }
 
         return $variables;
@@ -266,8 +266,8 @@ class ConfigBuilder
         }
 
         if ($generalConfig['DOCKER_SERVICES']['venia']) {
-            $this->verbose("Currently for Venia we just installed Venia sample data on install db phase. \n"
-                . "You should setup Venia separately after setup Magento", 1);
+            $this->verbose("\033[1;37m\033[1;33m" . "P.S. Currently for Venia we just installed Venia sample data on install db phase. \n"
+                . "You should setup Venia separately after setup Magento" . "\033[0m", 1);
         }
 
         $destinationFile = self::DOCKER_COMPOSE_DESTINATION_FILE;
