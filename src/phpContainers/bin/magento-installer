@@ -80,6 +80,10 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         --admin-user=$M2SETUP_ADMIN_USER \
         --admin-password=$M2SETUP_ADMIN_PASSWORD"
 
+    if [ -n "$M2SETUP_CRYPT_KEY" ]; then
+        INSTALL_COMMAND="$INSTALL_COMMAND --key=$M2SETUP_CRYPT_KEY"
+    fi
+
     if version_compare $M2SETUP_VERSION '>=' 2.4.1; then
         INSTALL_COMMAND="$INSTALL_COMMAND --document-root-is-pub=true"
     fi
@@ -120,6 +124,19 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
 
     $INSTALL_COMMAND
     $MAGENTO_COMMAND deploy:mode:set developer
+
+    if [ "$M2SETUP_USE_SAMPLE_DATA" = "venia" ]; then
+
+       deployVeniaSampleData --patch=$MAGENTO_ROOT --yes
+       #composer --working-dir=$MAGENTO_ROOT config --no-interaction --ansi repositories.venia-sample-data composer https://repo.magento.com
+       #composer --working-dir=$MAGENTO_ROOT require --no-interaction --ansi magento/venia-sample-data:0.0.1
+       $MAGENTO_COMMAND setup:upgrade
+       rm -rf $MAGENTO_ROOT/generated/*
+       rm -rf $MAGENTO_ROOT/var/generation/*
+       rm -rf $MAGENTO_ROOT/var/generated/*
+       $MAGENTO_COMMAND setup:di:compile
+    fi
+
     $MAGENTO_COMMAND index:reindex
     $MAGENTO_COMMAND setup:static-content:deploy -f
 

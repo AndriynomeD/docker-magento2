@@ -62,20 +62,76 @@ class ConfigBuilder
     public function run()
     {
         $this->buildPhpContainers();
+        $this->buildNginxContainer();
         $this->buildDockerCompose();
     }
 
-    /**
-     * Build the files described in the loaded config.
-     */
-    private function buildPhpContainers()
+    private function getGeneralConfig($variables = [])
     {
-        $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR
-            . self::PHP_CONTAINERS_TEMPLATE_DIR . DIRECTORY_SEPARATOR;
         $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
-        $buildPhpVersion = $generalConfig['PHP_VERSION'];
+        $defaultDockerComposeConfig = [
+            'PHP_VERSION' => '7.4',
+            'M2_VERSION' => '2.4.*',
+            'HTTPS_HOST' => false,
+            'NGINX_PROXY_PATH' => '',
+            'M2_INSTALL' => [],
+            'M2_SETTINGS' => [],
+            'DOCKER_DB' => [],
+            'DOCKER_SERVICES' => []
+        ];
+        $defaultDockerDbConfig = [
+            '__note__'  => 'available image: mariadb|mysql|percona',
+            'IMAGE'   => 'mariadb:10.4',
+            'TYPE'    => 'mariadb',
+            'VERSION' => '10.4'
+        ];
+        $defaultAdditionalServicesConfig = [
+            'external_elasticsearch'    => true,
+            'internal_elasticsearch'    => false,
+            'varnish'   => true,
+            'cron'  => true,
+            'redis' => false,
+            'rabbitmq'  => false,
+            'venia'   => false
+        ];
+        $variables = array_merge($defaultDockerComposeConfig, $generalConfig, $variables);
+        $variables['DOCKER_DB'] = array_merge($defaultDockerDbConfig, $variables['DOCKER_DB']);
+        $variables['DOCKER_SERVICES'] = array_merge($defaultAdditionalServicesConfig, $variables['DOCKER_SERVICES']);
+
+        if ($variables['DOCKER_SERVICES']['external_elasticsearch'] && $variables['DOCKER_SERVICES']['internal_elasticsearch']) {
+            throw new Exception( "\033[1;37m\033[0;31m" . 'External & internal elasticsearch cann\'t be enabled at same time' ."\033[0m");
+        }
+        $variables['ELASTICSEARCH_AVAILABLE'] = $variables['DOCKER_SERVICES']['external_elasticsearch']
+            || $variables['DOCKER_SERVICES']['internal_elasticsearch'];
+        if (!$variables['ELASTICSEARCH_AVAILABLE']
+            && version_compare(str_replace('*', 9, $variables['M2_VERSION']), '2.4.0', '>=')
+        ) {
+            throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' ."\033[0m");
+        }
+
+        if ($generalConfig['DOCKER_SERVICES']['venia']) {
+            if ($variables['DOCKER_SERVICES']['varnish']) {
+                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA not need Varnish on Magento backend' ."\033[0m");
+            }
+//            if (!$variables['NGINX_PROXY_PATH']) {
+//                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA required `NGINX_PROXY_PATH`' ."\033[0m");
+//            }
+            if ($variables['M2_INSTALL']['USE_SAMPLE_DATA']) {
+                $variables['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
+            }
+        }
+
+        if ($variables['HTTPS_HOST'] && !$variables['NGINX_PROXY_PATH']) {
+            throw new Exception( "\033[1;37m\033[0;31m" . 'Https required `NGINX_PROXY_PATH`' ."\033[0m");
+        }
+
+        return $variables;
+    }
+
+    private function getPhpContainerVariables($generalConfig, $phpContainerConfig, $variables = [])
+    {
         $defaultPhpContainerConfig = [
-            'composerVersion' => self::DEFAULT_COMPOSERVERSION,
+            'composerVersion' => 'latest',
             'databaseType' => $generalConfig['DOCKER_DB']['TYPE'],
             'databaseVersion' => $generalConfig['DOCKER_DB']['VERSION'],
             'specificPackages' => []
@@ -92,6 +148,35 @@ class ConfigBuilder
             '_disable_variables' => false,
             'executable' => false
         ];
+        $variables = array_merge(
+            $defaultPhpContainerConfig,
+            $phpContainerConfig,
+            $defaultFileVariables,
+            $variables
+        );
+        $variables['specificPackages'] = array_merge($defaultSpecificPackages, $variables['specificPackages']);
+
+        if ($variables['composerVersion'] === 'latest') {
+            $magento2Version = str_replace('*', 9, $generalConfig['M2_VERSION']);
+            if (version_compare($magento2Version, '2.4.2', '>=')) {
+                $variables['composerVersion'] = 'latest';
+            } else {
+                $variables['composerVersion'] = self::DEFAULT_COMPOSERVERSION;
+            }
+        }
+
+        return $variables;
+    }
+
+    /**
+     * Build the files described in the loaded config.
+     */
+    private function buildPhpContainers()
+    {
+        $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR
+            . self::PHP_CONTAINERS_TEMPLATE_DIR . DIRECTORY_SEPARATOR;
+        $generalConfig = $this->getGeneralConfig();
+        $buildPhpVersion = $generalConfig['PHP_VERSION'];
         $phpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
         foreach ($phpContainersConfig as $name => $phpContainerConfig) {
             if ($phpContainerConfig['version'] != $buildPhpVersion) {
@@ -117,13 +202,8 @@ class ConfigBuilder
                         '_disable_variables', 'executable',
                     ];
                     */
-                    $variables = array_merge(
-                        $defaultPhpContainerConfig,
-                        $phpContainerConfig,
-                        $defaultFileVariables,
-                        $variables
-                    );
-                    $variables['specificPackages'] = array_merge($defaultSpecificPackages, $variables['specificPackages']);
+
+                    $variables = $this->getPhpContainerVariables($generalConfig, $phpContainerConfig, $variables);
 
                     // Determine whether we should load with the template renderer, or whether we should straight up
                     // just load the file from disk.
@@ -152,26 +232,25 @@ class ConfigBuilder
         }
     }
 
+    /**
+     * Currently only generate ssl sertificates
+     */
+    private function buildNginxContainer()
+    {
+        $generalConfig = $this->getGeneralConfig();
+        $httpsOn = $generalConfig['HTTPS_HOST'];
+        if ($httpsOn) {
+            $this->verbose(sprintf("Generate ssl sertificates for Magento..."), 1);
+            $hosts = $generalConfig['M2_VIRTUAL_HOSTS'];
+            $nginxProxyPath = $generalConfig['NGINX_PROXY_PATH'];
+            shell_exec(sprintf('bash generateSSL.sh %s %s', $hosts, $nginxProxyPath));
+        }
+    }
+
     private function buildDockerCompose()
     {
         $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR;
-        $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
-        $defaultDockerComposeConfig = [
-            'PHP_VERSION' => '7.4',
-            'M2_VERSION' => '2.4.*',
-            'M2_INSTALL_DEMO' => [],
-            'M2_SETTINGS' => [],
-            'DOCKER_DB' => [],
-            'DOCKER_SERVICES' => []
-        ];
-        $defaultAdditionalServicesConfig = [
-            'external_elasticsearch'=> true,
-            'internal_elasticsearch'=> false,
-            'varnish'=> true,
-            'cron'=> true,
-            'redis'=> false,
-            'rabbitmq'=> false
-        ];
+        $generalConfig = $this->getGeneralConfig();
         $this->verbose(sprintf("Building '%s'...", 'docker-compose.yml'), 1);
         $templateConfig = [
             'templateDirPath' => $templateDirPath,
@@ -181,23 +260,14 @@ class ConfigBuilder
         $filename = self::DOCKER_COMPOSE_TEMPLATE_FILE;
         $contents = '';
         if ($templateFile = $this->getTemplateFile($filename, $templateConfig)) {
-            $variables = array_merge($defaultDockerComposeConfig, $generalConfig);
-            $variables['DOCKER_SERVICES'] = array_merge($defaultAdditionalServicesConfig, $variables['DOCKER_SERVICES']);
-            /** if external elastic enabled disable internal one  */
-            if ($variables['DOCKER_SERVICES']['external_elasticsearch']) {
-                $variables['DOCKER_SERVICES']['internal_elasticsearch'] = false;
-            }
-
-            $variables['ELASTICSEARCH_AVAILABLE'] = $variables['DOCKER_SERVICES']['external_elasticsearch']
-                || $variables['DOCKER_SERVICES']['internal_elasticsearch'];
-            if (!$variables['ELASTICSEARCH_AVAILABLE']
-                && version_compare(str_replace('*', 9, $variables['M2_VERSION']), '2.4.0', '>=')
-            ) {
-                throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' ."\033[0m");
-            }
-
+            $variables = $generalConfig;
             $contents = $this->renderTemplate($templateFile, $variables);
             $contents = str_replace('{{generated_by_builder}}', 'This file is automatically generated. Do not edit directly.', $contents);
+        }
+
+        if ($generalConfig['DOCKER_SERVICES']['venia']) {
+            $this->verbose("Currently for Venia we just installed Venia sample data on install db phase. \n"
+                . "You should setup Venia separately after setup Magento", 1);
         }
 
         $destinationFile = self::DOCKER_COMPOSE_DESTINATION_FILE;
@@ -205,7 +275,6 @@ class ConfigBuilder
         $this->writeFile($destinationFile, $contents);
         $this->setFilePermissions($destinationFile, $this->executablePermissions);
     }
-
 
     /**
      * Load the build configuration from the given file.

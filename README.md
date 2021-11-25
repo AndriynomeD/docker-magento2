@@ -16,7 +16,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`.
 
 3) Prepare all config files:
-    1) Fill `composer.env`, `global.env` with you data. 
+    1) Copy `config.json.sample` to `config.json`, `global.env.sample`, `global.env` & fill it with you data. 
         Example of required field for `composer.env` file:
         ```
         COMPOSER_MAGENTO_USERNAME={{repo.magento.com_username}}
@@ -24,26 +24,30 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
         ``` 
         P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`
     2) Create renamed copy of following files in your `{{root_directory}}`:
-        1) config.json.sample to config.json.         
-        2) Remove not needed block of php versions from `php-containers` section. `grunt` can be available only under cli.
-        3) Update sections with you data (read 'Single-store', 'Multi-store', 'Grunt' sections first):
+        1) Copy `config.json.sample` to `config.json`.
+        2) Update sections with you data (read 'Single-store', 'Multi-store', 'Grunt' sections first), also check [magento 2 system requirements][magento-system-requirements]:
             ```
             "M2_PROJECT": {{project_name}}
             "M2_VIRTUAL_HOSTS": {{all_site_domain}} 
             "M2_DB_NAME": {{database_name}}
             "PHP_VERSION": - php version
-            "M2_INSTALL_DEMO" - section need only for install magento from scratch
+            "M2_INSTALL" - section need only for install magento from scratch or install clean db
                 "BASE_URL": "http://{{main_domain}}/"
                 "SECURE_BASE_URL": "https://{{main_domain}}/"
                 "ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
             "M2_SETTINGS" - section with magento additional services settings (also used by magento-instaler scripts)
                 "ELASTICSEARCH_SETTINGS" - update index-prefix (can be {{project_name}} without TLD
+            "DOCKER_SERVICES": additional services, such as varnish, cron. If you want to use magento as Venia backend set `venia` to `true`.
+            "HTTPS_HOST": if set `true` will generate self-signed ssl sertificate in nginx-proxy folder(required `NGINX_PROXY_PATH`). P.S. Not tested with Multi-stores
+            Now `"composerVersion": "latest"` will set version 2.X for m2.4.2+ & 1.X in another case
            
             {{project_name}} - example: someproject.site
             {{all_site_domain}} -  see `Single-store` or `Multi-store` section
             {{main_domain}} - main site domain. see `Single-store` or `Multi-store` section
             {{database_name}} - Use unique db name with pattern: `{{client}}_{{project-name}}_{{dump-date}}` (example: someclient_someproject_20190710)
             ```
+            `grunt` can be available only under cli.
+
 
 4) Build php containers & `docker-compose.yml`:
     ```shell
@@ -51,24 +55,28 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     ```
     In `examples` folder you can see example of generated `docker-compose.yml`.
 
-5) Up containers:
+5) Up containers (first time up better don't add key `-d` for check if all okay):
     ```shell
-        $ docker-compose up
+        $ docker-compose up -d
     ```
-    P.S. Instead of `php bin/magento` use `sudo -uwww-data php bin/magento`:
-    NOTE: Please set `--rm` to remove a created container after run.
 
 6) Clone existing repo with magento into this folder or run next command for install magento from scratch:
     ```shell
         $ docker-compose run --rm cli magento-installer
     ```
-
-7) If you clone  existing repo import database:
+7) Now you can enter to cli (you should run all magento command under cli).
+   P.S. Instead of `php bin/magento` use `sudo -uwww-data php bin/magento`:
+   NOTE: Please set `--rm` to remove a created container after run.
+   Example :
+    ```shell
+        $ docker-compose run --rm cli bash
+    ```
+   
+8) If you clone  existing repo import database:
     1) Copy database dump into `{{magento_root}}`.
     2) Go to cli-container & import database dump:
     ```shell
         $ docker-compose run --rm cli bash
-        $ cd /var/www/magento/
     ```
     Import dump:
     ```shell
@@ -87,11 +95,14 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     'dbname' => {{database_name}},
     'username' => 'magento2',
     'password' => 'magento2',
-    
     ```
     Maybe after you want create admin user:
     ```shell
         $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
+    ```
+    3) Update env.php with service configs (also need to do after updating additional docker services)
+    ```shell
+       $ magento-service-updater
     ```
 
 ### Single-store
@@ -165,7 +176,7 @@ Rename (create renamed copy) the following file:
     ```shell
         $ docker-compose run --rm cli bash
         $ cd /var/www/magento/
-        $ sudo -uwww-data grunt clean && sudo -uwww-data grunt exec && sudo -uwww-data grunt less
+        $ sudo -uwww-data grunt exec:all && sudo -uwww-data grunt less
         $ sudo -uwww-data grunt watch
     ```
 
@@ -210,10 +221,6 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             ```shell
                 composer require --dev magento/magento-coding-standard
             ```
-       2. ~~For Commerce Cloud:~~ 
-             ```shell
-                composer require --dev magento/magento-coding-standard phpmd/phpmd:@stable squizlabs/php_codesniffer:~3.4.0 --sort-packages
-             ```
     2. Due to security, when installed this way the Magento standard for phpcs cannot be added automatically. You can achieve this by adding the following to your project's `composer.json`:
         ```json
         "scripts": {
@@ -320,18 +327,22 @@ Fix problem with owner:
 ```
 Example of fix permission problem inside cli-container:
 ```shell
-    $ cd /var/www/ && sudo chown -R www-data:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
+    $ sudo chown -R www-data:www-data /var/www/magento/ && sudo chmod -R g+w /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
 
 ### TODO
 - [x] Add additional service configuration (redis, rabbitmq)
-- [ ] Implement https functional. 
+- [x] Implement https functional for single store. 
+- [ ] Implement https functional for multi-stores. 
 - [ ] Implement configuration for Magento PWA.
 - [x] Implement internal elasticsearch service.
 - [ ] Implement gulp for cli.
-- [ ] Implement bash scripts for generate ssl certificate
+- [x] Implement bash scripts for generate ssl certificate
 - [x] Implement bash scripts for set/update default services configs to env.php
 - [ ] Implement LiveReload
+- [ ] Implement dynamic varnish configs during build.php run (like it was done for php containers)
+- [ ] Implement dynamic internal elasticsearch configs during build.php run (like it was done for php containers)
+- [ ] Implement dynamic redis configs during build.php run (like it was done for php containers)
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
@@ -343,3 +354,4 @@ Example of fix permission problem inside cli-container:
 [origin-repo]: https://github.com/meanbee/docker-magento2
 [nginx-proxy]: https://github.com/AndriynomeD/nginx-proxy
 [magento-coding-standard]: https://github.com/magento/magento-coding-standard
+[magento-system-requirements]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html

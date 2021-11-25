@@ -10,6 +10,7 @@ services:
 ?>
 <?php if (isset($DOCKER_SERVICES['varnish']) && $DOCKER_SERVICES['varnish']): ?>
   varnish:
+    hostname: varnish.<?= $M2_PROJECT . PHP_EOL ?>
     image: meanbee/magento2-varnish:latest
     environment:
       - VIRTUAL_HOST=<?= $M2_VIRTUAL_HOSTS . PHP_EOL ?>
@@ -30,6 +31,7 @@ services:
 //###########################################################################
 ?>
   web:
+    hostname: <?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/nginx/
     ports:
@@ -141,21 +143,24 @@ services:
       - ./global.env
       - ./composer.env
     environment:
-      - M2SETUP_INSTALL_DB=<?= $M2_INSTALL_DEMO['INSTALL_DB'] . PHP_EOL ?>
+      - M2SETUP_INSTALL_DB=<?= $M2_INSTALL['INSTALL_DB'] . PHP_EOL ?>
       - M2SETUP_DB_HOST=db
       - M2SETUP_DB_NAME=<?= $M2_DB_NAME . PHP_EOL ?>
       - M2SETUP_DB_USER=magento2
       - M2SETUP_DB_PASSWORD=magento2
-      - M2SETUP_BASE_URL=<?= $M2_INSTALL_DEMO['BASE_URL'] . PHP_EOL ?>
-      # - M2SETUP_SECURE_BASE_URL=<?= $M2_INSTALL_DEMO['SECURE_BASE_URL'] . PHP_EOL ?>
+      - M2SETUP_BASE_URL=<?= $M2_INSTALL['BASE_URL'] . PHP_EOL ?>
+      # - M2SETUP_SECURE_BASE_URL=<?= $M2_INSTALL['SECURE_BASE_URL'] . PHP_EOL ?>
       - M2SETUP_BACKEND_FRONTNAME=admin
       - M2SETUP_ADMIN_FIRSTNAME=AdminFirstName
       - M2SETUP_ADMIN_LASTNAME=AdminLastName
-      - M2SETUP_ADMIN_EMAIL=<?= $M2_INSTALL_DEMO['ADMIN_EMAIL'] . PHP_EOL ?>
+      - M2SETUP_ADMIN_EMAIL=<?= $M2_INSTALL['ADMIN_EMAIL'] . PHP_EOL ?>
       - M2SETUP_ADMIN_USER=admin
       - M2SETUP_ADMIN_PASSWORD=admin123
+<?= if (isset($M2_INSTALL['CRYPT_KEY']) && $M2_INSTALL['CRYPT_KEY']): ?>
+      - M2SETUP_CRYPT_KEY=<?= $M2_INSTALL['CRYPT_KEY'] . PHP_EOL ?>
+<?php endif; ?>
       - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>
-      - M2_USE_SAMPLE_DATA=<?= $M2_INSTALL_DEMO['USE_SAMPLE_DATA'] . PHP_EOL ?>
+      - M2SETUP_USE_SAMPLE_DATA=<?= $M2_INSTALL['USE_SAMPLE_DATA'] . PHP_EOL ?>
       - M2_ELASTIC_SETTINGS=<?= ($ELASTICSEARCH_AVAILABLE ? $M2_SETTINGS['ELASTICSEARCH_SETTINGS'] : '') . PHP_EOL ?>
       - M2_AMQ_SETTINGS=<?= ($DOCKER_SERVICES['rabbitmq'] ? $M2_SETTINGS['AMQ_SETTINGS'] : '') . PHP_EOL ?>
       - M2_REDIS_SETTINGS=<?= ($DOCKER_SERVICES['redis'] ? $M2_SETTINGS['REDIS_SETTINGS'] : '') . PHP_EOL ?>
@@ -208,7 +213,7 @@ services:
 
 <?php
 //###########################################################################
-//# CRON
+//# Internal Elasticsearch
 //###########################################################################
 ?>
 <?php if (isset($DOCKER_SERVICES['internal_elasticsearch']) && $DOCKER_SERVICES['internal_elasticsearch']): ?>
@@ -291,11 +296,11 @@ services:
 <?php endif; ?>
 
 networks:
-<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
-  elastic-net:
-    external: true
-<?php endif; ?>
   nginx-proxy:
     external: true
   databases:
     external: true
+<?php if (isset($DOCKER_SERVICES['external_elasticsearch']) && $DOCKER_SERVICES['external_elasticsearch']): ?>
+  elastic-net:
+    external: true
+<?php endif; ?>
