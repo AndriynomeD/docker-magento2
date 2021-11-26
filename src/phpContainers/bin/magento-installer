@@ -40,6 +40,7 @@ if [ -f "$AUTH_JSON_FILE" ]; then
 fi
 
 MAGENTO_COMMAND="magento-command"
+MAGENTO_FIX_PERMISSIONS="magento-fix-permissions"
 
 if [ ! -f "$MAGENTO_ROOT/composer.json" ]; then
     echo "Creating Magento ($M2SETUP_VERSION) project from composer"
@@ -122,24 +123,35 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
       INSTALL_COMMAND="$INSTALL_COMMAND --use-sample-data"
     fi
 
+    set +e
     $INSTALL_COMMAND
+    set -e
+    $MAGENTO_FIX_PERMISSIONS
     $MAGENTO_COMMAND deploy:mode:set developer
 
     if [ "$M2SETUP_USE_SAMPLE_DATA" = "venia" ]; then
+        echo "Deploy Venia Sample Data"
 
-       deployVeniaSampleData --patch=$MAGENTO_ROOT --yes
-       #composer --working-dir=$MAGENTO_ROOT config --no-interaction --ansi repositories.venia-sample-data composer https://repo.magento.com
-       #composer --working-dir=$MAGENTO_ROOT require --no-interaction --ansi magento/venia-sample-data:0.0.1
-       $MAGENTO_COMMAND setup:upgrade
-       rm -rf $MAGENTO_ROOT/generated/*
-       rm -rf $MAGENTO_ROOT/var/generation/*
-       rm -rf $MAGENTO_ROOT/var/generated/*
-       $MAGENTO_COMMAND setup:di:compile
+        bash deployVeniaSampleData.sh --path=$MAGENTO_ROOT --yes || exit 1
+        #composer --working-dir=$MAGENTO_ROOT config --no-interaction --ansi repositories.venia-sample-data composer https://repo.magento.com
+        #composer --working-dir=$MAGENTO_ROOT require --no-interaction --ansi magento/venia-sample-data:0.0.1
+        $MAGENTO_FIX_PERMISSIONS
+        $MAGENTO_COMMAND setup:upgrade
+        rm -rf $MAGENTO_ROOT/generated/*
+        rm -rf $MAGENTO_ROOT/var/generation/*
+        rm -rf $MAGENTO_ROOT/var/generated/*
+        $MAGENTO_COMMAND setup:di:compile
+        $MAGENTO_FIX_PERMISSIONS
     fi
 
     $MAGENTO_COMMAND index:reindex
     $MAGENTO_COMMAND setup:static-content:deploy -f
 
+else
+    echo "Skipping DB installation"
+fi
+
+if [ -f "$MAGENTO_ROOT/app/etc/env.php" ]; then
     echo "Creates or modifies the system configuration"
 
     UPDATE_SYSTEM_CONFIG_COMMAND="$MAGENTO_COMMAND config:set --lock-env"
@@ -157,18 +169,11 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/backend_port 80
         $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/access_list web
     fi
-
 else
-    echo "Skipping DB installation"
+    echo "Skip Creates or modifies the system configuration"
 fi
 
 echo "Fixing file permissions.."
-
-[ -f "$MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php" ] \
-  && sed -i 's/0770/0775/g' $MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php
-
-[ -f "$MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php" ] \
-  && sed -i 's/0660/0664/g' $MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php
 
 find $MAGENTO_ROOT/pub -type f -exec chmod 664 {} \;
 find $MAGENTO_ROOT/pub -type d -exec chmod 775 {} \;
@@ -176,6 +181,6 @@ find $MAGENTO_ROOT/var/generation -type d -exec chmod g+s {} \;
 find $MAGENTO_ROOT/var/generated -type d -exec chmod g+s {} \;
 find $MAGENTO_ROOT/generated -type d -exec chmod g+s {} \;
 
-chown -R www-data:www-data $MAGENTO_ROOT
+$MAGENTO_FIX_PERMISSIONS
 
 echo "Installation complete"

@@ -49,6 +49,9 @@
         "bin/magento-command": {
           "executable": true
         },
+        "bin/magento-fix-permissions": {
+          "executable": true
+        },
         "bin/magento-installer": {
           "executable": true
         },
@@ -113,6 +116,9 @@
           "executable": true
         },
         "bin/magento-command": {
+          "executable": true
+        },
+        "bin/magento-fix-permissions": {
           "executable": true
         },
         "bin/magento-installer": {
@@ -181,6 +187,9 @@
         "bin/magento-command": {
           "executable": true
         },
+        "bin/magento-fix-permissions": {
+          "executable": true
+        },
         "bin/magento-installer": {
           "executable": true
         },
@@ -243,6 +252,9 @@
         "bin/magento-command": {
           "executable": true
         },
+        "bin/magento-fix-permissions": {
+          "executable": true
+        },
         "bin/magento-installer": {
           "executable": true
         },
@@ -303,6 +315,9 @@
           "executable": true
         },
         "bin/magento-command": {
+          "executable": true
+        },
+        "bin/magento-fix-permissions": {
           "executable": true
         },
         "bin/magento-installer": {

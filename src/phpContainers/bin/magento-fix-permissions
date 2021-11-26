@@ -1,0 +1,16 @@
+#!/bin/bash
+
+[ "$DEBUG" = "true" ] && set -x
+
+if [ -f "$MAGENTO_ROOT/app/etc/env.php" ]; then
+  chmod 777 $MAGENTO_ROOT/app/etc/env.php
+fi
+
+[ -f "$MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php" ] \
+  && sed -i 's/0770/0775/g' $MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php
+
+[ -f "$MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php" ] \
+  && sed -i 's/0660/0664/g' $MAGENTO_ROOT/vendor/magento/framework/Filesystem/DriverInterface.php
+
+chown -R www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
+
