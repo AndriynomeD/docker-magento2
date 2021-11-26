@@ -330,6 +330,34 @@ Example of fix permission problem inside cli-container:
     $ sudo chown -R www-data:www-data /var/www/magento/ && sudo chmod -R g+w /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
 
+### Venia Support (WIP)
+- [x] Implement https functional for single store.
+- [ ] Implement https functional for multi-stores.
+- [x] Implement Venia Sample Data.
+- [ ] Implement configuration for Magento PWA.
+Because Venia required worked connection to magento 2 think at least as ext step is create separate docker-compose.yml in `{{root_directory}}/magento_venia` directory. PWA project should be inited in `{{root_directory}}/magento_venia/source
+venia docker-compose.yml example for connect to magento 2 as backend (need check if exists better way):
+```yml
+services:
+  pwa:
+    ...
+  external_links:
+    - "web.{{project_name}}:{{main_domain}}" #need mplement auto genatation via `php builder.php`
+    - "web.{{project_name}}:{{second_domain}}"
+    ...
+    - "web.{{project_name}}:{{last_domain}}"
+  networks:
+    - default
+    - nginx-proxy
+
+# used external proxy for use local magento 2 as backend
+networks:
+    nginx-proxy:
+        external: true
+```
+
+
+
 ### TODO
 - [x] Add additional service configuration (redis, rabbitmq)
 - [x] Implement https functional for single store. 
