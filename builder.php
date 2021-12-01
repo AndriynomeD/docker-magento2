@@ -92,6 +92,7 @@ class ConfigBuilder
             'cron'  => true,
             'redis' => false,
             'rabbitmq'  => false,
+            'magento-coding-standard'  => false,
             'venia'   => false
         ];
         $variables = array_merge($defaultDockerComposeConfig, $generalConfig, $variables);
@@ -179,7 +180,8 @@ class ConfigBuilder
         $buildPhpVersion = $generalConfig['PHP_VERSION'];
         $phpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
         foreach ($phpContainersConfig as $name => $phpContainerConfig) {
-            if ($phpContainerConfig['version'] != $buildPhpVersion) {
+            if ($phpContainerConfig['version'] != $buildPhpVersion
+                || (strpos('mcs', $name) !== false && !$generalConfig['DOCKER_SERVICES']['magento-coding-standard'])) {
                 // delete not used or just ignore them?
                 continue;
             }
@@ -349,7 +351,7 @@ class ConfigBuilder
     {
         return implode(DIRECTORY_SEPARATOR, [
             $destinationFolder,
-            $config['version'] . '-' . $config['flavour'],
+            $config['context-folder'] ?? $config['version'] . '-' . $config['flavour'],
             $filename,
         ]);
     }

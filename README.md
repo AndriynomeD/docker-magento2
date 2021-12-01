@@ -13,7 +13,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 
 1) Install & Configure [nginx-proxy][nginx-proxy]
 
-2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`.
+2) Make directory `magento` (`{{magento_root}}`) inside project root directory `{{root_directory}}`.
 
 3) Prepare all config files:
     1) Copy `config.json.sample` to `config.json`, `global.env.sample`, `global.env` & fill it with you data. 
@@ -160,7 +160,6 @@ Rename (create renamed copy) the following file:
 5. Inside `{{root_directory}}`: 
     ```shell
         $ docker-compose run --rm cli bash
-        $ cd /var/www/magento/
         $ npm install
         $ npm update
     ```
@@ -175,7 +174,6 @@ Rename (create renamed copy) the following file:
     Example of run grunt watch:
     ```shell
         $ docker-compose run --rm cli bash
-        $ cd /var/www/magento/
         $ sudo -uwww-data grunt exec:all && sudo -uwww-data grunt less
         $ sudo -uwww-data grunt watch
     ```
@@ -187,6 +185,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
 1) #### PphStorm Magento plugin:
     1. Install & Enable official Magento plugin for PphStorm.
+    2. Enabled plugin for project in Settings->PHP->Frameworks->Magento
    
 2) #### Xdebug config:
     
@@ -216,43 +215,45 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     
 
 3) #### [Magento Coding Standard][magento-coding-standard]
-    1. Install required packages:
-        1. For Community/Commerce:
-            ```shell
-                composer require --dev magento/magento-coding-standard
-            ```
-    2. Due to security, when installed this way the Magento standard for phpcs cannot be added automatically. You can achieve this by adding the following to your project's `composer.json`:
-        ```json
-        "scripts": {
-          "post-install-cmd": [
-            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
-          ],
-          "post-update-cmd": [
-            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
-          ]
-        }
+    1. On "Prepare all config files" step in `config.json` set `magento-coding-standard` under `DOCKER_SERVICES` to `true`.
+    2. Currently, PhpStorm don't have docker connection for eslint so you need install npm on host machine.
+    3. Install Magento Coding Standard project:
+        ```shell
+            docker-compose run --rm mcs magento-coding-standard-installer
+            cd `{{root_directory}}/magento-coding-standard`
+            npm init
         ```
-    3. Config PhpStorm:
+    4. Config PhpStorm (after magento & magento-coding-standard projects was setup):
         ```shell
         Settings->Directories->Excluded files: *Test*
         P.S. not work with vendor/*
         ```
         ```shell
-        Settings->Languages & Frameworks->PHP
-            PHP Language level: 7.3
+        Settings->PHP
+            PHP Language level: `PHP_VERSION`
             CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
                 Config Remote PHP Interpreter:
-                choose 'Docker Compose'
-                Service: 'cli'
+                    choose 'Docker Compose'
+                    Name: 'cli'
+                    Service: 'cli'
             Path mapping: map {{magento_root}} in left column to path `/var/www/magento` inside container.
         ```
        ```shell
        Settings->Languages & Frameworks->PHP->Quality tools
            PHP_CodeSniffer:
-           {{absolute_path}}/vendor/bin/phpcs (file should be a link to ../squizlabs/php_codesniffer/bin/phpcs)
-           {{absolute_path}}/vendor/bin/phpcbf (file should be a link to ../squizlabs/php_codesniffer/bin/phpcbf)
+           CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
+                Config Remote PHP Interpreter:
+                    choose 'Docker Compose'
+                    Name: 'mcs'
+                    Service: 'mcs'
+           Path mapping: map <Project root>/magento-coding-standard->/var/www/magento-coding-standard.
+           PHP_CodeSniffer path: `/var/www/magento-coding-standard/vendor/bin/phpcs`
+           Path to phpcbf: `/var/www/magento-coding-standard/vendor/bin/phpcbf`
+       
            PHP Mess Detector:
-           {{absolute_path}}/vendor/bin/phpmd (file should be a link to ../phpmd/phpmd/src/bin/phpmd)
+           CLI Interpreter: click '...' -> click '+' -> choose already created "cli" remote PHP Interpreter
+           Path mapping: map <Project root>/magento->/var/www/magento
+           PHP Mess Detector path: `/var/www/magento/vendor/bin/phpmd`
        ```
         ```shell
         Settings->Editor->Inspection
@@ -266,6 +267,20 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
                 Show sniff name: Yes
                 Coding Standard: Magento2 (if not see press reload & scroll up list)
         ```
+        ```shell
+       Settings->Languages & Frameworks
+       JavaScript->Code Quality Tools->ESLint:
+           Manual ESLint configuration:
+               ESLint package: {{absolute_path}}/magento-coding-standard/node_modules/eslint
+               Configuration file: {{absolute_path}}/magento-coding-standard/eslint/.eslintrc
+               Additional rules directory: {{absolute_path}}/magento-coding-standard/eslint/rules
+       ```
+   P.S. It enough create mcs container per different php version. If you already have mcs for current php version in another project you can create connect to this mcs container.
+
+   For upgrade magento coding standard enter inside mcs container:
+   ```shell
+      docker-compose run --rm mcs bash
+    ```
 
 ### Maybe useful
 
@@ -327,7 +342,7 @@ Fix problem with owner:
 ```
 Example of fix permission problem inside cli-container:
 ```shell
-    $ sudo chown -R www-data:www-data /var/www/magento/ && sudo chmod -R g+w /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
+    $ sudo chown -R www-data:www-data $MAGENTO_ROOT && sudo chmod -R g+w $MAGENTO_ROOT && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
 
 ### Venia Support (WIP)
@@ -364,6 +379,7 @@ networks:
 - [x] Implement https functional for single store. 
 - [ ] Implement https functional for multi-stores. 
 - [ ] Implement configuration for Magento PWA.
+- [x] Implement configuration for Magento Coding Standard.
 - [x] Implement internal elasticsearch service.
 - [ ] Implement gulp for cli.
 - [x] Implement bash scripts for generate ssl certificate

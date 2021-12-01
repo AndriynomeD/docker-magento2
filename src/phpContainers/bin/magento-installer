@@ -63,7 +63,7 @@ else
     composer --working-dir=$MAGENTO_ROOT install
 fi
 
-chown -R www-data:www-data $MAGENTO_ROOT
+chown -R www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 
 if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
 

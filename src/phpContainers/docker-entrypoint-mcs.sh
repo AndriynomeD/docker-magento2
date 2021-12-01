@@ -8,8 +8,8 @@
 if [[ "$UPDATE_UID_GID" = "true" ]]; then
     echo "Updating www-data uid and gid"
 
-    DOCKER_UID=`stat -c "%u" $MAGENTO_ROOT`
-    DOCKER_GID=`stat -c "%g" $MAGENTO_ROOT`
+    DOCKER_UID=`stat -c "%u" $MCS_ROOT`
+    DOCKER_GID=`stat -c "%g" $MCS_ROOT`
 
     INCUMBENT_USER=`getent passwd $DOCKER_UID | cut -d: -f1`
     INCUMBENT_GROUP=`getent group $DOCKER_GID | cut -d: -f1`
@@ -28,28 +28,10 @@ if [[ "$UPDATE_UID_GID" = "true" ]]; then
 fi
 
 # Ensure our Magento directory exists
-mkdir -p $MAGENTO_ROOT
-chown www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
+mkdir -p $MCS_ROOT
+chown www-data:www-data $MCS_ROOT && chmod -R g+w $MCS_ROOT
 
 <?php if ($flavour === 'cli'): ?>
-
-CRON_LOG=/var/log/cron.log
-
-# Setup Magento cron
-echo "#~ MAGENTO START c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
-if [ "$(printf '%s\n' "2.4.0" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.4.0" ]; then
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
-else
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/update/cron.php >> ${MAGENTO_ROOT}/var/log/update.cron.log" >> /etc/cron.d/magento
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento setup:cron:run >> ${MAGENTO_ROOT}/var/log/setup.cron.log" >> /etc/cron.d/magento
-fi
-echo "#~ MAGENTO END c5f9e5ed71cceaabc4d4fd9b3e827a2b" >> /etc/cron.d/magento
-
-# Get rsyslog running for cron output
-touch $CRON_LOG
-#echo "cron.* $CRON_LOG" > /etc/rsyslog.d/cron.conf
-#service rsyslog start
 
 # host registration for use in the debugger configuration (remote_host for cli)
 HOST_DOMAIN="host.docker.internal"
@@ -61,20 +43,9 @@ fi
 
 <?php endif ?>
 
-# Configure Sendmail if required
-if [ "$ENABLE_SENDMAIL" == "true" ]; then
-    echo "${POSTFIX_SASL_PASSWD}" > /etc/postfix/sasl_passwd
-    postmap /etc/postfix/sasl_passwd
-    /etc/init.d/postfix restart
-fi
-
 # Substitute in php.ini values
 [ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
-
-[ "$PHP_ENABLE_XDEBUG" = "true" ] && \
-    docker-php-ext-enable xdebug && \
-    echo "Xdebug is enabled"
 
 <?php if ($flavour === 'cli'): ?>
 
