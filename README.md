@@ -186,6 +186,21 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 1) #### PphStorm Magento plugin:
     1. Install & Enable official Magento plugin for PphStorm.
     2. Enabled plugin for project in Settings->PHP->Frameworks->Magento
+    3. Config Project PHP interpreter: 
+    ```shell
+    Settings->Directories->Excluded files: *Test*
+    P.S. not work with vendor/*
+    ```
+    ```shell
+    Settings->PHP
+        PHP Language level: `PHP_VERSION`
+        CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
+            Config Remote PHP Interpreter:
+                choose 'Docker Compose'
+                Name: 'cli'
+                Service: 'cli'
+        Path mapping: map {{magento_root}} in left column to path `/var/www/magento` inside container.
+    ```
    
 2) #### Xdebug config:
     
@@ -224,20 +239,6 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             npm init
         ```
     4. Config PhpStorm (after magento & magento-coding-standard projects was setup):
-        ```shell
-        Settings->Directories->Excluded files: *Test*
-        P.S. not work with vendor/*
-        ```
-        ```shell
-        Settings->PHP
-            PHP Language level: `PHP_VERSION`
-            CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
-                Config Remote PHP Interpreter:
-                    choose 'Docker Compose'
-                    Name: 'cli'
-                    Service: 'cli'
-            Path mapping: map {{magento_root}} in left column to path `/var/www/magento` inside container.
-        ```
        ```shell
        Settings->Languages & Frameworks->PHP->Quality tools
            PHP_CodeSniffer:
