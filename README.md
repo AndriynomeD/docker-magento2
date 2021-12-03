@@ -347,8 +347,7 @@ Example of fix permission problem inside cli-container:
 ```
 
 ### Venia Support (WIP)
-- [x] Implement https functional for single store.
-- [ ] Implement https functional for multi-stores.
+- [x] Implement https functional.
 - [x] Implement Venia Sample Data.
 - [ ] Implement configuration for Magento PWA.
 Because Venia required worked connection to magento 2 think at least as ext step is create separate docker-compose.yml in `{{root_directory}}/magento_venia` directory. PWA project should be inited in `{{root_directory}}/magento_venia/source`. In Venia `DEV_SERVER_HOST`==`{{main_domain}}`, `DEV_SERVER_PORT`==`443`.
