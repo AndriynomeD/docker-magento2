@@ -7,7 +7,7 @@
     "M2_VERSION": "2.4.*",
     "HTTPS_HOST": true,
     "NGINX_PROXY_PATH": "",
-    "M2_INSTALL_DEMO": {
+    "M2_INSTALL": {
       "BASE_URL": "http://magento2.docker/",
       "SECURE_BASE_URL": "https://magento2.docker/",
       "INSTALL_DB": "true",
@@ -34,6 +34,7 @@
       "cron": true,
       "redis": false,
       "rabbitmq": false,
+      "magento-coding-standard": false,
       "venia": false
     }
   },
@@ -81,6 +82,33 @@
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.8.1"
+    },
+    "7.0-mcs": {
+      "version": "7.0",
+      "flavour": "cli",
+      "context-folder": "7.0-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [],
+      "phpExtensions": [
+        "mcrypt"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
     },
     "7.0-fpm": {
       "version": "7.0",
@@ -151,6 +179,33 @@
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
     },
+    "7.1-mcs": {
+      "version": "7.1",
+      "flavour": "cli",
+      "context-folder": "7.1-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [],
+      "phpExtensions": [
+        "mcrypt"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
+    },
     "7.1-fpm": {
       "version": "7.1",
       "flavour": "fpm",
@@ -218,6 +273,31 @@
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
     },
+    "7.2-mcs": {
+      "version": "7.2",
+      "flavour": "cli",
+      "context-folder": "7.2-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [],
+      "phpExtensions": [],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
+    },
     "7.2-fpm": {
       "version": "7.2",
       "flavour": "fpm",
@@ -282,6 +362,31 @@
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
+    },
+    "7.3-mcs": {
+      "version": "7.3",
+      "flavour": "cli",
+      "context-folder": "7.3-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [],
+      "phpExtensions": [],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
     },
     "7.3-fpm": {
       "version": "7.3",
@@ -349,6 +454,33 @@
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
+    },
+    "7.4-mcs": {
+      "version": "7.4",
+      "flavour": "cli",
+      "context-folder": "7.4-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [
+        "libonig-dev"
+      ],
+      "phpExtensions": [],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
     },
     "7.4-fpm": {
       "version": "7.4",
