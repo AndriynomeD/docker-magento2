@@ -1,0 +1,91 @@
+<?php if (array_key_exists('gd', $specificPackages) && $specificPackages['gd'] !== false): ?>
+###########################################################################
+# Configure the gd library
+###########################################################################
+
+<?php if (version_compare($phpVersion, '7.4', '>=')): ?>
+RUN docker-php-ext-configure \
+  gd --prefix=/usr --with-freetype --with-jpeg
+<?php else: ?>
+RUN docker-php-ext-configure \
+  gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
+<?php endif; ?>
+
+RUN docker-php-ext-install gd
+
+<?php endif; ?>
+<?php /** imagick can be false|true|{imagick_version} */ ?>
+<?php if (array_key_exists('imagick', $specificPackages) && $specificPackages['imagick'] !== false): ?>
+###########################################################################
+# Imagemagick:
+###########################################################################
+
+ARG INSTALL_IMAGEMAGICK=<?= $specificPackages['imagick'] !== false ? 'true' : 'false'; ?>
+ARG IMAGEMAGICK_VERSION=<?= ($specificPackages['imagick'] !== true)? $specificPackages['imagick'] : 'latest'; ?>
+ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
+
+RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
+    apt-get install -yqq libmagickwand-dev imagemagick && \
+    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+      cd /tmp && \
+      if [ ${IMAGEMAGICK_VERSION} = "latest" ]; then \
+        git clone https://github.com/Imagick/imagick; \
+      else \
+        git clone --branch ${IMAGEMAGICK_VERSION} https://github.com/Imagick/imagick; \
+      fi && \
+      cd imagick && \
+      phpize && \
+      ./configure && \
+      make && \
+      make install && \
+      rm -r /tmp/imagick; \
+    else \
+      pecl install imagick; \
+    fi && \
+    docker-php-ext-enable imagick; \
+    php -m | grep -q 'imagick' \
+;fi
+
+<?php endif; ?>
+<?php if (array_key_exists('ioncube', $specificPackages) && $specificPackages['ioncube'] !== false): ?>
+###########################################################################
+# IonCube Loader:
+###########################################################################
+
+ARG INSTALL_IONCUBE=<?= $specificPackages['ioncube'] !== false ? 'true' : 'false'; ?>
+
+RUN if [ ${INSTALL_IONCUBE} = true ]; then \
+    if [ $(php -r "echo PHP_MAJOR_VERSION;") != "8" ]; then \
+        # Install the php ioncube loader
+        curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
+        && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
+        && mv /tmp/ioncube/ioncube_loader_lin_<?= $phpVersion; ?>.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
+        && printf "zend_extension=ioncube_loader.so\n" > /usr/local/etc/php/conf.d/0ioncube.ini \
+        && rm -rf /tmp/ioncube* \
+    ;fi\
+;fi
+
+<?php endif; ?>
+<?php if (array_key_exists('calendar', $specificPackages) && $specificPackages['calendar'] !== false): ?>
+###########################################################################
+# Calendar:
+###########################################################################
+
+ARG INSTALL_CALENDAR=<?= $specificPackages['calendar'] !== false ? 'true' : 'false'; ?>
+
+RUN if [ ${INSTALL_CALENDAR} = true ]; then \
+    docker-php-ext-configure calendar && \
+    docker-php-ext-install calendar \
+;fi
+
+<?php endif; ?>
+<?php if (array_key_exists('libsodiumfix', $specificPackages) && $specificPackages['libsodiumfix'] !== false): ?>
+###########################################################################
+# Fix bug: libsodium 1.0.13 or higher required for Magento 2.3.2 but newest version 1.0.11
+###########################################################################
+RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
+RUN apt-get update && apt-get -t stretch-backports install -y \
+  libsodium-dev
+RUN pecl install -f libsodium-1.0.17
+
+<?php endif; ?>

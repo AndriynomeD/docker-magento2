@@ -1,0 +1,186 @@
+#!/bin/bash
+
+[ "$DEBUG" = "true" ] && set -x
+
+#from https://stackoverflow.com/a/48487783
+function version_compare() # $1-a $2-op $3-$b
+# Compare a and b as version strings. Rules:
+# R1: a and b : dot-separated sequence of items. Items are numeric. The last item can optionally end with letters, i.e., 2.5 or 2.5a.
+# R2: Zeros are automatically inserted to compare the same number of items, i.e., 1.0 < 1.0.1 means 1.0.0 < 1.0.1 => yes.
+# R3: op can be '=' '==' '!=' '<' '<=' '>' '>=' (lexicographic).
+# R4: Unrestricted number of digits of any item, i.e., 3.0003 > 3.0000004.
+# R5: Unrestricted number of items.
+{
+  local a=$1 op=$2 b=$3 al=${1##*.} bl=${3##*.}
+  while [[ $al =~ ^[[:digit:]] ]]; do al=${al:1}; done
+  while [[ $bl =~ ^[[:digit:]] ]]; do bl=${bl:1}; done
+  local ai=${a%$al} bi=${b%$bl}
+
+  local ap=${ai//[[:digit:]]} bp=${bi//[[:digit:]]}
+  ap=${ap//./.0} bp=${bp//./.0}
+
+  local w=1 fmt=$a.$b x IFS=.
+  for x in $fmt; do [ ${#x} -gt $w ] && w=${#x}; done
+  fmt=${*//[^.]}; fmt=${fmt//./%${w}s}
+  printf -v a $fmt $ai$bp; printf -v a "%s-%${w}s" $a $al
+  printf -v b $fmt $bi$ap; printf -v b "%s-%${w}s" $b $bl
+
+  case $op in
+    '<='|'>=' ) [ "$a" ${op:0:1} "$b" ] || [ "$a" = "$b" ] ;;
+    * )         [ "$a" $op "$b" ] ;;
+  esac
+}
+
+AUTH_JSON_FILE="$(composer -g config data-dir 2>/dev/null)/auth.json"
+
+if [ -f "$AUTH_JSON_FILE" ]; then
+    # Get composer auth information into an environment variable to avoid "you need
+    # to be using an interactive terminal to authenticate".
+    COMPOSER_AUTH=`cat $AUTH_JSON_FILE`
+fi
+
+MAGENTO_COMMAND="magento-command"
+MAGENTO_FIX_PERMISSIONS="magento-fix-permissions"
+
+if [ ! -f "$MAGENTO_ROOT/composer.json" ]; then
+    echo "Creating Magento ($M2SETUP_VERSION) project from composer"
+
+    composer create-project \
+        --repository-url=https://repo.magento.com/ \
+        magento/project-community-edition=$M2SETUP_VERSION \
+        --no-interaction \
+        $MAGENTO_ROOT
+
+    # Magento forces Composer to use $MAGENTO_ROOT/var/composer_home as the home directory
+    # when running any Composer commands through Magento, e.g. sampledata:deploy, so copy the
+    # credentials over to it to prevent Composer from asking for them again
+    if [ -f "$AUTH_JSON_FILE" ]; then
+        mkdir -p $MAGENTO_ROOT/var/composer_home
+        cat $AUTH_JSON_FILE > $MAGENTO_ROOT/var/composer_home/auth.json
+    fi
+else
+    echo "Magento installation found in $MAGENTO_ROOT, installing composer dependencies"
+    composer --working-dir=$MAGENTO_ROOT install
+fi
+
+chown -R www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
+
+if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
+
+    echo "Install Magento"
+
+    INSTALL_COMMAND="$MAGENTO_COMMAND setup:install \
+        --db-host=$M2SETUP_DB_HOST \
+        --db-name=$M2SETUP_DB_NAME \
+        --db-user=$M2SETUP_DB_USER \
+        --db-password=$M2SETUP_DB_PASSWORD \
+        --base-url=$M2SETUP_BASE_URL \
+        --admin-firstname=$M2SETUP_ADMIN_FIRSTNAME \
+        --admin-lastname=$M2SETUP_ADMIN_LASTNAME \
+        --admin-email=$M2SETUP_ADMIN_EMAIL \
+        --admin-user=$M2SETUP_ADMIN_USER \
+        --admin-password=$M2SETUP_ADMIN_PASSWORD"
+
+    if [ -n "$M2SETUP_CRYPT_KEY" ]; then
+        INSTALL_COMMAND="$INSTALL_COMMAND --key=$M2SETUP_CRYPT_KEY"
+    fi
+
+    if version_compare $M2SETUP_VERSION '>=' 2.4.1; then
+        INSTALL_COMMAND="$INSTALL_COMMAND --document-root-is-pub=true"
+    fi
+
+    # Use a separate value for secure base URL, if the variable is set
+    if [ -n "$M2SETUP_SECURE_BASE_URL" ]; then
+        INSTALL_COMMAND="$INSTALL_COMMAND --base-url-secure=$M2SETUP_SECURE_BASE_URL"
+    fi
+
+    # Only define a backend-frontname if the variable is set, or not empty.
+    if [ -n "$M2SETUP_BACKEND_FRONTNAME" ]; then
+        INSTALL_COMMAND="$INSTALL_COMMAND --backend-frontname=$M2SETUP_BACKEND_FRONTNAME"
+    fi
+
+    if version_compare $M2SETUP_VERSION '>=' 2.4.0; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2_ELASTIC_SETTINGS"
+    fi
+
+    if version_compare $M2SETUP_VERSION '>=' 2.3.0; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_AMQ_SETTINGS"
+    fi
+
+    if [ -n "$M2SETUP_REDIS_SETTINGS" ]; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_REDIS_SETTINGS"
+    fi
+
+    if [ -n "$M2_VARNISH_SETTINGS" ]; then
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2_VARNISH_SETTINGS"
+    fi
+
+    if [ "$M2SETUP_USE_SAMPLE_DATA" = "true" ]; then
+
+      $MAGENTO_COMMAND sampledata:deploy
+      composer --working-dir=$MAGENTO_ROOT update
+
+      INSTALL_COMMAND="$INSTALL_COMMAND --use-sample-data"
+    fi
+
+    set +e
+    $INSTALL_COMMAND
+    set -e
+    $MAGENTO_FIX_PERMISSIONS
+    $MAGENTO_COMMAND deploy:mode:set developer
+
+    if [ "$M2SETUP_USE_SAMPLE_DATA" = "venia" ]; then
+        echo "Deploy Venia Sample Data"
+
+        bash deployVeniaSampleData.sh --path=$MAGENTO_ROOT --yes || exit 1
+        #composer --working-dir=$MAGENTO_ROOT config --no-interaction --ansi repositories.venia-sample-data composer https://repo.magento.com
+        #composer --working-dir=$MAGENTO_ROOT require --no-interaction --ansi magento/venia-sample-data:0.0.1
+        $MAGENTO_FIX_PERMISSIONS
+        $MAGENTO_COMMAND setup:upgrade
+        rm -rf $MAGENTO_ROOT/generated/*
+        rm -rf $MAGENTO_ROOT/var/generation/*
+        rm -rf $MAGENTO_ROOT/var/generated/*
+        $MAGENTO_COMMAND setup:di:compile
+        $MAGENTO_FIX_PERMISSIONS
+    fi
+
+    $MAGENTO_COMMAND index:reindex
+    $MAGENTO_COMMAND setup:static-content:deploy -f
+
+else
+    echo "Skipping DB installation"
+fi
+
+if [ -f "$MAGENTO_ROOT/app/etc/env.php" ]; then
+    echo "Creates or modifies the system configuration"
+
+    UPDATE_SYSTEM_CONFIG_COMMAND="$MAGENTO_COMMAND config:set --lock-env"
+
+    $UPDATE_SYSTEM_CONFIG_COMMAND web/unsecure/base_url $M2SETUP_BASE_URL
+    if [ -n "$M2SETUP_SECURE_BASE_URL" ]; then
+        $UPDATE_SYSTEM_CONFIG_COMMAND web/secure/base_url $M2SETUP_SECURE_BASE_URL
+    else
+        $UPDATE_SYSTEM_CONFIG_COMMAND web/secure/base_url $M2SETUP_BASE_URL
+    fi
+
+    if [ -n "$M2_VARNISH_SETTINGS" ]; then
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/caching_application 2
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/backend_host web
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/backend_port 80
+        $UPDATE_SYSTEM_CONFIG_COMMAND system/full_page_cache/varnish/access_list web
+    fi
+else
+    echo "Skip Creates or modifies the system configuration"
+fi
+
+echo "Fixing file permissions.."
+
+find $MAGENTO_ROOT/pub -type f -exec chmod 664 {} \;
+find $MAGENTO_ROOT/pub -type d -exec chmod 775 {} \;
+find $MAGENTO_ROOT/var/generation -type d -exec chmod g+s {} \;
+find $MAGENTO_ROOT/var/generated -type d -exec chmod g+s {} \;
+find $MAGENTO_ROOT/generated -type d -exec chmod g+s {} \;
+
+$MAGENTO_FIX_PERMISSIONS
+
+echo "Installation complete"

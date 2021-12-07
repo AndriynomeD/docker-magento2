@@ -29,7 +29,7 @@ fi
 
 # Ensure our Magento directory exists
 mkdir -p $MAGENTO_ROOT
-chown www-data:www-data $MAGENTO_ROOT
+chown www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 
 <?php if ($flavour === 'cli'): ?>
 

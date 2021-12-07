@@ -9,65 +9,74 @@ Also this docker-compose services required [nginx-proxy][nginx-proxy]
 For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html  
 Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/AndriynomeD/0d61773efef2408b3785f2f91aceae12)
 
-### Usage
+### Usage 
 
-1) Install [nginx-proxy][nginx-proxy]
+1) Install & Configure [nginx-proxy][nginx-proxy]
 
-2) Make directory `magento` (`{{magento_root}}`) inside root directory `{{root_directory}}`.  If need clone existing repo with magento into this folder.
+2) Make directory `magento` (`{{magento_root}}`) inside project root directory `{{root_directory}}`.
 
 3) Prepare all config files:
-    1) Fill `composer.env`, `global.env` with you data. 
+    1) Copy `config.json.sample` to `config.json`, `global.env.sample`, `global.env` & fill it with you data. 
         Example of required field for `composer.env` file:
         ```
         COMPOSER_MAGENTO_USERNAME={{repo.magento.com_username}}
         COMPOSER_MAGENTO_PASSWORD={{repo.magento.com_password}}
         ``` 
         P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`
-    2) Create renamed copy of following files in your Magento `{{root_directory}}`:
-        1) config.json.sample to config.json. 
-        2) Remove not needed block of php versions from `php-containers` section.
-        3) Fill `docker-compose` section with you data. If `varnish`/`cron` not needed set it to false.
-            `docker-compose` section params:
+    2) Create renamed copy of following files in your `{{root_directory}}`:
+        1) Copy `config.json.sample` to `config.json`.
+        2) Update sections with you data (read 'Single-store', 'Multi-store', 'Grunt' sections first), also check [magento 2 system requirements][magento-system-requirements]:
             ```
-            "M2SETUP_PROJECT": {{project_name}}
-            "M2SETUP_VIRTUAL_HOST": {{all_site_domain}} 
-            "M2SETUP_BASE_URL": "http://{{main_domain}}/"
-            "M2SETUP_SECURE_BASE_URL": "https://{{main_domain}}/"
-            "M2SETUP_DB_NAME": {{database_name}}
-            "M2SETUP_PHP": "7.2"
-            "M2SETUP_ELASTIC_SETTINGS": {{update elastic settings}} # magento 2.4.0+ used elastic by default
-            "M2SETUP_ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
-    
+            "M2_PROJECT": {{project_name}}
+            "M2_VIRTUAL_HOSTS": {{all_site_domain}} 
+            "M2_DB_NAME": {{database_name}}
+            "PHP_VERSION": - php version
+            "M2_INSTALL" - section need only for install magento from scratch or install clean db
+                "BASE_URL": "http://{{main_domain}}/"
+                "SECURE_BASE_URL": "https://{{main_domain}}/"
+                "ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
+            "M2_SETTINGS" - section with magento additional services settings (also used by magento-instaler scripts)
+                "ELASTICSEARCH_SETTINGS" - update index-prefix (can be {{project_name}} without TLD
+            "DOCKER_SERVICES": additional services, such as varnish, cron. If you want to use magento as Venia backend set `venia` to `true`.
+            "HTTPS_HOST": if set `true` will generate self-signed ssl sertificate in nginx-proxy folder(required `NGINX_PROXY_PATH`). P.S. Not tested with Multi-stores
+            Now `"composerVersion": "latest"` will set version 2.X for m2.4.2+ & 1.X in another case
+           
             {{project_name}} - example: someproject.site
             {{all_site_domain}} -  see `Single-store` or `Multi-store` section
             {{main_domain}} - main site domain. see `Single-store` or `Multi-store` section
             {{database_name}} - Use unique db name with pattern: `{{client}}_{{project-name}}_{{dump-date}}` (example: someclient_someproject_20190710)
             ```
+            `grunt` can be available only under cli.
+
 
 4) Build php containers & `docker-compose.yml`:
     ```shell
         $ php builder.php
-        $ php docker-compose-builder.php
     ```
     In `examples` folder you can see example of generated `docker-compose.yml`.
 
-5) Up containers:
+5) Up containers (first time up better don't add key `-d` for check if all okay):
     ```shell
-        $ docker-compose up
+        $ docker-compose up -d
     ```
-    P.S. Instead of `php bin/magento` use `magento-command`:
-    ```shell
-        $ docker-compose run --rm cli magento-command deploy:mode:show 
-    ```
-    NOTE: Please set `--rm` to remove a created container after run.  
-    Or inside container run `php bin/magento` from user `www-data` (for example see `src/bin/magento-command`)
 
-6) Import database:
+6) Clone existing repo with magento into this folder or run next command for install magento from scratch:
+    ```shell
+        $ docker-compose run --rm cli magento-installer
+    ```
+7) Now you can enter to cli (you should run all magento command under cli).
+   P.S. Instead of `php bin/magento` use `sudo -uwww-data php bin/magento`:
+   NOTE: Please set `--rm` to remove a created container after run.
+   Example :
+    ```shell
+        $ docker-compose run --rm cli bash
+    ```
+   
+8) If you clone  existing repo import database:
     1) Copy database dump into `{{magento_root}}`.
     2) Go to cli-container & import database dump:
     ```shell
         $ docker-compose run --rm cli bash
-        $ cd /var/www/magento/
     ```
     Import dump:
     ```shell
@@ -86,14 +95,15 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     'dbname' => {{database_name}},
     'username' => 'magento2',
     'password' => 'magento2',
-    
     ```
     Maybe after you want create admin user:
     ```shell
         $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
     ```
-
-
+    3) Update env.php with service configs (also need to do after updating additional docker services)
+    ```shell
+       $ magento-service-updater
+    ```
 
 ### Single-store
 
@@ -110,10 +120,10 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     Example:
     ```
     # single-store sites (docker):
-    127.0.0.1 someanotherproject1.site
-    127.0.0.1 someanotherproject2.site
+    127.0.0.1 some_anotherproject1.site
+    127.0.0.1 some_anotherproject2.site
     127.0.0.1 someproject.site
-    127.0.0.1 someanotherproject3.site
+    127.0.0.1 some_anotherproject3.site
     # end single-store sites (docker)
     ```
 
@@ -133,7 +143,7 @@ Example: we have 3 store/website: someproject.site, someproject-vip.site, somepr
     ```
     # multi-store 9 (docker)
     127.0.0.1 someproject.site someproject-vip.site someproject-retail.site
-    127.0.0.1 someanotherproject2.site someanotherproject2-vip.site someanotherproject2-retail.site
+    127.0.0.1 some_anotherproject2.site some_anotherproject2-vip.site some_anotherproject2-retail.site
     # end multi-store 9 (docker)
     ```
 
@@ -150,7 +160,6 @@ Rename (create renamed copy) the following file:
 5. Inside `{{root_directory}}`: 
     ```shell
         $ docker-compose run --rm cli bash
-        $ cd /var/www/magento/
         $ npm install
         $ npm update
     ```
@@ -165,8 +174,7 @@ Rename (create renamed copy) the following file:
     Example of run grunt watch:
     ```shell
         $ docker-compose run --rm cli bash
-        $ cd /var/www/magento/
-        $ sudo -uwww-data grunt clean && sudo -uwww-data grunt exec && sudo -uwww-data grunt less
+        $ sudo -uwww-data grunt exec:all && sudo -uwww-data grunt less
         $ sudo -uwww-data grunt watch
     ```
 
@@ -175,10 +183,30 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
 ### PphStorm
 
-1) #### Xdebug config:
-
-    1. `Add Configuration` or `Edit Configuration`
-    2. Add `PHP remote debug`
+1) #### PphStorm Magento plugin:
+    1. Install & Enable official Magento plugin for PphStorm.
+    2. Enabled plugin for project in Settings->PHP->Frameworks->Magento
+    3. Config Project PHP interpreter: 
+    ```shell
+    Settings->Directories->Excluded files: *Test*
+    P.S. not work with vendor/*
+    ```
+    ```shell
+    Settings->PHP
+        PHP Language level: `PHP_VERSION`
+        CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
+            Config Remote PHP Interpreter:
+                choose 'Docker Compose'
+                Name: 'cli'
+                Service: 'cli'
+        Path mapping: map {{magento_root}} in left column to path `/var/www/magento` inside container.
+    ```
+   
+2) #### Xdebug config:
+    
+    1. Enabled Xdebug in global.env file (PHP_ENABLE_XDEBUG=true).
+    2. `Add Configuration` or `Edit Configuration`
+    3. Add `PHP remote debug`
         ```shell
         Name: Configuration
         IDE key(s): PHPSTORM
@@ -190,7 +218,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             Use path mapping: Yes
                 map {{magento_root}} in left column to path `/var/www/magento` inside container
         ```
-    3. Apply this config
+    4. Apply this config
     
     For cli debug:
     ```shell
@@ -200,60 +228,33 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
         exit
     ```
     
-    
-2) #### URN config:
-   1. Copy `{{root_directory}}/.idea/misc.xml` file to `{{magento_root}}/.idea/misc.xml`.
-   2. Go to cli-container & generate urn:
-       ```shell
-           $ docker-compose run --rm cli bash
-           $ cd /var/www/magento/
-           $ sudo -uwww-data php bin/magento dev:urn-catalog:generate .idea/misc.xml
-       ```
-   3. Move file `{{magento_root}}/.idea/misc.xml` to `{{root_directory}}/.idea/misc.xml`.
-   4. Replace in file `{{magento_root}}/.idea/misc.xml` string `/var/www/magento` or `$PROJECT_DIR$` by `$PROJECT_DIR$/magento` (all path should start with `$PROJECT_DIR$/magento`).
 
 3) #### [Magento Coding Standard][magento-coding-standard]
-    1. Install required packages:
-        1. For Community/Commerce:
-            ```shell
-                composer require --dev magento/magento-coding-standard
-            ```
-        2. For Commerce Cloud:
-             ```shell
-                composer require --dev magento/magento-coding-standard phpmd/phpmd:@stable squizlabs/php_codesniffer:~3.4.0 --sort-packages
-             ```
-    2. Due to security, when installed this way the Magento standard for phpcs cannot be added automatically. You can achieve this by adding the following to your project's `composer.json`:
-        ```json
-        "scripts": {
-          "post-install-cmd": [
-            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
-          ],
-          "post-update-cmd": [
-            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
-          ]
-        }
-        ```
-    3. Config PhpStorm:
+    1. On "Prepare all config files" step in `config.json` set `magento-coding-standard` under `DOCKER_SERVICES` to `true`.
+    2. Currently, PhpStorm don't have docker connection for eslint so you need install npm on host machine.
+    3. Install Magento Coding Standard project:
         ```shell
-        Settings->Directories->Excluded files: *Test*
-        P.S. not work with vendor/*
+            docker-compose run --rm mcs magento-coding-standard-installer
+            cd `{{root_directory}}/magento-coding-standard`
+            npm init
         ```
-        ```shell
-        Settings->Languages & Frameworks->PHP
-            PHP Language level: 7.3
-            CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
-                Config Remote PHP Interpreter:
-                choose 'Docker Compose'
-                Service: 'cli'
-            Path mapping: map {{magento_root}} in left column to path `/var/www/magento` inside container.
-        ```
+    4. Config PhpStorm (after magento & magento-coding-standard projects was setup):
        ```shell
        Settings->Languages & Frameworks->PHP->Quality tools
            PHP_CodeSniffer:
-           {{absolute_path}}/vendor/bin/phpcs (file should be a link to ../squizlabs/php_codesniffer/bin/phpcs)
-           {{absolute_path}}/vendor/bin/phpcbf (file should be a link to ../squizlabs/php_codesniffer/bin/phpcbf)
+           CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
+                Config Remote PHP Interpreter:
+                    choose 'Docker Compose'
+                    Name: 'mcs'
+                    Service: 'mcs'
+           Path mapping: map <Project root>/magento-coding-standard->/var/www/magento-coding-standard.
+           PHP_CodeSniffer path: `/var/www/magento-coding-standard/vendor/bin/phpcs`
+           Path to phpcbf: `/var/www/magento-coding-standard/vendor/bin/phpcbf`
+       
            PHP Mess Detector:
-           {{absolute_path}}/vendor/bin/phpmd (file should be a link to ../phpmd/phpmd/src/bin/phpmd)
+           CLI Interpreter: click '...' -> click '+' -> choose already created "cli" remote PHP Interpreter
+           Path mapping: map <Project root>/magento->/var/www/magento
+           PHP Mess Detector path: `/var/www/magento/vendor/bin/phpmd`
        ```
         ```shell
         Settings->Editor->Inspection
@@ -267,6 +268,20 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
                 Show sniff name: Yes
                 Coding Standard: Magento2 (if not see press reload & scroll up list)
         ```
+        ```shell
+       Settings->Languages & Frameworks
+       JavaScript->Code Quality Tools->ESLint:
+           Manual ESLint configuration:
+               ESLint package: {{absolute_path}}/magento-coding-standard/node_modules/eslint
+               Configuration file: {{absolute_path}}/magento-coding-standard/eslint/.eslintrc
+               Additional rules directory: {{absolute_path}}/magento-coding-standard/eslint/rules
+       ```
+   P.S. It enough create mcs container per different php version. If you already have mcs for current php version in another project you can create connect to this mcs container.
+
+   For upgrade magento coding standard enter inside mcs container:
+   ```shell
+      docker-compose run --rm mcs bash
+    ```
 
 ### Maybe useful
 
@@ -328,12 +343,51 @@ Fix problem with owner:
 ```
 Example of fix permission problem inside cli-container:
 ```shell
-    $ cd /var/www/ && sudo chown -R www-data:www-data magento/ && sudo chmod -R g+w magento/ && cd /var/www/magento/ && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
+    $ sudo chown -R www-data:www-data $MAGENTO_ROOT && sudo chmod -R g+w $MAGENTO_ROOT && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
-Also:
-1. mageconfigsync diff function not work (but load/save work)
-2. docker-compose run --rm cli magerun2 list - not working (Incompatibility with Magento 2.3.0)
 
+### Venia Support (WIP)
+- [x] Implement https functional.
+- [x] Implement Venia Sample Data.
+- [ ] Implement configuration for Magento PWA.
+Because Venia required worked connection to magento 2 think at least as ext step is create separate docker-compose.yml in `{{root_directory}}/magento_venia` directory. PWA project should be inited in `{{root_directory}}/magento_venia/source`. In Venia `DEV_SERVER_HOST`==`{{main_domain}}`, `DEV_SERVER_PORT`==`443`.
+Also need create custom makeHostAndCert.js that respect `NGINX_PROXY_PATH`
+venia docker-compose.yml example for connect to magento 2 as backend (need check if exists better way):
+```yml
+services:
+  pwa:
+    ...
+  external_links:
+    - "web.{{project_name}}:{{main_domain}}" #need mplement auto genatation via `php builder.php`
+    - "web.{{project_name}}:{{second_domain}}"
+    ...
+    - "web.{{project_name}}:{{last_domain}}"
+  networks:
+    - default
+    - nginx-proxy
+
+# used external proxy for use local magento 2 as backend
+networks:
+    nginx-proxy:
+        external: true
+```
+
+
+
+### TODO
+- [x] Add additional service configuration (redis, rabbitmq)
+- [x] Implement https functional for single store. 
+- [ ] Implement https functional for multi-stores. 
+- [ ] Implement configuration for Magento PWA.
+- [x] Implement configuration for Magento Coding Standard.
+- [x] Implement internal elasticsearch service.
+- [ ] Implement gulp for cli.
+- [x] Implement bash scripts for generate ssl certificate
+- [x] Implement bash scripts for set/update default services configs to env.php
+- [ ] Implement LiveReload
+- [ ] Implement dynamic varnish configs during build.php run (like it was done for php containers)
+- [ ] Implement dynamic internal elasticsearch configs during build.php run (like it was done for php containers)
+- [ ] Implement dynamic redis configs during build.php run (like it was done for php containers)
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
@@ -345,3 +399,4 @@ Also:
 [origin-repo]: https://github.com/meanbee/docker-magento2
 [nginx-proxy]: https://github.com/AndriynomeD/nginx-proxy
 [magento-coding-standard]: https://github.com/magento/magento-coding-standard
+[magento-system-requirements]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html
