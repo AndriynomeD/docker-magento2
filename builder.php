@@ -126,6 +126,10 @@ class ConfigBuilder
             throw new Exception( "\033[1;37m\033[0;31m" . 'Https required `NGINX_PROXY_PATH`' . "\033[0m");
         }
 
+        if ($variables['NGINX_PROXY_PATH']) {
+            $variables['NGINX_PROXY_PATH'] = rtrim($variables['NGINX_PROXY_PATH'], '/');
+        }
+
         return $variables;
     }
 
@@ -181,7 +185,7 @@ class ConfigBuilder
         $phpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
         foreach ($phpContainersConfig as $name => $phpContainerConfig) {
             if ($phpContainerConfig['version'] != $buildPhpVersion
-                || (strpos('mcs', $name) !== false && !$generalConfig['DOCKER_SERVICES']['magento-coding-standard'])) {
+                || (strpos($name, 'mcs') !== false && !$generalConfig['DOCKER_SERVICES']['magento-coding-standard'])) {
                 // delete not used or just ignore them?
                 continue;
             }

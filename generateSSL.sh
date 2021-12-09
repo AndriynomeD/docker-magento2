@@ -15,9 +15,8 @@ fi
 
 for DOMAIN in "${DOMAINS[@]}"
 do
-    SUBJECT_ALT_NAME=$SUBJECT_ALT_NAME"DNS:$element,"
     openssl req -x509 -nodes -days 730 \
         -subj  "/C=US/ST=TX/L=Austin/O=Magento/OU=Magento Docker/CN=$DOMAIN" \
-        -newkey rsa:2048 -keyout ${NGINXPROXYPATH}etc/nginx/certs/$DOMAIN.key \
-        -out ${NGINXPROXYPATH}etc/nginx/certs/$DOMAIN.crt
+        -newkey rsa:2048 -keyout ${NGINXPROXYPATH}/etc/nginx/certs/$DOMAIN.key \
+        -out ${NGINXPROXYPATH}/etc/nginx/certs/$DOMAIN.crt
 done
