@@ -11,6 +11,7 @@
       "BASE_URL": "http://magento2.docker/",
       "SECURE_BASE_URL": "https://magento2.docker/",
       "INSTALL_DB": "true",
+      "EDITION": "community",
       "USE_SAMPLE_DATA": "true",
       "ADMIN_EMAIL": "dummy@gmail.com",
       "CRYPT_KEY": ""

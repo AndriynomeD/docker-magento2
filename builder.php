@@ -130,6 +130,16 @@ class ConfigBuilder
             $variables['NGINX_PROXY_PATH'] = rtrim($variables['NGINX_PROXY_PATH'], '/');
         }
 
+        if (!isset($variables['M2_INSTALL']['EDITION'])) {
+            $variables['M2_INSTALL']['EDITION'] = 'community';
+        }
+        $availableEdition = ['community', 'enterprise'];
+        if (!in_array($variables['M2_INSTALL']['EDITION'], $availableEdition)) {
+            throw new Exception( "\033[1;37m\033[0;31m"
+                . sprintf('Incorrect Edition: %s. Available: %s', $variables['M2_INSTALL']['EDITION'], implode(', ', $availableEdition))
+                . "\033[0m");
+        }
+
         return $variables;
     }
 

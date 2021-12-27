@@ -45,11 +45,20 @@ MAGENTO_FIX_PERMISSIONS="magento-fix-permissions"
 if [ ! -f "$MAGENTO_ROOT/composer.json" ]; then
     echo "Creating Magento ($M2SETUP_VERSION) project from composer"
 
-    composer create-project \
-        --repository-url=https://repo.magento.com/ \
-        magento/project-community-edition=$M2SETUP_VERSION \
-        --no-interaction \
-        $MAGENTO_ROOT
+    # install community if version not specify
+    COMPOSER_CREATE_PROJECT="composer create-project \
+          --repository-url=https://repo.magento.com/ \
+          magento/project-community-edition=$M2SETUP_VERSION \
+          --no-interaction \
+          $MAGENTO_ROOT"
+    if [ "$M2SETUP_EDITION" = "enterprise" ]; then
+       COMPOSER_CREATE_PROJECT="composer create-project \
+              --repository-url=https://repo.magento.com/ \
+              magento/project-enterprise-edition=$M2SETUP_VERSION \
+              --no-interaction \
+              $MAGENTO_ROOT"
+    fi
+    $COMPOSER_CREATE_PROJECT
 
     # Magento forces Composer to use $MAGENTO_ROOT/var/composer_home as the home directory
     # when running any Composer commands through Magento, e.g. sampledata:deploy, so copy the
