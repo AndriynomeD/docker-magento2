@@ -35,6 +35,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
                 "BASE_URL": "http://{{main_domain}}/"
                 "SECURE_BASE_URL": "https://{{main_domain}}/"
                 "ADMIN_EMAIL": {{real email}} # magento 2.4.0+ used 2FA by default
+                "EDITION": community/enterprise
             "M2_SETTINGS" - section with magento additional services settings (also used by magento-instaler scripts)
                 "ELASTICSEARCH_SETTINGS" - update index-prefix (can be {{project_name}} without TLD
             "DOCKER_SERVICES": additional services, such as varnish, cron. If you want to use magento as Venia backend set `venia` to `true`.
@@ -282,6 +283,17 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
    ```shell
       docker-compose run --rm mcs bash
     ```
+
+### Ngrok support (usefully for testing online payment methods etc.)
+1) Install ngrok
+2) Download & install [magento-ngrok extension](https://github.com/AndriynomeD/magento-ngrok) to app/code/Shkoliar/Ngrok folder.
+3) Run ngrok with additional param host-header. Example:
+    ```shell
+        ./ngrok http -host-header={{local_site_domain}} 80
+    ```
+    How it works: internet->ngrok->reverse-proxy->project-entrypoint(nginx/varnish->nginx->varnish)->reverse-proxy->ngrok->internet
+
+    P.S. It for local development - do not commit Shkoliar_Ngrok into project git
 
 ### Maybe useful
 
