@@ -285,15 +285,17 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     ```
 
 ### Ngrok support (usefully for testing online payment methods etc.)
-1) Install ngrok
+1) Install ngrok. Copy `ngrok` to `/usr/local/bin` for run ngrok from any folder by command 'ngrok'
 2) Download & install [magento-ngrok extension](https://github.com/AndriynomeD/magento-ngrok) to app/code/Shkoliar/Ngrok folder.
-3) Run ngrok with additional param host-header. Example:
+3) Run to cli container and set `sudo -uwww-data php bin/magento config:set --lock-env web/url/redirect_to_base 0`.
+4) Redeploy project: set:up, s:d:c, etc.
+5) Run ngrok with additional param host-header. Example `ngrok http -host-header=magento243.site 80`:
     ```shell
-        ./ngrok http -host-header={{local_site_domain}} 80
+        ngrok http -host-header={{local_site_domain}} 80
     ```
     How it works: internet->ngrok->reverse-proxy->project-entrypoint(nginx/varnish->nginx->varnish)->reverse-proxy->ngrok->internet
 
-    P.S. It for local development - do not commit Shkoliar_Ngrok into project git
+    P.S. It for local development - do not commit Shkoliar_Ngrok into project git.
 
 ### Maybe useful
 
