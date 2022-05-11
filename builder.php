@@ -18,7 +18,8 @@ class ConfigBuilder
     const PHP_CONTAINERS_CONFIG_KEY = 'php-containers';
     const PHP_CONTAINERS_TEMPLATE_DIR = 'phpContainers';
     const PHP_CONTAINERS_DESTINATION_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers' . DIRECTORY_SEPARATOR . 'php';
-    const DEFAULT_COMPOSERVERSION = '1.10.17';
+    const DEFAULT_COMPOSER1VERSION = '1.10.17';
+    const DEFAULT_XDEBUG2VERSION = '2.9.8';
 
     /* docker-compose consts */
     const DOCKER_COMPOSE_TEMPLATE_FILE = 'docker-compose.tml';
@@ -171,12 +172,29 @@ class ConfigBuilder
         );
         $variables['specificPackages'] = array_merge($defaultSpecificPackages, $variables['specificPackages']);
 
+        if ($variables['specificPackages']['ioncube'] && version_compare($generalConfig['PHP_VERSION'], '8.0', '>=')) {
+            throw new Exception( "\033[1;37m\033[0;31m" . 'IonCube not supported PHP 8 or hight yet.' . "\033[0m");
+        }
+
         if ($variables['composerVersion'] === 'latest') {
             $magento2Version = str_replace('*', 9, $generalConfig['M2_VERSION']);
             if (version_compare($magento2Version, '2.4.2', '>=')) {
                 $variables['composerVersion'] = 'latest';
+            } elseif (version_compare($magento2Version, '2.3.7', '>=')) {
+                $variables['composerVersion'] = 'latest';
             } else {
-                $variables['composerVersion'] = self::DEFAULT_COMPOSERVERSION;
+                $variables['composerVersion'] = self::DEFAULT_COMPOSER1VERSION;
+            }
+        }
+
+        if ($variables['xdebugVersion'] == 'latest') {
+            $magento2Version = str_replace('*', 9, $generalConfig['M2_VERSION']);
+            if (version_compare($magento2Version, '2.3.7', '>=')
+                && version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')
+            ) {
+                $variables['xdebugVersion'] = 'latest';
+            } else {
+                $variables['xdebugVersion'] = self::DEFAULT_XDEBUG2VERSION;
             }
         }
 

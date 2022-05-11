@@ -37,7 +37,7 @@ CRON_LOG=/var/log/cron.log
 
 # Setup Magento cron
 echo "#~ MAGENTO START c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
-if [ "$(printf '%s\n' "2.4.0" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.4.0" ]; then
+if [ "$(printf '%s\n' "2.3.7" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.3.7" ]; then
   echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
 else
   echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
