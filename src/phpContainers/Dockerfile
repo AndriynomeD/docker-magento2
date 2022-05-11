@@ -19,6 +19,8 @@ MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
         'libpng-dev',
         'libxslt1-dev',
         'libzip-dev',
+        'zip',
+        'unzip',
         'sudo',
         'git'
     ], $packages ?? [], $flavourPackages ?? [])
@@ -38,7 +40,6 @@ RUN apt-get update \
   'mbstring',
   'pdo_mysql',
   'xsl',
-  'zip',
   'soap',
   'bcmath',
   'pcntl',
@@ -49,6 +50,16 @@ RUN apt-get update \
 RUN docker-php-ext-install \
   <?php echo join(" \\ \n  ", $imagePhpExtensions) ?>
 
+
+# added zip to container (so there is no composer warning)
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] || { [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "3" ] ;} ;}; then \
+    docker-php-ext-configure zip; \
+else \
+    docker-php-ext-configure zip --with-libzip; \
+fi && \
+  # Install the zip extension
+  docker-php-ext-install zip && \
+  php -m | grep -q 'zip'
 
 <?php include "Docker-specific-packages"; ?>
 ###########################################################################

@@ -20,8 +20,8 @@ RUN docker-php-ext-install gd
 # Imagemagick:
 ###########################################################################
 
-ARG INSTALL_IMAGEMAGICK=<?= $specificPackages['imagick'] !== false ? 'true' : 'false'; ?>
-ARG IMAGEMAGICK_VERSION=<?= ($specificPackages['imagick'] !== true)? $specificPackages['imagick'] : 'latest'; ?>
+ARG INSTALL_IMAGEMAGICK=<?= $specificPackages['imagick'] !== false ? 'true' : 'false'; ?><?= PHP_EOL ?>
+ARG IMAGEMAGICK_VERSION=<?= ($specificPackages['imagick'] !== true)? $specificPackages['imagick'] : 'latest'; ?><?= PHP_EOL ?>
 ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
