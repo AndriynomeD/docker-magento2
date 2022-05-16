@@ -146,9 +146,15 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         #composer --working-dir=$MAGENTO_ROOT require --no-interaction --ansi magento/venia-sample-data:0.0.1
         $MAGENTO_FIX_PERMISSIONS
         $MAGENTO_COMMAND setup:upgrade
-        rm -rf $MAGENTO_ROOT/generated/*
-        rm -rf $MAGENTO_ROOT/var/generation/*
-        rm -rf $MAGENTO_ROOT/var/generated/*
+        if [ -d "$MAGENTO_ROOT/generated" ]; then
+            rm -rf $MAGENTO_ROOT/generated/*
+        fi
+        if [ -d "$MAGENTO_ROOT/var/generation" ]; then
+            rm -rf $MAGENTO_ROOT/var/generation/*
+        fi
+        if [ -d "$MAGENTO_ROOT/var/generated" ]; then
+            rm -rf $MAGENTO_ROOT/var/generated/*
+        fi
         $MAGENTO_COMMAND setup:di:compile
         $MAGENTO_FIX_PERMISSIONS
     fi
@@ -186,9 +192,15 @@ echo "Fixing file permissions.."
 
 find $MAGENTO_ROOT/pub -type f -exec chmod 664 {} \;
 find $MAGENTO_ROOT/pub -type d -exec chmod 775 {} \;
-find $MAGENTO_ROOT/var/generation -type d -exec chmod g+s {} \;
-find $MAGENTO_ROOT/var/generated -type d -exec chmod g+s {} \;
-find $MAGENTO_ROOT/generated -type d -exec chmod g+s {} \;
+if [ -d "$MAGENTO_ROOT/var/generation" ]; then
+    find $MAGENTO_ROOT/var/generation -type d -exec chmod g+s {} \;
+fi
+if [ -d "$MAGENTO_ROOT/var/generated" ]; then
+    find $MAGENTO_ROOT/var/generated -type d -exec chmod g+s {} \;
+fi
+if [ -d "$MAGENTO_ROOT/generated" ]; then
+    find $MAGENTO_ROOT/generated -type d -exec chmod g+s {} \;
+fi
 
 $MAGENTO_FIX_PERMISSIONS
 
