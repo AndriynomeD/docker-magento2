@@ -187,7 +187,7 @@ class ConfigBuilder
             }
         }
 
-        if ($variables['xdebugVersion'] == 'latest') {
+        if (isset($variables['xdebugVersion']) && $variables['xdebugVersion'] == 'latest') {
             $magento2Version = str_replace('*', 9, $generalConfig['M2_VERSION']);
             if (version_compare($magento2Version, '2.3.7', '>=')
                 && version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')
