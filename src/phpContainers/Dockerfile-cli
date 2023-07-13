@@ -29,7 +29,7 @@ RUN apt-get update \
     && apt-get install -y \
     && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g grunt-cli
+    && apt-get install -y npm && npm install -g grunt-cli
 
 <?php endif; ?>
 ###########################################################################
