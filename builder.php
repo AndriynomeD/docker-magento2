@@ -25,6 +25,10 @@ class ConfigBuilder
     const DOCKER_COMPOSE_TEMPLATE_FILE = 'docker-compose.tml';
     const DOCKER_COMPOSE_DESTINATION_FILE = __DIR__ . DIRECTORY_SEPARATOR . 'docker-compose.yml';
 
+    /* search_engine consts */
+    const SEARCH_ENGINE_CONTAINERS_TEMPLATE_DIR = 'search_engine';
+    const SEARCH_ENGINE_CONTAINERS_DESTINATION_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers' . DIRECTORY_SEPARATOR . 'search_engine';
+
     const DEFAULT_EXECUTABLE_PERMISSIONS = 0755;
     const DEFAULT_VERBOSE_LEVEL = 1;
 
@@ -64,6 +68,7 @@ class ConfigBuilder
     {
         $this->buildPhpContainers();
         $this->buildNginxContainer();
+        $this->buildSearchEngineContainer();
         $this->buildDockerCompose();
     }
 
@@ -72,15 +77,24 @@ class ConfigBuilder
      * @param array $array2
      * @return array
      */
-    private function array_merge_recursive_distinct(array $array1, array $array2): array {
-        foreach ($array2 as $key => $value) {
-            if (is_array($value) && isset($array1[$key]) && is_array($array1[$key])) {
-                $array1[$key] = $this->array_merge_recursive_distinct($array1[$key], $value);
-            } else {
-                $array1[$key] = $value;
+    private function array_merge_recursive_distinct(array ...$arrays): array {
+        $base = array_shift($arrays);
+
+        foreach ($arrays as $array) {
+            foreach ($array as $key => $value) {
+                if (
+                    is_array($value)
+                    && isset($base[$key])
+                    && is_array($base[$key])
+                ) {
+                    $base[$key] = $this->array_merge_recursive_distinct($base[$key], $value);
+                } else {
+                    $base[$key] = $value;
+                }
             }
         }
-        return $array1;
+
+        return $base;
     }
 
     /**
@@ -109,7 +123,7 @@ class ConfigBuilder
                 'search_engine' => [
                     '__note__'  => 'available image: elasticsearch|opensearch, connect_type: external|internal',
                     'CONNECT_TYPE' => 'external',
-                    'IMAGE'   => 'elasticsearch:7.7.1',
+                    'IMAGE'   => 'docker.elastic.co/elasticsearch/elasticsearch:7.7.1',
                     'TYPE'    => 'elasticsearch',
                     'VERSION' => '7.7.1'
                 ],
@@ -122,10 +136,7 @@ class ConfigBuilder
             ]
         ];
 
-        $variables = $this->array_merge_recursive_distinct(
-            $this->array_merge_recursive_distinct($defaultDockerComposeConfig, $generalConfig),
-            $variables
-        );
+        $variables = $this->array_merge_recursive_distinct($defaultDockerComposeConfig, $generalConfig, $variables);
 
         if (is_array($variables['DOCKER_SERVICES']['search_engine'])
             && $variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'none'
@@ -179,39 +190,37 @@ class ConfigBuilder
     }
 
     /**
-     * @param $generalConfig
-     * @param $phpContainerConfig
-     * @param $variables
-     * @return array|false[]
+     * @param array $generalConfig
+     * @param array $phpContainerConfig
+     * @param array $variables
+     * @return array
      * @throws Exception
      */
-    private function getPhpContainerVariables($generalConfig, $phpContainerConfig, $variables = [])
+    private function getPhpContainerVariables(array $generalConfig, array $phpContainerConfig, array $variables = []): array
     {
         $defaultPhpContainerConfig = [
             'composerVersion' => 'latest',
             'databaseType' => $generalConfig['DOCKER_SERVICES']['database']['TYPE'],
             'databaseVersion' => $generalConfig['DOCKER_SERVICES']['database']['VERSION'],
-            'specificPackages' => []
-        ];
-        $defaultSpecificPackages = [
-            'gd' => true,
-            'imagick' => false,
-            'calendar' => false,
-            'ioncube' => false,
-            'grunt' => false,
-            'libsodiumfix' => false
+            'specificPackages' => [
+                'gd' => true,
+                'imagick' => false,
+                'calendar' => false,
+                'ioncube' => false,
+                'grunt' => false,
+                'libsodiumfix' => false
+            ]
         ];
         $defaultFileVariables = [
             '_disable_variables' => false,
             'executable' => false
         ];
-        $variables = array_merge(
+        $variables = $this->array_merge_recursive_distinct(
             $defaultPhpContainerConfig,
             $phpContainerConfig,
             $defaultFileVariables,
             $variables
         );
-        $variables['specificPackages'] = array_merge($defaultSpecificPackages, $variables['specificPackages']);
 
         if ($variables['specificPackages']['ioncube'] && version_compare($generalConfig['PHP_VERSION'], '8.0', '>=')) {
             throw new Exception( "\033[1;37m\033[0;31m" . 'IonCube not supported PHP 8 or higher yet.' . "\033[0m");
@@ -243,6 +252,34 @@ class ConfigBuilder
     }
 
     /**
+     * @param array $generalConfig
+     * @param array $variables
+     * @return array
+     */
+    private function getSearchEngineContainerVariables(array $generalConfig, array $variables = []): array
+    {
+        $searchEngineType = $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'];
+        $searchEngineImage = $generalConfig['DOCKER_SERVICES']['search_engine']['IMAGE'];
+        $defaultSearchEngineContainerConfig = [
+            'searchEngineImage' => $searchEngineImage,
+            'ELASTICSEARCH_IMAGE' => $searchEngineType == 'elasticsearch' ? $searchEngineImage: '',
+            'OPENSEARCH_IMAGE' => $searchEngineType == 'opensearch' ? $searchEngineImage: ''
+        ];
+        $defaultFileVariables = [
+            '_disable_variables' => false,
+            'executable' => false
+        ];
+        $variables = $this->array_merge_recursive_distinct(
+            $defaultSearchEngineContainerConfig,
+            $defaultFileVariables,
+            $variables
+        );
+
+        return $variables;
+    }
+
+
+    /**
      * Build the files described in the loaded config.
      */
     private function buildPhpContainers()
@@ -252,20 +289,20 @@ class ConfigBuilder
         $generalConfig = $this->getGeneralConfig();
         $buildPhpVersion = $generalConfig['PHP_VERSION'];
         $phpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
-        foreach ($phpContainersConfig as $name => $phpContainerConfig) {
-            if ($phpContainerConfig['version'] != $buildPhpVersion
+        foreach ($phpContainersConfig as $name => $containerConfig) {
+            if ($containerConfig['version'] != $buildPhpVersion
                 || (strpos($name, 'mcs') !== false && !$generalConfig['DOCKER_SERVICES']['magento-coding-standard'])) {
                 // delete not used or just ignore them?
                 continue;
             }
             $this->verbose(sprintf("Building '%s'...", $name), 1);
-            $configFiles = $phpContainerConfig['files'];
-            unset($phpContainerConfig['files']);
-            $phpContainerConfig['phpVersion'] = $phpContainerConfig['version'];
+            $configFiles = $containerConfig['files'];
+            unset($containerConfig['files']);
+            $containerConfig['phpVersion'] = $containerConfig['version'];
             $templateConfig = [
                 'templateDirPath' => $templateDirPath,
-                'version' => $phpContainerConfig['version'],
-                'flavour' => $phpContainerConfig['flavour'],
+                'version' => $containerConfig['version'],
+                'flavour' => $containerConfig['flavour'],
             ];
             foreach ($configFiles as $filename => $variables) {
                 $contents = '';
@@ -278,7 +315,7 @@ class ConfigBuilder
                     ];
                     */
 
-                    $variables = $this->getPhpContainerVariables($generalConfig, $phpContainerConfig, $variables);
+                    $variables = $this->getPhpContainerVariables($generalConfig, $containerConfig, $variables);
 
                     // Determine whether we should load with the template renderer, or whether we should straight up
                     // just load the file from disk.
@@ -293,7 +330,7 @@ class ConfigBuilder
 
                 $destinationFile = $this->getDestinationFile(
                     $filename,
-                    $phpContainerConfig,
+                    $containerConfig,
                     self::PHP_CONTAINERS_DESTINATION_DIR
                 );
                 $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
@@ -305,14 +342,6 @@ class ConfigBuilder
                 }
             }
         }
-    }
-
-    /**
-     * Build the files described in the loaded config.
-     */
-    private function buildSearchEngineContainer()
-    {
-
     }
 
     /**
@@ -333,6 +362,73 @@ class ConfigBuilder
         }
     }
 
+    /**
+     * Build the files described in the loaded config.
+     */
+    private function buildSearchEngineContainer()
+    {
+
+        $generalConfig = $this->getGeneralConfig();
+        $isSearchEngineInternal = $generalConfig['DOCKER_SERVICES']['search_engine'] !== false
+            && $generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'internal';
+        if ($isSearchEngineInternal) {
+            $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR . self::SEARCH_ENGINE_CONTAINERS_TEMPLATE_DIR . DIRECTORY_SEPARATOR . $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE']. DIRECTORY_SEPARATOR;
+            $containerConfig = [
+                'context-folder' => $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'],
+                'files' =>  [
+                    'Dockerfile' => []
+                ]
+            ];
+            $this->verbose(sprintf("Building '%s'...", 'search_engine'), 1);
+            $configFiles = $containerConfig['files'];
+            unset($containerConfig['files']);
+            $templateConfig = [
+                'templateDirPath' => $templateDirPath,
+                'version' => '',
+                'flavour' => '',
+            ];
+            foreach ($configFiles as $filename => $variables) {
+                $contents = '';
+                if ($templateFile = $this->getTemplateFile($filename, $templateConfig)) {
+                    /* list of all variables
+                    $variables = [
+                        'searchEngineImage', 'ELASTICSEARCH_IMAGE', 'OPENSEARCH_IMAGE',
+                        '_disable_variables', 'executable',
+                    ];
+                    */
+                    $variables = $this->getSearchEngineContainerVariables($generalConfig, $variables);
+
+                    // Determine whether we should load with the template renderer, or whether we should straight up
+                    // just load the file from disk.
+                    if ($variables['_disable_variables']) {
+                        $contents = file_get_contents($templateFile);
+                    } else {
+                        $contents = $this->renderTemplate($templateFile, $variables);
+                    }
+
+                    $contents = str_replace('{{generated_by_builder}}', 'This file is automatically generated. Do not edit directly.', $contents);
+                }
+
+                $destinationFile = $this->getDestinationFile(
+                    $filename,
+                    $containerConfig,
+                    self::SEARCH_ENGINE_CONTAINERS_DESTINATION_DIR
+                );
+                $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
+                $this->writeFile($destinationFile, $contents);
+
+                if ($variables['executable'] ) {
+                    $this->verbose(sprintf("\tUpdating permissions on '%s' to '%o'...", $destinationFile, $this->executablePermissions), 2);
+                    $this->setFilePermissions($destinationFile, $this->executablePermissions);
+                }
+            }
+        }
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
     private function buildDockerCompose()
     {
         $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR;
@@ -340,8 +436,8 @@ class ConfigBuilder
         $this->verbose(sprintf("Building '%s'...", 'docker-compose.yml'), 1);
         $templateConfig = [
             'templateDirPath' => $templateDirPath,
-            'version' => 'none',
-            'flavour' => 'none',
+            'version' => '',
+            'flavour' => '',
         ];
         $filename = self::DOCKER_COMPOSE_TEMPLATE_FILE;
         $contents = '';
