@@ -19,6 +19,8 @@ MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
         'libpng-dev',
         'libxslt1-dev',
         'libzip-dev',
+        'zip',
+        'unzip',
         'sudo',
         'git'
     ], $packages ?? [], $flavourPackages ?? [])
@@ -26,7 +28,9 @@ MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
 
 RUN apt-get update \
   && apt-get install -y \
-    <?php echo join(" \\ \n    ", $imagePackages) ?>
+    <?php echo join(" \\ \n    ", $imagePackages) ?> \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
 ###########################################################################
@@ -38,7 +42,6 @@ RUN apt-get update \
   'mbstring',
   'pdo_mysql',
   'xsl',
-  'zip',
   'soap',
   'bcmath',
   'pcntl',
@@ -46,7 +49,7 @@ RUN apt-get update \
 ], $phpExtensions ?? [], $flavourPhpExtensions ?? []);
 ?>
 
-RUN docker-php-ext-install \
+RUN docker-php-ext-install -j$(nproc) \
   <?php echo join(" \\ \n  ", $imagePhpExtensions) ?>
 
 
@@ -56,15 +59,13 @@ RUN docker-php-ext-install \
 # Configuring...
 ###########################################################################
 
-ENV PHP_MEMORY_LIMIT 2G
-ENV PHP_ENABLE_XDEBUG false
-ENV MCS_ROOT /var/www/magento-coding-standard
+ENV PHP_MEMORY_LIMIT=2G \
+    PHP_ENABLE_XDEBUG=false \
+    MCS_ROOT=/var/www/magento-coding-standard \
+    DEBUG=false \
+    UPDATE_UID_GID=false
 
-ENV DEBUG false
-ENV UPDATE_UID_GID false
-
-ADD docker-entrypoint-mcs.sh /docker-entrypoint.sh
-
+COPY docker-entrypoint-mcs.sh /docker-entrypoint.sh
 RUN ["chmod", "+x", "/docker-entrypoint.sh"]
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

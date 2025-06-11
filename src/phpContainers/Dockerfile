@@ -28,7 +28,9 @@ MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
 
 RUN apt-get update \
   && apt-get install -y \
-    <?php echo join(" \\ \n    ", $imagePackages) ?>
+    <?php echo join(" \\ \n    ", $imagePackages) ?> \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
 ###########################################################################
@@ -47,7 +49,7 @@ RUN apt-get update \
 ], $phpExtensions ?? [], $flavourPhpExtensions ?? []);
 ?>
 
-RUN docker-php-ext-install \
+RUN docker-php-ext-install -j$(nproc) \
   <?php echo join(" \\ \n  ", $imagePhpExtensions) ?>
 
 
@@ -67,7 +69,7 @@ fi && \
 ###########################################################################
 
 <?php $xdebugVersion = ($xdebugVersion == 'latest' || $xdebugVersion == '') ? '' : '-' . $xdebugVersion; ?>
-RUN pecl install -o -f <?php printf("xdebug%s\n", $xdebugVersion) ?>
+RUN pecl install -o -f <?php printf("xdebug%s", $xdebugVersion) ?> && rm -rf /tmp/pear
 ADD etc/php-xdebug.ini /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
 
 ###########################################################################
@@ -80,24 +82,24 @@ RUN apt-get update \
   && echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections \
   && apt-get install -y \
     postfix \
-    libsasl2-modules
+    libsasl2-modules \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY etc/postfix/config.cf /etc/postfix/
-RUN sed -i "s/relayhost =[ ]*$//g" /etc/postfix/main.cf
-RUN cat /etc/postfix/config.cf >> /etc/postfix/main.cf
+RUN sed -i "s/relayhost =[ ]*$//g" /etc/postfix/main.cf \
+    && cat /etc/postfix/config.cf >> /etc/postfix/main.cf
 
 ###########################################################################
 # Configuring...
 ###########################################################################
 
-ENV PHP_MEMORY_LIMIT 2G
-ENV PHP_ENABLE_XDEBUG false
-ENV MAGENTO_ROOT /var/www/magento
+ENV PHP_MEMORY_LIMIT=2G \
+    PHP_ENABLE_XDEBUG=false \
+    MAGENTO_ROOT=/var/www/magento \
+    DEBUG=false \
+    UPDATE_UID_GID=false
 
-ENV DEBUG false
-ENV UPDATE_UID_GID false
-
-ADD docker-entrypoint.sh /docker-entrypoint.sh
-
+COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN ["chmod", "+x", "/docker-entrypoint.sh"]
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

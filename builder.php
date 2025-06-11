@@ -67,48 +67,82 @@ class ConfigBuilder
         $this->buildDockerCompose();
     }
 
+    /**
+     * @param array $array1
+     * @param array $array2
+     * @return array
+     */
+    private function array_merge_recursive_distinct(array $array1, array $array2): array {
+        foreach ($array2 as $key => $value) {
+            if (is_array($value) && isset($array1[$key]) && is_array($array1[$key])) {
+                $array1[$key] = $this->array_merge_recursive_distinct($array1[$key], $value);
+            } else {
+                $array1[$key] = $value;
+            }
+        }
+        return $array1;
+    }
+
+    /**
+     * @param $variables
+     * @return array
+     * @throws Exception
+     */
     private function getGeneralConfig($variables = [])
     {
         $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
         $defaultDockerComposeConfig = [
             'PHP_VERSION' => '7.4',
-            'M2_VERSION' => '2.4.*',
+            'M2_VERSION' => '2.4.2',
             'HTTPS_HOST' => false,
             'NGINX_PROXY_PATH' => '',
             'M2_INSTALL' => [],
             'M2_SETTINGS' => [],
-            'DOCKER_DB' => [],
-            'DOCKER_SERVICES' => []
+            'DOCKER_SERVICES' => [
+                'database' => [
+                    '__note__'  => 'available image: mariadb|mysql|percona',
+                    'IMAGE'   => 'mariadb:10.4',
+                    'TYPE'    => 'mariadb',
+                    'VERSION' => '10.4',
+                    'VOLUME'  => 'mariadb10'
+                ],
+                'search_engine' => [
+                    '__note__'  => 'available image: elasticsearch|opensearch, connect_type: external|internal',
+                    'CONNECT_TYPE' => 'external',
+                    'IMAGE'   => 'elasticsearch:7.7.1',
+                    'TYPE'    => 'elasticsearch',
+                    'VERSION' => '7.7.1'
+                ],
+                'varnish'   => true,
+                'cron'  => true,
+                'redis' => false,
+                'rabbitmq'  => false,
+                'magento-coding-standard'  => false,
+                'venia'   => false
+            ]
         ];
-        $defaultDockerDbConfig = [
-            '__note__'  => 'available image: mariadb|mysql|percona',
-            'IMAGE'   => 'mariadb:10.4',
-            'TYPE'    => 'mariadb',
-            'VERSION' => '10.4'
-        ];
-        $defaultAdditionalServicesConfig = [
-            'external_elasticsearch'    => true,
-            'internal_elasticsearch'    => false,
-            'varnish'   => true,
-            'cron'  => true,
-            'redis' => false,
-            'rabbitmq'  => false,
-            'magento-coding-standard'  => false,
-            'venia'   => false
-        ];
-        $variables = array_merge($defaultDockerComposeConfig, $generalConfig, $variables);
-        $variables['DOCKER_DB'] = array_merge($defaultDockerDbConfig, $variables['DOCKER_DB']);
-        $variables['DOCKER_SERVICES'] = array_merge($defaultAdditionalServicesConfig, $variables['DOCKER_SERVICES']);
 
-        if ($variables['DOCKER_SERVICES']['external_elasticsearch'] && $variables['DOCKER_SERVICES']['internal_elasticsearch']) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'External & internal elasticsearch cann\'t be enabled at same time' . "\033[0m");
+        $variables = $this->array_merge_recursive_distinct(
+            $this->array_merge_recursive_distinct($defaultDockerComposeConfig, $generalConfig),
+            $variables
+        );
+
+        if (is_array($variables['DOCKER_SERVICES']['search_engine'])
+            && $variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'none'
+        ) {
+            $variables['DOCKER_SERVICES']['search_engine'] = false;
         }
-        $variables['ELASTICSEARCH_AVAILABLE'] = $variables['DOCKER_SERVICES']['external_elasticsearch']
-            || $variables['DOCKER_SERVICES']['internal_elasticsearch'];
-        if (!$variables['ELASTICSEARCH_AVAILABLE']
+        $variables['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE'] = $variables['DOCKER_SERVICES']['search_engine'] !== false
+            && in_array($variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'], ['internal', 'external']);
+        if (!$variables['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE']
             && version_compare(str_replace('*', 9, $variables['M2_VERSION']), '2.4.0', '>=')
         ) {
             throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' . "\033[0m");
+        }
+        if (is_array($variables['DOCKER_SERVICES']['search_engine'])
+            && !in_array($variables['DOCKER_SERVICES']['search_engine']['TYPE'], ['elasticsearch', 'opensearch'])
+        ) {
+            throw new Exception( "\033[1;37m\033[0;31m" . 'Available search engine: elasticsearch, opensearch' . "\033[0m");
         }
 
         if ($generalConfig['DOCKER_SERVICES']['venia']) {
@@ -134,7 +168,7 @@ class ConfigBuilder
         if (!isset($variables['M2_INSTALL']['EDITION'])) {
             $variables['M2_INSTALL']['EDITION'] = 'community';
         }
-        $availableEdition = ['community', 'enterprise'];
+        $availableEdition = ['community', 'enterprise', 'cloud'];
         if (!in_array($variables['M2_INSTALL']['EDITION'], $availableEdition)) {
             throw new Exception( "\033[1;37m\033[0;31m"
                 . sprintf('Incorrect Edition: %s. Available: %s', $variables['M2_INSTALL']['EDITION'], implode(', ', $availableEdition))
@@ -144,12 +178,19 @@ class ConfigBuilder
         return $variables;
     }
 
+    /**
+     * @param $generalConfig
+     * @param $phpContainerConfig
+     * @param $variables
+     * @return array|false[]
+     * @throws Exception
+     */
     private function getPhpContainerVariables($generalConfig, $phpContainerConfig, $variables = [])
     {
         $defaultPhpContainerConfig = [
             'composerVersion' => 'latest',
-            'databaseType' => $generalConfig['DOCKER_DB']['TYPE'],
-            'databaseVersion' => $generalConfig['DOCKER_DB']['VERSION'],
+            'databaseType' => $generalConfig['DOCKER_SERVICES']['database']['TYPE'],
+            'databaseVersion' => $generalConfig['DOCKER_SERVICES']['database']['VERSION'],
             'specificPackages' => []
         ];
         $defaultSpecificPackages = [
@@ -173,7 +214,7 @@ class ConfigBuilder
         $variables['specificPackages'] = array_merge($defaultSpecificPackages, $variables['specificPackages']);
 
         if ($variables['specificPackages']['ioncube'] && version_compare($generalConfig['PHP_VERSION'], '8.0', '>=')) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'IonCube not supported PHP 8 or hight yet.' . "\033[0m");
+            throw new Exception( "\033[1;37m\033[0;31m" . 'IonCube not supported PHP 8 or higher yet.' . "\033[0m");
         }
 
         if ($variables['composerVersion'] === 'latest') {
@@ -267,7 +308,18 @@ class ConfigBuilder
     }
 
     /**
-     * Currently only generate ssl sertificates
+     * Build the files described in the loaded config.
+     */
+    private function buildSearchEngineContainer()
+    {
+
+    }
+
+    /**
+     * Currently only generate ssl certificates
+     *
+     * @return void
+     * @throws Exception
      */
     private function buildNginxContainer()
     {

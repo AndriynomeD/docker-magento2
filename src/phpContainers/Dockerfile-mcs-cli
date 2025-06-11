@@ -27,25 +27,26 @@ include "Dockerfile-mcs";
 
 RUN apt-get update \
     && apt-get install -y \
-    && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g grunt-cli
+    curl gnupg && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
+    && apt-get install -y nodejs && npm install -g grunt-cli \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 <?php endif; ?>
 ###########################################################################
 # Configuring...
 ###########################################################################
 
-ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_GITHUB_TOKEN ""
-ENV COMPOSER_MAGENTO_USERNAME ""
-ENV COMPOSER_MAGENTO_PASSWORD ""
-ENV COMPOSER_BITBUCKET_KEY ""
-ENV COMPOSER_BITBUCKET_SECRET ""
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_GITHUB_TOKEN="" \
+    COMPOSER_MAGENTO_USERNAME="" \
+    COMPOSER_MAGENTO_PASSWORD ="" \
+    COMPOSER_BITBUCKET_KEY="" \
+    COMPOSER_BITBUCKET_SECRET=""
 
 VOLUME /root/.composer/cache
 
-ADD etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
+COPY etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
 
 ###########################################################################
 # Get composer installed to /usr/local/bin/composer
@@ -58,7 +59,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 ###########################################################################
 
 ADD bin/* /usr/local/bin/
-
 RUN ["chmod", "+x", "/usr/local/bin/magento-coding-standard-installer"]
 
 WORKDIR $MCS_ROOT

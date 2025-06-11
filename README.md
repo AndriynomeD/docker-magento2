@@ -18,7 +18,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 3) Prepare all config files:
     1) Copy `config.json.sample` to `config.json`, `global.env.sample`, `global.env` & fill it with you data. 
         Example of required field for `composer.env` file:
-        ```
+        ```env
         COMPOSER_MAGENTO_USERNAME={{repo.magento.com_username}}
         COMPOSER_MAGENTO_PASSWORD={{repo.magento.com_password}}
         ``` 
@@ -26,7 +26,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     2) Create renamed copy of following files in your `{{root_directory}}`:
         1) Copy `config.json.sample` to `config.json`.
         2) Update sections with you data (read 'Single-store', 'Multi-store', 'Grunt' sections first), also check [magento 2 system requirements][magento-system-requirements]:
-            ```
+            ```json
             "M2_PROJECT": {{project_name}}
             "M2_VIRTUAL_HOSTS": {{all_site_domain}} 
             "M2_DB_NAME": {{database_name}}
@@ -52,46 +52,46 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 
 4) Build php containers & `docker-compose.yml`:
     ```shell
-        $ php builder.php
+        php builder.php
     ```
     In `examples` folder you can see example of generated `docker-compose.yml`.
 
 5) Up containers (first time up better don't add key `-d` for check if all okay):
     ```shell
-        $ docker-compose up -d
+        docker-compose up -d
     ```
 
 6) Clone existing repo with magento into this folder or run next command for install magento from scratch:
     ```shell
-        $ docker-compose run --rm cli magento-installer
+        docker-compose run --rm cli magento-installer
     ```
 7) Now you can enter to cli (you should run all magento command under cli).
    P.S. Instead of `php bin/magento` use `sudo -uwww-data php bin/magento`:
    NOTE: Please set `--rm` to remove a created container after run.
    Example :
     ```shell
-        $ docker-compose run --rm cli bash
+        docker-compose run --rm cli bash
     ```
    
 8) If you clone  existing repo import database:
     1) Copy database dump into `{{magento_root}}`.
     2) Go to cli-container & import database dump:
     ```shell
-        $ docker-compose run --rm cli bash
+        docker-compose run --rm cli bash
     ```
     Import dump:
     ```shell
-        $ mysql -hdb -umagento2 -p {{youre_database_name}} < {{youre_database_dump}}
+        mysql -hdb -umagento2 -p {{youre_database_name}} < {{youre_database_dump}}
     ```
     Or using source:
     ```shell
-        $ mysql -hdb -umagento2 -p 
-        $ use {{youre_database_name}};
-        $ source {{youre_database_dump}}
+        mysql -hdb -umagento2 -p 
+        use {{youre_database_name}};
+        source {{youre_database_dump}}
     ```
     Copy into right places under `{{magento_root}}` all magento required secure sensitive file like `app/etc/env.php` file.  
     In `env.php` file use next config for database:
-    ```
+    ```php
     'host' => 'db',
     'dbname' => {{database_name}},
     'username' => 'magento2',
@@ -99,11 +99,11 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     ```
     Maybe after you want create admin user:
     ```shell
-        $ sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
+        sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
     ```
     3) Update env.php with service configs (also need to do after updating additional docker services)
     ```shell
-       $ magento-service-updater
+       magento-service-updater
     ```
 
 ### Single-store
@@ -111,7 +111,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
 1) `config.json` params:
     1) {{all_site_domain}} same as {{main_domain}} (example: someproject.site)
 2) Add all you're site domain to `/etc/hosts` file:
-    ```
+    ```hosts 
     # single-store sites (docker):
     ...
     127.0.0.1 {{main_domain}}
@@ -119,7 +119,7 @@ Also [install/delete/reinstall docker/docker-compose](https://gist.github.com/An
     # end single-store sites (docker)
     ```
     Example:
-    ```
+    ```hosts
     # single-store sites (docker):
     127.0.0.1 some_anotherproject1.site
     127.0.0.1 some_anotherproject2.site
@@ -135,13 +135,13 @@ Example: we have 3 store/website: someproject.site, someproject-vip.site, somepr
     2) {{main_domain}} - So you should choose one domain main (example: we choose `someproject.site` like a {{main_domain}})
 2) In folder `{{root_directory}}/nginx/etc/multi_vhost/` create one/multiple own config file(s) for multi-store. Use file `example_vhost.conf` as example.
 3) Add space separated all you're site domain to `/etc/hosts` file:
-    ```
+    ```hosts
     # multi-store {{unique project name or main_domain or unique number}} (docker):
     127.0.0.1 {{main_domain}} {{additional_domain_1}} ... {{additional_domain_N}}
     # end multi-store {{unique project name or number}} (docker)
     ```
     Example:
-    ```
+    ```hosts
     # multi-store 9 (docker)
     127.0.0.1 someproject.site someproject-vip.site someproject-retail.site
     127.0.0.1 some_anotherproject2.site some_anotherproject2-vip.site some_anotherproject2-retail.site
@@ -160,23 +160,23 @@ Rename (create renamed copy) the following file:
 4. Update local-themes.js by include your local site theme
 5. Inside `{{root_directory}}`: 
     ```shell
-        $ docker-compose run --rm cli bash
-        $ npm install
-        $ npm update
+        docker-compose run --rm cli bash
+        npm install
+        npm update
     ```
     
     Then in bash of cli-container got to magento root directory and use standard grunt command:
     ```shell
-        $ sudo -uwww-data grunt clean   Removes the theme related static files in the pub/static and var directories.
-        $ sudo -uwww-data grunt exec    Republishes symlinks to the source files to the pub/static/frontend/ directory.
-        $ sudo -uwww-data grunt less    Compiles .css files using the symlinks published in the pub/static/frontend/ directory.
-        $ sudo -uwww-data grunt watch   Tracks the changes in the source files, recompiles .css files, and reloads the page in the browser.
+        sudo -uwww-data grunt clean   Removes the theme related static files in the pub/static and var directories.
+        sudo -uwww-data grunt exec    Republishes symlinks to the source files to the pub/static/frontend/ directory.
+        sudo -uwww-data grunt less    Compiles .css files using the symlinks published in the pub/static/frontend/ directory.
+        sudo -uwww-data grunt watch   Tracks the changes in the source files, recompiles .css files, and reloads the page in the browser.
     ```
     Example of run grunt watch:
     ```shell
-        $ docker-compose run --rm cli bash
-        $ sudo -uwww-data grunt exec:all && sudo -uwww-data grunt less
-        $ sudo -uwww-data grunt watch
+        docker-compose run --rm cli bash
+        sudo -uwww-data grunt exec:all && sudo -uwww-data grunt less
+        sudo -uwww-data grunt watch
     ```
 
 Reloads the page in the browser not working.  
@@ -228,6 +228,12 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
         php bin/magento setup:up    (command for debug example)
         exit
     ```
+   ```shell
+        sudo su -l www-data -s /bin/bash
+        cd /var/www/magento/ && export XDEBUG_CONFIG="client_host=host.docker.internal"
+        php bin/magento setup:up    (command for debug example)
+        exit
+    ```
     
 
 3) #### [Magento Coding Standard][magento-coding-standard]
@@ -240,7 +246,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
             npm init
         ```
     4. Config PhpStorm (after magento & magento-coding-standard projects was setup):
-       ```shell
+       ```plaintext
        Settings->Languages & Frameworks->PHP->Quality tools
            PHP_CodeSniffer:
            CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
@@ -257,7 +263,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
            Path mapping: map <Project root>/magento->/var/www/magento
            PHP Mess Detector path: `/var/www/magento/vendor/bin/phpmd`
        ```
-        ```shell
+        ```plaintext
         Settings->Editor->Inspection
         PHP->Quality tools
             ->PHP Mess Detector validation:
@@ -269,7 +275,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
                 Show sniff name: Yes
                 Coding Standard: Magento2 (if not see press reload & scroll up list)
         ```
-        ```shell
+        ```plaintext
        Settings->Languages & Frameworks
        JavaScript->Code Quality Tools->ESLint:
            Manual ESLint configuration:
@@ -286,7 +292,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
 ### Ngrok support (usefully for testing online payment methods etc.)
 1) Install ngrok. Copy `ngrok` to `/usr/local/bin` for run ngrok from any folder by command 'ngrok'
-2) Download & install [magento-ngrok extension](https://github.com/AndriynomeD/magento-ngrok) to app/code/Shkoliar/Ngrok folder.
+2) Download & install [magento-ngrok extension](https://github.com/shkoliar/magento-ngrok) to app/code/Shkoliar/Ngrok folder.
 3) Run to cli container and set `sudo -uwww-data php bin/magento config:set --lock-env web/url/redirect_to_base 0`.
 4) Redeploy project: set:up, s:d:c, etc.
 5) Run ngrok with additional param host-header. Example `ngrok http -host-header=magento243.site 80`:
@@ -301,37 +307,37 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
 1) For debug inside 'ubuntu' container (docker exec -it {{container}} bash):
     ```shell
-        $ sudo apt-get install nano
-        $ sudo apt-get install rsyslog
-        $ sudo apt-get install telnet
-        $ sudo apt-get install dnsutils
-        $ sudo apt-get install iputils-ping
+        sudo apt-get install nano
+        sudo apt-get install rsyslog
+        sudo apt-get install telnet
+        sudo apt-get install dnsutils
+        sudo apt-get install iputils-ping
     ```
 2) For debug inside 'alpine' container (docker exec -it {{container}} sh):
     ```shell
-        $ yum install iputils
+        yum install iputils
     ``` 
 3) In Mysql:
     ```shell
-        $ mysql -hdb -umagento2 -p
+        mysql -hdb -umagento2 -p
     ```
-    ```
+    ```sql
     show databases;
     ```
-    ```
+    ```sql
     create database {{youre_database_name}};
     ```
-    ```
+    ```sql
     GRANT ALL PRIVILEGES ON {{youre_database_name}}.* TO 'magento2'@'%'; - add user `magento2` grant for {{youre_database_name}}
     ```
-    ```
+    ```sql
     use {{youre_database_name}};
     ```
-    ```
+    ```sql
     source {{youre_database_dump}}
     ```
     Change password:
-    ```
+    ```sql
     UPDATE mysql.user SET Password=PASSWORD('root') WHERE User='root';
     FLUSH PRIVILEGES;
     ```
@@ -339,7 +345,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 4) PphStorm & Database
     Get real db host & port (this info can be find using next command):
     ```shell
-        $ docker ps -a
+        docker ps -a
     ```
 
 Next use it when connected to db by PphStorm
@@ -348,16 +354,16 @@ Next use it when connected to db by PphStorm
 
 If you can't edit magento file in Phpstorm try it:
 ```shell
-    $ sudo usermod -aG www-data ${USER}
-    $ sudo chmod -R g+w magento
+    sudo usermod -aG www-data ${USER}
+    sudo chmod -R g+w magento
 ```
 Fix problem with owner:
 ```shell
-    $ sudo chown -R www-data:www-data var/cache
+    sudo chown -R www-data:www-data var/cache
 ```
 Example of fix permission problem inside cli-container:
 ```shell
-    $ sudo chown -R www-data:www-data $MAGENTO_ROOT && sudo chmod -R g+w $MAGENTO_ROOT && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
+    sudo chown -R www-data:www-data $MAGENTO_ROOT && sudo chmod -R g+w $MAGENTO_ROOT && rm -rf var/cache && rm -rf var/page_cache && rm -rf var/generation && rm -rf var/session
 ```
 
 ### Venia Support (WIP)

@@ -110,7 +110,7 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
     fi
 
     if version_compare $M2SETUP_VERSION '>=' 2.4.0; then
-      INSTALL_COMMAND="$INSTALL_COMMAND $M2_ELASTIC_SETTINGS"
+      INSTALL_COMMAND="$INSTALL_COMMAND $M2_SEARCH_ENGINE_SETTINGS"
     fi
 
     if version_compare $M2SETUP_VERSION '>=' 2.3.0; then

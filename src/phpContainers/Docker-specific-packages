@@ -3,15 +3,13 @@
 # Configure the gd library
 ###########################################################################
 
+RUN docker-php-ext-configure \
 <?php if (version_compare($phpVersion, '7.4', '>=')): ?>
-RUN docker-php-ext-configure \
-  gd --prefix=/usr --with-freetype --with-jpeg
+  gd --prefix=/usr --with-freetype --with-jpeg \
 <?php else: ?>
-RUN docker-php-ext-configure \
-  gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
+  gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
 <?php endif; ?>
-
-RUN docker-php-ext-install gd
+  && docker-php-ext-install gd
 
 <?php endif; ?>
 <?php /** imagick can be false|true|{imagick_version} */ ?>
@@ -22,9 +20,10 @@ RUN docker-php-ext-install gd
 
 ARG INSTALL_IMAGEMAGICK=<?= $specificPackages['imagick'] !== false ? 'true' : 'false'; ?><?= PHP_EOL ?>
 ARG IMAGEMAGICK_VERSION=<?= ($specificPackages['imagick'] !== true)? $specificPackages['imagick'] : 'latest'; ?><?= PHP_EOL ?>
-ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
+ENV IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
+    apt-get update && \
     apt-get install -yqq libmagickwand-dev imagemagick && \
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
       cd /tmp && \
@@ -86,6 +85,6 @@ RUN if [ ${INSTALL_CALENDAR} = true ]; then \
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
 RUN apt-get update && apt-get -t stretch-backports install -y \
   libsodium-dev
-RUN pecl install -f libsodium-1.0.17
+RUN pecl install -f libsodium-1.0.17 && rm -rf /tmp/pear
 
 <?php endif; ?>
