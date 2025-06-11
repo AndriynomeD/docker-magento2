@@ -3,7 +3,7 @@
     "M2_PROJECT": "magento2.docker",
     "M2_VIRTUAL_HOSTS": "magento2.docker",
     "M2_DB_NAME": "magento2_database",
-    "PHP_VERSION": "7.4",
+    "PHP_VERSION": "8.3",
     "M2_VERSION": "2.4.*",
     "HTTPS_HOST": true,
     "NGINX_PROXY_PATH": "",
@@ -17,25 +17,36 @@
       "CRYPT_KEY": ""
     },
     "M2_SETTINGS": {
-      "ELASTICSEARCH_SETTINGS": "--elasticsearch-index-prefix=magento2docker --search-engine=elasticsearch7 --elasticsearch-host=elasticsearch --elasticsearch-port=9200",
+      "SEARCH_ENGINE_SETTINGS": "--opensearch-index-prefix=magento2docker --search-engine=opensearch --opensearch-host=opensearch --opensearch-port=9200",
       "AMQ_SETTINGS": "--amqp-host=rabbitmq --amqp-port=5672 --amqp-user=rabbitmq_user --amqp-password=rabbitmq_pass --amqp-virtualhost=rabbitmq",
       "REDIS_SETTINGS": "--session-save=redis --session-save-redis-host=redis --session-save-redis-port=6379",
       "VARNISH_SETTINGS": "--http-cache-hosts=varnish"
     },
-    "DOCKER_DB": {
-      "__note__": "available image: mariadb|mysql|percona",
-      "IMAGE": "mariadb:10.4",
-      "TYPE": "mariadb",
-      "VERSION": "10.4"
-    },
     "DOCKER_SERVICES": {
-      "external_elasticsearch": true,
-      "internal_elasticsearch": false,
+      "database": {
+        "__note_image__": "available image: mariadb|mysql|percona",
+        "IMAGE": "mariadb:11.4",
+        "TYPE": "mariadb",
+        "VERSION": "11.4",
+        "VOLUME": "mariadb11"
+      },
+      "search_engine": {
+        "__note_connect_type__": "available connect_type: external|internal|none",
+        "CONNECT_TYPE": "external",
+        "__note_image__": "available images: opensearchproject/opensearch:{{version}}|docker.elastic.co/elasticsearch/elasticsearch:{{version}}",
+        "IMAGE": "opensearchproject/opensearch:2.19.1",
+        "__note_type__": "available type: elasticsearch|opensearch",
+        "TYPE": "opensearch",
+        "VERSION": "2.19.1"
+      },
+      "__note_varnish__": "available varnish: true|false",
       "varnish": false,
       "cron": true,
       "redis": false,
       "rabbitmq": false,
+      "__note_mcs__": "available magento-coding-standard: true|false",
       "magento-coding-standard": false,
+      "__note_venia__": "available venia: true|false",
       "venia": false
     }
   },
@@ -699,6 +710,321 @@
         "ioncube": false
       },
       "xdebugVersion": "3.1.2"
+    },
+    "8.2-cli": {
+      "version": "8.2",
+      "flavour": "cli",
+      "files": {
+        "Dockerfile": {},
+        "docker-entrypoint.sh": {
+          "executable": true
+        },
+        "bin/magento-command": {
+          "executable": true
+        },
+        "bin/magento-fix-permissions": {
+          "executable": true
+        },
+        "bin/magento-installer": {
+          "executable": true
+        },
+        "bin/magento-service-updater": {
+          "executable": true
+        },
+        "bin/run-cron": {
+          "executable": true
+        },
+        "bin/deployVeniaSampleData.sh": {
+          "executable": true
+        },
+        "etc/postfix/config.cf": {},
+        "etc/php-cli.ini": {},
+        "etc/php-xdebug.ini": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": true,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest",
+      "xdebugVersion": "3.3.1"
+    },
+    "8.2-mcs": {
+      "version": "8.2",
+      "flavour": "cli",
+      "context-folder": "8.2-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
+    },
+    "8.2-fpm": {
+      "version": "8.2",
+      "flavour": "fpm",
+      "files": {
+        "Dockerfile": {},
+        "docker-entrypoint.sh": {
+          "executable": true
+        },
+        "etc/postfix/config.cf": {},
+        "etc/php-fpm.ini": {},
+        "etc/php-xdebug.ini": {},
+        "etc/php-fpm.conf": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": true,
+        "calendar": false,
+        "ioncube": false
+      },
+      "xdebugVersion": "3.3.1"
+    },
+    "8.3-cli": {
+      "version": "8.3",
+      "flavour": "cli",
+      "files": {
+        "Dockerfile": {},
+        "docker-entrypoint.sh": {
+          "executable": true
+        },
+        "bin/magento-command": {
+          "executable": true
+        },
+        "bin/magento-fix-permissions": {
+          "executable": true
+        },
+        "bin/magento-installer": {
+          "executable": true
+        },
+        "bin/magento-service-updater": {
+          "executable": true
+        },
+        "bin/run-cron": {
+          "executable": true
+        },
+        "bin/deployVeniaSampleData.sh": {
+          "executable": true
+        },
+        "etc/postfix/config.cf": {},
+        "etc/php-cli.ini": {},
+        "etc/php-xdebug.ini": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": true,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest",
+      "xdebugVersion": "3.4.3"
+    },
+    "8.3-mcs": {
+      "version": "8.3",
+      "flavour": "cli",
+      "context-folder": "8.3-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
+    },
+    "8.3-fpm": {
+      "version": "8.3",
+      "flavour": "fpm",
+      "files": {
+        "Dockerfile": {},
+        "docker-entrypoint.sh": {
+          "executable": true
+        },
+        "etc/postfix/config.cf": {},
+        "etc/php-fpm.ini": {},
+        "etc/php-xdebug.ini": {},
+        "etc/php-fpm.conf": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": true,
+        "calendar": false,
+        "ioncube": false
+      },
+      "xdebugVersion": "3.4.3"
+    },
+    "8.4-cli": {
+      "version": "8.4",
+      "flavour": "cli",
+      "files": {
+        "Dockerfile": {},
+        "docker-entrypoint.sh": {
+          "executable": true
+        },
+        "bin/magento-command": {
+          "executable": true
+        },
+        "bin/magento-fix-permissions": {
+          "executable": true
+        },
+        "bin/magento-installer": {
+          "executable": true
+        },
+        "bin/magento-service-updater": {
+          "executable": true
+        },
+        "bin/run-cron": {
+          "executable": true
+        },
+        "bin/deployVeniaSampleData.sh": {
+          "executable": true
+        },
+        "etc/postfix/config.cf": {},
+        "etc/php-cli.ini": {},
+        "etc/php-xdebug.ini": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": true,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest",
+      "xdebugVersion": "3.4.3"
+    },
+    "8.4-mcs": {
+      "version": "8.4",
+      "flavour": "cli",
+      "context-folder": "8.4-mcs",
+      "files": {
+        "Dockerfile-mcs": {},
+        "docker-entrypoint-mcs.sh": {
+          "executable": true
+        },
+        "bin/magento-coding-standard-installer": {
+          "executable": true
+        },
+        "etc/php-cli.ini": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": false,
+        "calendar": false,
+        "ioncube": false,
+        "grunt": true
+      },
+      "composerVersion": "latest"
+    },
+    "8.4-fpm": {
+      "version": "8.4",
+      "flavour": "fpm",
+      "files": {
+        "Dockerfile": {},
+        "docker-entrypoint.sh": {
+          "executable": true
+        },
+        "etc/postfix/config.cf": {},
+        "etc/php-fpm.ini": {},
+        "etc/php-xdebug.ini": {},
+        "etc/php-fpm.conf": {}
+      },
+      "packages": [
+        "libonig-dev",
+        "libssl-dev"
+      ],
+      "phpExtensions": [
+        "ftp"
+      ],
+      "specificPackages": {
+        "gd": true,
+        "imagick": true,
+        "calendar": false,
+        "ioncube": false
+      },
+      "xdebugVersion": "3.4.3"
     }
   }
 }
