@@ -3,7 +3,7 @@
 # {{generated_by_builder}}
 #--------------------------------------------------------------------------
 
-FROM <?= $OPENSEARCH_IMAGE . PHP_EOL ?>
+FROM opensearchproject/opensearch:<?= $OPENSEARCH_VERSION . PHP_EOL ?>
 
 MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
 

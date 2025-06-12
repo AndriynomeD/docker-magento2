@@ -114,25 +114,28 @@ class ConfigBuilder
             'M2_SETTINGS' => [],
             'DOCKER_SERVICES' => [
                 'database' => [
-                    '__note__'  => 'available image: mariadb|mysql|percona',
+                    '__note_image__'  => 'available image: mariadb|mysql|percona',
                     'IMAGE'   => 'mariadb:10.4',
                     'TYPE'    => 'mariadb',
                     'VERSION' => '10.4',
                     'VOLUME'  => 'mariadb10'
                 ],
                 'search_engine' => [
-                    '__note__'  => 'available image: elasticsearch|opensearch, connect_type: external|internal',
+                    '__note_connect_type__' => 'available connect_type: external|internal|none',
                     'CONNECT_TYPE' => 'external',
-                    'IMAGE'   => 'docker.elastic.co/elasticsearch/elasticsearch:7.7.1',
+                    '__note_type__' => 'available type: elasticsearch|opensearch',
                     'TYPE'    => 'elasticsearch',
                     'VERSION' => '7.7.1'
                 ],
-                'varnish'   => true,
-                'cron'  => true,
+                '__note_varnish__' => 'available varnish: true|false',
+                'varnish' => true,
+                'cron' => true,
                 'redis' => false,
-                'rabbitmq'  => false,
-                'magento-coding-standard'  => false,
-                'venia'   => false
+                'rabbitmq' => false,
+                '__note_mcs__' => 'available magento-coding-standard: true|false',
+                'magento-coding-standard' => false,
+                '__note_venia__' => 'available venia: true|false',
+                'venia' => false
             ]
         ];
 
@@ -260,10 +263,13 @@ class ConfigBuilder
     {
         $searchEngineType = $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'];
         $searchEngineImage = $generalConfig['DOCKER_SERVICES']['search_engine']['IMAGE'];
+        $searchEngineVersion = $generalConfig['DOCKER_SERVICES']['search_engine']['VERSION'];
         $defaultSearchEngineContainerConfig = [
             'searchEngineImage' => $searchEngineImage,
             'ELASTICSEARCH_IMAGE' => $searchEngineType == 'elasticsearch' ? $searchEngineImage: '',
-            'OPENSEARCH_IMAGE' => $searchEngineType == 'opensearch' ? $searchEngineImage: ''
+            'ELASTICSEARCH_VERSION' => $searchEngineType == 'elasticsearch' ? $searchEngineVersion: '',
+            'OPENSEARCH_IMAGE' => $searchEngineType == 'opensearch' ? $searchEngineImage: '',
+            'OPENSEARCH_VERSION' => $searchEngineType == 'opensearch' ? $searchEngineVersion: ''
         ];
         $defaultFileVariables = [
             '_disable_variables' => false,

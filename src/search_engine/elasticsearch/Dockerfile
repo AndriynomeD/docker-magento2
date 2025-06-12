@@ -3,7 +3,7 @@
 # {{generated_by_builder}}
 #--------------------------------------------------------------------------
 
-FROM <?= $ELASTICSEARCH_IMAGE . PHP_EOL ?>
+FROM docker.elastic.co/elasticsearch/elasticsearch:<?= $ELASTICSEARCH_VERSION . PHP_EOL ?>
 
 MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
 

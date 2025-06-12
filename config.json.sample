@@ -33,8 +33,6 @@
       "search_engine": {
         "__note_connect_type__": "available connect_type: external|internal|none",
         "CONNECT_TYPE": "external",
-        "__note_image__": "available images: opensearchproject/opensearch:{{version}}|docker.elastic.co/elasticsearch/elasticsearch:{{version}}",
-        "IMAGE": "opensearchproject/opensearch:2.19.1",
         "__note_type__": "available type: elasticsearch|opensearch",
         "TYPE": "opensearch",
         "VERSION": "2.19.1"
