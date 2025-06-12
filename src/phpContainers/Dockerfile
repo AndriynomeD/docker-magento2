@@ -7,6 +7,11 @@ FROM <?php printf("php:%s-%s\n", $phpVersion, $flavour) ?>
 
 LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
 
+<?php
+ $parts = explode('.', $phpVersion);
+ $shortVersion = $parts[0] . '.' . $parts[1];
+?>
+ARG PHP_VERSION=<?= $shortVersion . PHP_EOL; ?>
 ###########################################################################
 # Install dependencies
 ###########################################################################
@@ -19,8 +24,6 @@ LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
         'libmcrypt-dev',
         'libxslt1-dev',
         'libzip-dev',
-        'zip',
-        'unzip',
         'sudo',
         'git'
     ], $packages ?? [], $flavourPackages ?? [])
@@ -28,10 +31,9 @@ LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
 
 RUN apt-get update \
   && apt-get install -y \
-    <?php echo join(" \\ \n    ", $imagePackages) ?> \
+    <?= join(" \\ \n    ", $imagePackages) ?> \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 
 ###########################################################################
 # Install required PHP extensions
@@ -50,18 +52,27 @@ RUN apt-get update \
 ?>
 
 RUN docker-php-ext-install -j$(nproc) \
-  <?php echo join(" \\ \n  ", $imagePhpExtensions) ?>
+  <?= join(" \\ \n  ", $imagePhpExtensions) ?> \
+    && docker-php-source delete
 
+###########################################################################
+# Zip/Unzip (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
+###########################################################################
 
-# added zip to container (so there is no composer warning)
-RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] || { [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "3" ] ;} ;}; then \
-    docker-php-ext-configure zip; \
-else \
-    docker-php-ext-configure zip --with-libzip; \
-fi && \
-  # Install the zip extension
-  docker-php-ext-install zip && \
-  php -m | grep -q 'zip'
+RUN apt-get update \
+  && apt-get install -y \
+    libzip-dev zip unzip && \
+    if [ ${PHP_VERSION} = "7.3" ] || [ ${PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+      docker-php-ext-configure zip; \
+    else \
+      docker-php-ext-configure zip --with-libzip; \
+    fi && \
+    # Install the zip extension
+    docker-php-ext-install zip && \
+    php -m | grep -q 'zip' \
+    && docker-php-source delete \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 <?php include "Dockerfile-specific-packages"; ?>
 ###########################################################################

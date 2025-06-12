@@ -15,7 +15,7 @@ RUN docker-php-ext-configure \
 <?php /** imagick can be false|true|{imagick_version} */ ?>
 <?php if (array_key_exists('imagick', $specificPackages) && $specificPackages['imagick'] !== false): ?>
 ###########################################################################
-# Imagemagick:
+# Imagemagick (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
 ###########################################################################
 
 ARG INSTALL_IMAGEMAGICK=<?= $specificPackages['imagick'] !== false ? 'true' : 'false'; ?><?= PHP_EOL ?>
@@ -28,7 +28,7 @@ RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
       cd /tmp && \
       if [ ${IMAGEMAGICK_VERSION} = "latest" ]; then \
-        if [ $(php -r "printf(\"%s.%s\", PHP_MAJOR_VERSION, PHP_MINOR_VERSION)" = "8.4" ]; then \
+        if [ "$PHP_VERSION" = "8.4" ]; then \
           git clone --branch develop https://github.com/Imagick/imagick; \
         else \
           git clone https://github.com/Imagick/imagick; \
@@ -52,26 +52,29 @@ RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
 <?php endif; ?>
 <?php if (array_key_exists('ioncube', $specificPackages) && $specificPackages['ioncube'] !== false): ?>
 ###########################################################################
-# IonCube Loader:
+# IonCube Loader (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
 ###########################################################################
 
+ARG $PHP_INI_DIR=/usr/local/etc/php
 ARG INSTALL_IONCUBE=<?= $specificPackages['ioncube'] !== false ? 'true' : 'false'; ?>
 
 RUN if [ ${INSTALL_IONCUBE} = true ]; then \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") != "8" ]; then \
-        # Install the php ioncube loader
-        curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
-        && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
-        && mv /tmp/ioncube/ioncube_loader_lin_<?= $phpVersion; ?>.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
-        && printf "zend_extension=ioncube_loader.so\n" > /usr/local/etc/php/conf.d/0ioncube.ini \
-        && rm -rf /tmp/ioncube* \
-    ;fi\
+    if [ ${PHP_VERSION} != "8.4" ] \
+      && [ ${PHP_VERSION} != "8.0" ]; then \
+      # Install the php ioncube loader
+      curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
+      && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
+      && mv /tmp/ioncube/ioncube_loader_lin_${PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
+      && printf "zend_extension=ioncube_loader.so\n" > $PHP_INI_DIR/conf.d/0ioncube.ini \
+      && rm -rf /tmp/ioncube* \
+      && php -m | grep -oiE '^ionCube Loader$' \
+    ;fi \
 ;fi
 
 <?php endif; ?>
 <?php if (array_key_exists('calendar', $specificPackages) && $specificPackages['calendar'] !== false): ?>
 ###########################################################################
-# Calendar:
+# Calendar (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
 ###########################################################################
 
 ARG INSTALL_CALENDAR=<?= $specificPackages['calendar'] !== false ? 'true' : 'false'; ?>
