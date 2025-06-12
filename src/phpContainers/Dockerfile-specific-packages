@@ -28,7 +28,11 @@ RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
       cd /tmp && \
       if [ ${IMAGEMAGICK_VERSION} = "latest" ]; then \
-        git clone https://github.com/Imagick/imagick; \
+        if [ $(php -r "printf(\"%s.%s\", PHP_MAJOR_VERSION, PHP_MINOR_VERSION)" = "8.4" ]; then \
+          git clone --branch develop https://github.com/Imagick/imagick; \
+        else \
+          git clone https://github.com/Imagick/imagick; \
+        fi; \
       else \
         git clone --branch ${IMAGEMAGICK_VERSION} https://github.com/Imagick/imagick; \
       fi && \

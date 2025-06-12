@@ -5,18 +5,18 @@
 
 FROM <?php printf("php:%s-%s\n", $phpVersion, $flavour) ?>
 
-MAINTAINER AndriynomeD <andriynomed.work@gmail.com>
+LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
 
 ###########################################################################
 # Install dependencies
 ###########################################################################
 <?php
     $imagePackages = array_merge([
-        'libfreetype6-dev',
         'libicu-dev',
+        'libfreetype6-dev',
         'libjpeg62-turbo-dev',
-        'libmcrypt-dev',
         'libpng-dev',
+        'libmcrypt-dev',
         'libxslt1-dev',
         'libzip-dev',
         'zip',
@@ -63,7 +63,7 @@ fi && \
   docker-php-ext-install zip && \
   php -m | grep -q 'zip'
 
-<?php include "Docker-specific-packages"; ?>
+<?php include "Dockerfile-specific-packages"; ?>
 ###########################################################################
 # Install Xdebug (but don't enable)
 ###########################################################################
