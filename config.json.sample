@@ -7,10 +7,12 @@
     "M2_VERSION": "2.4.*",
     "HTTPS_HOST": true,
     "NGINX_PROXY_PATH": "",
+    "M2_SOURCE_VOLUME": "./magento",
     "M2_INSTALL": {
       "BASE_URL": "http://magento2.docker/",
       "SECURE_BASE_URL": "https://magento2.docker/",
       "INSTALL_DB": "true",
+      "__note_edition__": "available edition: community|enterprise|cloud",
       "EDITION": "community",
       "USE_SAMPLE_DATA": "true",
       "ADMIN_EMAIL": "dummy@gmail.com",
@@ -853,7 +855,7 @@
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": true,
+        "imagick": false,
         "calendar": false,
         "ioncube": false,
         "grunt": true
@@ -913,7 +915,7 @@
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": true,
+        "imagick": false,
         "calendar": false,
         "ioncube": false
       },
@@ -958,7 +960,7 @@
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": true,
+        "imagick": false,
         "calendar": false,
         "ioncube": false,
         "grunt": true
@@ -1018,7 +1020,7 @@
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": true,
+        "imagick": false,
         "calendar": false,
         "ioncube": false
       },

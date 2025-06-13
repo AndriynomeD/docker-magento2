@@ -171,6 +171,10 @@ class ConfigBuilder
             }
         }
 
+        if (!$variables['M2_SOURCE_VOLUME'] ) {
+            throw new Exception( "\033[1;37m\033[0;31m" . 'Magento source volume required' . "\033[0m");
+        }
+
         if ($variables['HTTPS_HOST'] && !$variables['NGINX_PROXY_PATH']) {
             throw new Exception( "\033[1;37m\033[0;31m" . 'Https required `NGINX_PROXY_PATH`' . "\033[0m");
         }
@@ -262,13 +266,9 @@ class ConfigBuilder
     private function getSearchEngineContainerVariables(array $generalConfig, array $variables = []): array
     {
         $searchEngineType = $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'];
-        $searchEngineImage = $generalConfig['DOCKER_SERVICES']['search_engine']['IMAGE'];
         $searchEngineVersion = $generalConfig['DOCKER_SERVICES']['search_engine']['VERSION'];
         $defaultSearchEngineContainerConfig = [
-            'searchEngineImage' => $searchEngineImage,
-            'ELASTICSEARCH_IMAGE' => $searchEngineType == 'elasticsearch' ? $searchEngineImage: '',
             'ELASTICSEARCH_VERSION' => $searchEngineType == 'elasticsearch' ? $searchEngineVersion: '',
-            'OPENSEARCH_IMAGE' => $searchEngineType == 'opensearch' ? $searchEngineImage: '',
             'OPENSEARCH_VERSION' => $searchEngineType == 'opensearch' ? $searchEngineVersion: ''
         ];
         $defaultFileVariables = [
@@ -373,7 +373,6 @@ class ConfigBuilder
      */
     private function buildSearchEngineContainer()
     {
-
         $generalConfig = $this->getGeneralConfig();
         $isSearchEngineInternal = $generalConfig['DOCKER_SERVICES']['search_engine'] !== false
             && $generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'internal';

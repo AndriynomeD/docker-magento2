@@ -1,7 +1,7 @@
 #
 # {{generated_by_builder}}
 #
-version: "2"
+version: "3.9"
 services:
 <?php
 //###########################################################################
@@ -18,11 +18,12 @@ services:
       - HTTPS_METHOD=noredirect
     ports:
       - 80
-    links:
-      - web
+#    depends_on:
+#      web:
+#        condition: service_started
     networks:
-      - default
-      - nginx-proxy
+      default:
+      nginx-proxy:
 
 <?php endif; ?>
 <?php
@@ -31,16 +32,16 @@ services:
 //###########################################################################
 ?>
   web:
-    hostname: <?= $M2_PROJECT . PHP_EOL ?>
+    hostname: web.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/nginx/
     ports:
       - 80
-    links:
-      - fpm
-      - db
-    volumes_from:
-      - appdata
+#    depends_on:
+#      fpm:
+#       condition: service_healthy
+    volumes:
+      - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
       - ./global.env
 <?php if (!(isset($DOCKER_SERVICES['varnish']) && $DOCKER_SERVICES['varnish'])): ?>
@@ -50,8 +51,8 @@ services:
       - HTTPS_METHOD=noredirect
 <?php endif; ?>
     networks:
-      - default
-      - nginx-proxy
+      default:
+      nginx-proxy:
 
 <?php
 //###########################################################################
@@ -64,31 +65,17 @@ services:
       context: containers/php/<?= $PHP_VERSION ?>-fpm/
     ports:
       - 9000
-    links:
-      - db
-<?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
-      - redis
-<?php endif; ?>
-<?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
-      - rabbitmq
-<?php endif; ?>
-<?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'internal'): ?>
-      - elasticsearch
-      - opensearch
-<?php endif; ?>
-<?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
-    external_links:
-      - elasticsearch
-      - opensearch
-<?php endif; ?>
-    volumes_from:
-      - appdata
+#    depends_on:
+#      db:
+#        condition: service_healthy
+    volumes:
+      - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
       - ./global.env
     networks:
-      - default
+      default:
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
-      - search-engine-net
+      search-engine-net:
 <?php endif; ?>
 
 <?php
@@ -109,9 +96,14 @@ services:
       - MYSQL_USER=magento2
       - MYSQL_PASSWORD=magento2
       - TERM=meh
+#    healthcheck:
+#      test: 'mysqladmin ping -h localhost -pmagento2'
+#      interval: 30s
+#      timeout: 30s
+#      retries: 3
     networks:
-      - default
-      - databases
+      default:
+      databases:
 
 <?php
 //###########################################################################
@@ -122,27 +114,30 @@ services:
     hostname: cli.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
-    links:
-      - db
+#    depends_on:
+#      db:
+#        condition: service_healthy
 <?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
-      - redis
+#      redis:
+#        condition: service_healthy
 <?php endif; ?>
 <?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
-      - rabbitmq
+#      rabbitmq:
+#        condition: service_healthy
 <?php endif; ?>
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'internal'): ?>
-      - elasticsearch
-      - opensearch
+<?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'elasticsearch'): ?>
+#      elasticsearch:
+#        condition: service_healthy
 <?php endif; ?>
-<?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
-    external_links:
-      - elasticsearch
-      - opensearch
+<?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'opensearch'): ?>
+#      opensearch:
+#        condition: service_healthy
+<?php endif; ?>
 <?php endif; ?>
     volumes:
       - ~/.composer/cache:/root/.composer/cache
-    volumes_from:
-      - appdata
+      - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
       - ./global.env
       - ./composer.env
@@ -171,11 +166,10 @@ services:
       - M2_REDIS_SETTINGS=<?= ($DOCKER_SERVICES['redis'] ? $M2_SETTINGS['REDIS_SETTINGS'] : '') . PHP_EOL ?>
       - M2_VARNISH_SETTINGS=<?= ($DOCKER_SERVICES['varnish'] ? $M2_SETTINGS['VARNISH_SETTINGS'] : ''). PHP_EOL ?>
     networks:
-      - default
+      default:
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
-      - search-engine-net
+      search-engine-net:
 <?php endif; ?>
-
 
 <?php
 //###########################################################################
@@ -187,31 +181,35 @@ services:
     hostname: cron.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
-    links:
-      - db
+#    depends_on:
+#      db:
+#        condition: service_healthy
 <?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
-      - redis
+#      redis:
+#        condition: service_healthy
 <?php endif; ?>
 <?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
-      - rabbitmq
+#      rabbitmq:
+#        condition: service_healthy
 <?php endif; ?>
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'internal'): ?>
-      - elasticsearch
-      - opensearch
+<?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'elasticsearch'): ?>
+#      elasticsearch:
+#        condition: service_healthy
 <?php endif; ?>
-<?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
-    external_links:
-      - elasticsearch
-      - opensearch
+<?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'opensearch'): ?>
+#      opensearch:
+#        condition: service_healthy
+<?php endif; ?>
 <?php endif; ?>
     command: run-cron
+    volumes:
+      - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
+    env_file:
+      - ./global.env
     environment:
       - ENABLE_SENDMAIL=false
       - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>
-    env_file:
-      - ./global.env
-    volumes_from:
-      - appdata
     networks:
       - default
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
@@ -226,7 +224,7 @@ services:
 ?>
 <?php if (isset($DOCKER_SERVICES['magento-coding-standard']) && $DOCKER_SERVICES['magento-coding-standard']): ?>
   mcs:
-    hostname: magento-coding-standard.<?= $M2_PROJECT . PHP_EOL ?>
+    hostname: mcs.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/php/<?= $PHP_VERSION ?>-mcs/
       dockerfile: Dockerfile-mcs
@@ -237,7 +235,7 @@ services:
       - ./global.env
       - ./composer.env
     networks:
-      - default
+      default:
 
 <?php endif; ?>
 <?php
@@ -250,7 +248,7 @@ services:
   elasticsearch:
     hostname: elasticsearch.<?= $M2_PROJECT . PHP_EOL ?>
     build:
-      context: containers/elasticsearch/
+      context: containers/search_engine/elasticsearch/
     logging:
       driver: none
     ports:
@@ -267,13 +265,20 @@ services:
       memlock:
         soft: -1
         hard: -1
+#    healthcheck:
+#      test: [
+#        "CMD-SHELL",
+#        "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"' || exit 1"
+#      ]
+#      interval: 10s
+#      timeout: 10s
+#      retries: 12
 
 <?php else: ?>
   opensearch:
-    container_name: opensearch.<?= $M2_PROJECT . PHP_EOL ?>
-    hostname: opensearch.docker
+    hostname: opensearch.<?= $M2_PROJECT . PHP_EOL ?>
     build:
-      context: containers/opensearch2/
+      context: containers/search_engine/opensearch/
 #    logging:
 #      driver: none # json-file|none|...
     ports:
@@ -292,6 +297,14 @@ services:
       memlock:
         soft: -1
         hard: -1
+#    healthcheck:
+#      test: [
+#        "CMD-SHELL",
+#        "curl -s -u 'admin:admin' -k https://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"' || exit 1"
+#      ]
+#      interval: 10s
+#      timeout: 10s
+#      retries: 12
 
 <?php endif; ?>
 <?php endif; ?>
@@ -306,6 +319,11 @@ services:
     image: 'redis'
     ports:
       - 6379
+#    healthcheck:
+#      test: 'redis-cli ping || exit 1'
+#      interval: 30s
+#      timeout: 30s
+#      retries: 3
 
 <?php endif; ?>
 <?php
@@ -327,18 +345,13 @@ services:
       - RABBITMQ_DEFAULT_USER=rabbitmq_user
       - RABBITMQ_DEFAULT_PASS=rabbitmq_pass
       - RABBITMQ_DEFAULT_VHOST=rabbitmq
+#    healthcheck:
+#      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
 
 <?php endif; ?>
-<?php
-//###########################################################################
-//# Data containers
-//###########################################################################
-?>
-  appdata:
-    image: tianon/true
-    volumes:
-      - ./magento:/var/www/magento
-
 networks:
   nginx-proxy:
     external: true
