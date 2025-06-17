@@ -1,4 +1,4 @@
-FROM nginx:1.9
+FROM nginx:1.24
 
 LABEL maintainer="Nick Jones <nick@nicksays.co.uk>"
 
