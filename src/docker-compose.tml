@@ -18,9 +18,9 @@ services:
       - HTTPS_METHOD=noredirect
     ports:
       - 80
-#    depends_on:
-#      web:
-#        condition: service_started
+    depends_on:
+      web:
+        condition: service_started #service_healthy
     networks:
       default:
       nginx-proxy:
@@ -37,9 +37,9 @@ services:
       context: containers/nginx/
     ports:
       - 80
-#    depends_on:
-#      fpm:
-#       condition: service_healthy
+    depends_on:
+      fpm:
+       condition: service_started #service_healthy
     volumes:
       - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
@@ -65,9 +65,9 @@ services:
       context: containers/php/<?= $PHP_VERSION ?>-fpm/
     ports:
       - 9000
-#    depends_on:
-#      db:
-#        condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
@@ -96,11 +96,16 @@ services:
       - MYSQL_USER=magento2
       - MYSQL_PASSWORD=magento2
       - TERM=meh
-#    healthcheck:
-#      test: 'mysqladmin ping -h localhost -pmagento2'
-#      interval: 30s
-#      timeout: 30s
-#      retries: 3
+    healthcheck:
+<?php if ($DOCKER_SERVICES['database']['TYPE'] == 'mariadb'): ?>
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+<?php elseif ($DOCKER_SERVICES['database']['TYPE'] == 'mysql' || $DOCKER_SERVICES['database']['TYPE'] == 'percona'): ?>
+      test: 'mysqladmin ping -h localhost -umagento2 -pmagento2'
+<?php endif; ?>
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
     networks:
       default:
       databases:
@@ -114,25 +119,25 @@ services:
     hostname: cli.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
-#    depends_on:
-#      db:
-#        condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
 <?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
-#      redis:
-#        condition: service_healthy
+      redis:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
-#      rabbitmq:
-#        condition: service_healthy
+      rabbitmq:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'internal'): ?>
 <?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'elasticsearch'): ?>
-#      elasticsearch:
-#        condition: service_healthy
+      elasticsearch:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'opensearch'): ?>
-#      opensearch:
-#        condition: service_healthy
+      opensearch:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php endif; ?>
     volumes:
@@ -181,25 +186,25 @@ services:
     hostname: cron.<?= $M2_PROJECT . PHP_EOL ?>
     build:
       context: containers/php/<?= $PHP_VERSION ?>-cli/
-#    depends_on:
-#      db:
-#        condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
 <?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
-#      redis:
-#        condition: service_healthy
+      redis:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php if (isset($DOCKER_SERVICES['rabbitmq']) && $DOCKER_SERVICES['rabbitmq']): ?>
-#      rabbitmq:
-#        condition: service_healthy
+      rabbitmq:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'internal'): ?>
 <?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'elasticsearch'): ?>
-#      elasticsearch:
-#        condition: service_healthy
+      elasticsearch:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php if ($DOCKER_SERVICES['search_engine']['TYPE'] == 'opensearch'): ?>
-#      opensearch:
-#        condition: service_healthy
+      opensearch:
+        condition: service_started #service_healthy
 <?php endif; ?>
 <?php endif; ?>
     command: run-cron
