@@ -316,21 +316,28 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     docker-compose run --rm mcs bash
     ```
 
-### [WIP]Ngrok support (usefully for testing online payment methods etc.)
+### Ngrok support (usefully for testing online payment methods etc.)
 
-1) Install ngrok. Copy `ngrok` to `/usr/local/bin` for run ngrok from any folder by command 'ngrok'
-2) Download & install [magento-ngrok extension](https://github.com/shkoliar/magento-ngrok) to app/code/Shkoliar/Ngrok folder.
+1) [Install ngrok](https://dashboard.ngrok.com/get-started/setup/linux). Copy `ngrok` to `/usr/local/bin` for run ngrok from any folder by command 'ngrok'.
+2) Download & install [magento ngrok extension][magento-ngrok] to app/code/Shkoliar/Ngrok folder.
 3) Run to cli container and set `sudo -uwww-data php bin/magento config:set --lock-env web/url/redirect_to_base 0`.
 4) Redeploy project: set:up, s:d:c, etc.
-5) Run ngrok with additional param host-header. Example `ngrok http -host-header=magento243.site 80`:
+5) Run ngrok with additional param host-header. Example `ngrok http https://magento248.site --host-header=magento248.site`:
+   P.S. `{{BASE_URL}}` === `http://{{main_domain}}/` or `https://{{main_domain}}/`
     ```shell
-    ngrok http -host-header={{local_site_domain}} 80
+    ngrok http {{BASE_URL}} --host-header={{main_domain}} # tested with http/https as `{{BASE_URL}}`
     ```
     How it works: internet->ngrok->reverse-proxy->project-entrypoint(nginx/varnish->nginx->varnish)->reverse-proxy->ngrok->internet
 
     P.S. It for local development - do not commit Shkoliar_Ngrok into project git.
+    Alternative:
+    ```shell
+    ngrok http --host-header={{local_site_domain}} 80         # work for http only
+    ngrok http {{BASE_URL}}:80 --host-header={{main_domain}}  # additional specified port
+    ngrok http {{BASE_URL}}:443 --host-header={{main_domain}} # additional specified port
+    ```
 
-### [WIP] Maybe useful
+### Maybe useful
 
 1) For debug inside 'ubuntu' container (docker exec -it {{container}} bash):
     ```shell
@@ -374,15 +381,8 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     ```shell
     docker ps -a
     ```
+    Next use it when connected to db by PphStorm
 
-Next use it when connected to db by PphStorm
-
-### [WIP] Maybe useful
-
-1. Delete container not used longer that a week:
-```shell
-    docker ps --filter "status=exited" | grep -E "Exited .*week[s]? ago" | awk '$2 != "tianon/true" {print $1}' | xargs --no-run-if-empty docker rm
-```
 
 ### Problem
 
@@ -457,6 +457,7 @@ networks:
 - [ ] Implement dynamic varnish configs during build.php run (like it was done for php containers)
 - [x] Implement dynamic internal elasticsearch configs during build.php run (like it was done for php containers)
 - [ ] Implement dynamic redis configs during build.php run (like it was done for php containers)
+- [x] Implement ngrok support via [magento ngrok extension][magento-ngrok]
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
@@ -469,3 +470,4 @@ networks:
 [nginx-proxy]: https://github.com/AndriynomeD/nginx-proxy
 [magento-coding-standard]: https://github.com/magento/magento-coding-standard
 [magento-system-requirements]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html
+[magento-ngrok]: https://github.com/AndriynomeD/magento-ngrok
