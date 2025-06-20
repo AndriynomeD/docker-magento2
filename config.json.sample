@@ -12,7 +12,7 @@
       "BASE_URL": "http://magento2.docker/",
       "SECURE_BASE_URL": "https://magento2.docker/",
       "INSTALL_DB": "true",
-      "__note_edition__": "Available edition: community|enterprise|cloud",
+      "__note_edition__": "Available edition: community|enterprise|cloud|mage-os",
       "EDITION": "community",
       "__note_use_sample_data": "Available options: true, false, venia",
       "USE_SAMPLE_DATA": "true",
@@ -59,6 +59,9 @@
         "Dockerfile": {},
         "docker-entrypoint.sh": {
           "executable": true
+        },
+        "bin/version_compare.sh": {
+          "executable": false
         },
         "bin/magento-command": {
           "executable": true
@@ -156,6 +159,9 @@
         "docker-entrypoint.sh": {
           "executable": true
         },
+        "bin/version_compare.sh": {
+          "executable": false
+        },
         "bin/magento-command": {
           "executable": true
         },
@@ -252,6 +258,9 @@
         "docker-entrypoint.sh": {
           "executable": true
         },
+        "bin/version_compare.sh": {
+          "executable": false
+        },
         "bin/magento-command": {
           "executable": true
         },
@@ -342,6 +351,9 @@
         "docker-entrypoint.sh": {
           "executable": true
         },
+        "bin/version_compare.sh": {
+          "executable": false
+        },
         "bin/magento-command": {
           "executable": true
         },
@@ -431,6 +443,9 @@
         "Dockerfile": {},
         "docker-entrypoint.sh": {
           "executable": true
+        },
+        "bin/version_compare.sh": {
+          "executable": false
         },
         "bin/magento-command": {
           "executable": true
@@ -528,6 +543,9 @@
         "docker-entrypoint.sh": {
           "executable": true
         },
+        "bin/version_compare.sh": {
+          "executable": false
+        },
         "bin/magento-command": {
           "executable": true
         },
@@ -624,6 +642,9 @@
         "docker-entrypoint.sh": {
           "executable": true
         },
+        "bin/version_compare.sh": {
+          "executable": false
+        },
         "bin/magento-command": {
           "executable": true
         },
@@ -719,6 +740,9 @@
         "Dockerfile": {},
         "docker-entrypoint.sh": {
           "executable": true
+        },
+        "bin/version_compare.sh": {
+          "executable": false
         },
         "bin/magento-command": {
           "executable": true
@@ -825,6 +849,9 @@
         "docker-entrypoint.sh": {
           "executable": true
         },
+        "bin/version_compare.sh": {
+          "executable": false
+        },
         "bin/magento-command": {
           "executable": true
         },
@@ -929,6 +956,9 @@
         "Dockerfile": {},
         "docker-entrypoint.sh": {
           "executable": true
+        },
+        "bin/version_compare.sh": {
+          "executable": false
         },
         "bin/magento-command": {
           "executable": true

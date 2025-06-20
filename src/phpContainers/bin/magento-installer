@@ -3,34 +3,7 @@
 
 [ "$DEBUG" = "true" ] && set -x
 
-#from https://stackoverflow.com/a/48487783
-function version_compare() # $1-a $2-op $3-$b
-# Compare a and b as version strings. Rules:
-# R1: a and b : dot-separated sequence of items. Items are numeric. The last item can optionally end with letters, i.e., 2.5 or 2.5a.
-# R2: Zeros are automatically inserted to compare the same number of items, i.e., 1.0 < 1.0.1 means 1.0.0 < 1.0.1 => yes.
-# R3: op can be '=' '==' '!=' '<' '<=' '>' '>=' (lexicographic).
-# R4: Unrestricted number of digits of any item, i.e., 3.0003 > 3.0000004.
-# R5: Unrestricted number of items.
-{
-  local a=$1 op=$2 b=$3 al=${1##*.} bl=${3##*.}
-  while [[ $al =~ ^[[:digit:]] ]]; do al=${al:1}; done
-  while [[ $bl =~ ^[[:digit:]] ]]; do bl=${bl:1}; done
-  local ai=${a%$al} bi=${b%$bl}
-
-  local ap=${ai//[[:digit:]]} bp=${bi//[[:digit:]]}
-  ap=${ap//./.0} bp=${bp//./.0}
-
-  local w=1 fmt=$a.$b x IFS=.
-  for x in $fmt; do [ ${#x} -gt $w ] && w=${#x}; done
-  fmt=${*//[^.]}; fmt=${fmt//./%${w}s}
-  printf -v a $fmt $ai$bp; printf -v a "%s-%${w}s" $a $al
-  printf -v b $fmt $bi$ap; printf -v b "%s-%${w}s" $b $bl
-
-  case $op in
-    '<='|'>=' ) [ "$a" ${op:0:1} "$b" ] || [ "$a" = "$b" ] ;;
-    * )         [ "$a" $op "$b" ] ;;
-  esac
-}
+source /usr/local/bin/version_compare.sh
 
 AUTH_JSON_FILE="$(composer -g config data-dir 2>/dev/null)/auth.json"
 
@@ -42,22 +15,47 @@ fi
 
 MAGENTO_COMMAND="magento-command"
 MAGENTO_FIX_PERMISSIONS="magento-fix-permissions"
+MAGENTO_TYPE="Magento"
+if [ "$M2SETUP_EDITION" = "enterprise" ]; then
+    MAGENTO_TYPE="Magento Enterprise"
+elif [ "$M2SETUP_EDITION" = "cloud" ]; then
+    MAGENTO_TYPE="Magento Cloud"
+    echo "Not supported edition: $M2SETUP_EDITION"
+    exit 1
+elif [ "$M2SETUP_EDITION" = "mage-os" ]; then
+    MAGENTO_TYPE="MageOS"
+else
+    echo "Unknown edition: $M2SETUP_EDITION"
+    exit 1
+fi
 
 if [ ! -f "$MAGENTO_ROOT/composer.json" ]; then
-    echo "Creating Magento ($M2SETUP_VERSION) project from composer"
+    echo "Creating $MAGENTO_TYPE ($M2SETUP_VERSION) project from composer"
 
     # install community if version not specify
     COMPOSER_CREATE_PROJECT="composer create-project \
-          --repository-url=https://repo.magento.com/ \
-          magento/project-community-edition=$M2SETUP_VERSION \
-          --no-interaction \
-          $MAGENTO_ROOT"
+        --repository-url=https://repo.magento.com/ \
+        magento/project-community-edition=$M2SETUP_VERSION \
+        --no-interaction \
+        $MAGENTO_ROOT"
     if [ "$M2SETUP_EDITION" = "enterprise" ]; then
-       COMPOSER_CREATE_PROJECT="composer create-project \
-              --repository-url=https://repo.magento.com/ \
-              magento/project-enterprise-edition=$M2SETUP_VERSION \
-              --no-interaction \
-              $MAGENTO_ROOT"
+        COMPOSER_CREATE_PROJECT="composer create-project \
+            --repository-url=https://repo.magento.com/ \
+            magento/project-enterprise-edition=$M2SETUP_VERSION \
+            --no-interaction \
+            $MAGENTO_ROOT"
+    elif [ "$M2SETUP_EDITION" = "cloud" ]; then
+            echo "Not supported edition: $M2SETUP_EDITION"
+            exit 1
+    elif [ "$M2SETUP_EDITION" = "mage-os" ]; then
+        COMPOSER_CREATE_PROJECT="composer create-project \
+            --repository-url=https://repo.mage-os.org/ \
+            mage-os/project-community-edition=$M2SETUP_VERSION \
+            --no-interaction \
+            $MAGENTO_ROOT"
+    else
+        echo "Unknown edition: $M2SETUP_EDITION"
+        exit 1
     fi
     $COMPOSER_CREATE_PROJECT
 
@@ -77,7 +75,7 @@ chown -R www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 
 if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
 
-    echo "Install Magento"
+    echo "Install $MAGENTO_TYPE"
 
     INSTALL_COMMAND="$MAGENTO_COMMAND setup:install \
         --db-host=$M2SETUP_DB_HOST \
@@ -95,7 +93,8 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         INSTALL_COMMAND="$INSTALL_COMMAND --key=$M2SETUP_CRYPT_KEY"
     fi
 
-    if version_compare $M2SETUP_VERSION '>=' 2.4.1; then
+    if { [ "$M2SETUP_EDITION" != "mage-os" ] && version_compare "$M2SETUP_VERSION" ">=" "2.4.1"; } \
+        || [ "$M2SETUP_EDITION" = "mage-os" ]; then
         INSTALL_COMMAND="$INSTALL_COMMAND --document-root-is-pub=true"
     fi
 
@@ -109,11 +108,13 @@ if [ ! "$M2SETUP_INSTALL_DB" = "false" ]; then
         INSTALL_COMMAND="$INSTALL_COMMAND --backend-frontname=$M2SETUP_BACKEND_FRONTNAME"
     fi
 
-    if version_compare $M2SETUP_VERSION '>=' 2.4.0; then
+    if { [ "$M2SETUP_EDITION" != "mage-os" ] && version_compare "$M2SETUP_VERSION" ">=" "2.4.0"; } \
+         || [ "$M2SETUP_EDITION" = "mage-os" ]; then
       INSTALL_COMMAND="$INSTALL_COMMAND $M2_SEARCH_ENGINE_SETTINGS"
     fi
 
-    if version_compare $M2SETUP_VERSION '>=' 2.3.0; then
+    if { [ "$M2SETUP_EDITION" != "mage-os" ] && version_compare "$M2SETUP_VERSION" ">=" "2.3.0"; } \
+         || [ "$M2SETUP_EDITION" = "mage-os" ]; then
       INSTALL_COMMAND="$INSTALL_COMMAND $M2SETUP_AMQ_SETTINGS"
     fi
 

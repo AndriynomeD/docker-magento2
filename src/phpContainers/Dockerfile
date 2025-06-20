@@ -97,7 +97,8 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY etc/postfix/config.cf /etc/postfix/
-RUN sed -i "s/relayhost =[ ]*$//g" /etc/postfix/main.cf \
+RUN chmod u=rw,g=r,o=r /etc/postfix/config.cf \
+    && sed -i "s/relayhost =[ ]*$//g" /etc/postfix/main.cf \
     && cat /etc/postfix/config.cf >> /etc/postfix/main.cf
 
 ###########################################################################

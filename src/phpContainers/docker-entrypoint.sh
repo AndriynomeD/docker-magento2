@@ -3,6 +3,8 @@
 
 [ "$DEBUG" = "true" ] && set -x
 
+source /usr/local/bin/version_compare.sh
+
 # If asked, we'll ensure that the www-data is set to the same uid/gid as the
 # mounted volume.  This works around permission issues with virtualbox shared
 # folders.
@@ -38,7 +40,8 @@ CRON_LOG=/var/log/cron.log
 
 # Setup Magento cron
 echo "#~ MAGENTO START c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
-if [ "$(printf '%s\n' "2.3.7" "$M2SETUP_VERSION" | sort -V | head -n1)" = "2.3.7" ]; then
+if { [ "$M2SETUP_EDITION" != "mage-os" ] && version_compare "$M2SETUP_VERSION" ">=" "2.3.7"; } \
+    || [ "$M2SETUP_EDITION" = "mage-os" ]; then
   echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
 else
   echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento

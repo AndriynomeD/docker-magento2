@@ -186,10 +186,17 @@ class ConfigBuilder
         if (!isset($variables['M2_INSTALL']['EDITION'])) {
             $variables['M2_INSTALL']['EDITION'] = 'community';
         }
-        $availableEdition = ['community', 'enterprise', 'cloud'];
+
+        $availableEdition = ['community', 'enterprise', 'cloud', 'mage-os'];
         if (!in_array($variables['M2_INSTALL']['EDITION'], $availableEdition)) {
             throw new Exception( "\033[1;37m\033[0;31m"
                 . sprintf('Incorrect Edition: %s. Available: %s', $variables['M2_INSTALL']['EDITION'], implode(', ', $availableEdition))
+                . "\033[0m");
+        }
+
+        if ($variables['M2_INSTALL']['EDITION'] === 'cloud' && $variables['M2_INSTALL']['INSTALL_DB']) {
+            throw new Exception( "\033[1;37m\033[0;31m"
+                . sprintf('INSTALL_DB not available \'%s\' edition.', $variables['M2_INSTALL']['EDITION'])
                 . "\033[0m");
         }
 
@@ -234,24 +241,32 @@ class ConfigBuilder
         }
 
         if ($variables['composerVersion'] === 'latest') {
-            $magento2Version = str_replace('*', 9, $generalConfig['M2_VERSION']);
-            if (version_compare($magento2Version, '2.4.2', '>=')) {
-                $variables['composerVersion'] = 'latest';
-            } elseif (version_compare($magento2Version, '2.3.7', '>=')) {
+            if ($generalConfig['M2_INSTALL']['EDITION'] === 'mage-os') {
                 $variables['composerVersion'] = 'latest';
             } else {
-                $variables['composerVersion'] = self::DEFAULT_COMPOSER1VERSION;
+                $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
+                if (version_compare($magentoVersion, '2.4.2', '>=')) {
+                    $variables['composerVersion'] = 'latest';
+                } elseif (version_compare($magentoVersion, '2.3.7', '>=')) {
+                    $variables['composerVersion'] = 'latest';
+                } else {
+                    $variables['composerVersion'] = self::DEFAULT_COMPOSER1VERSION;
+                }
             }
         }
 
         if (isset($variables['xdebugVersion']) && $variables['xdebugVersion'] == 'latest') {
-            $magento2Version = str_replace('*', 9, $generalConfig['M2_VERSION']);
-            if (version_compare($magento2Version, '2.3.7', '>=')
-                && version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')
-            ) {
-                $variables['xdebugVersion'] = 'latest';
+            if ($generalConfig['M2_INSTALL']['EDITION'] === 'mage-os') {
+                $variables['composerVersion'] = 'latest';
             } else {
-                $variables['xdebugVersion'] = self::DEFAULT_XDEBUG2VERSION;
+                $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
+                if (version_compare($magentoVersion, '2.3.7', '>=')
+                    && version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')
+                ) {
+                    $variables['xdebugVersion'] = 'latest';
+                } else {
+                    $variables['xdebugVersion'] = self::DEFAULT_XDEBUG2VERSION;
+                }
             }
         }
 
