@@ -46,8 +46,8 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
       | M2_INSTALL:                 | `magento-installer` config section                                                                                                                                       |
       | ├── BASE_URL                | Main domain "http://`{{main_domain}}`/" or "https" if HTTPS_HOST==true. See `Single-store` or `Multi-store` section                                                      |
       | ├── SECURE_BASE_URL         | Main domain "https://`{{main_domain}}`/". See `Single-store` or `Multi-store` section                                                                                    |
-      | ├── INSTALL_DB              | Should `magento-installer` install database                                                                                                                              |
-      | ├── EDITION                 | Magento edition. Available edition: community, enterprise, cloud                                                                                                         |
+      | ├── INSTALL_DB              | Should `magento-installer` install database.                                                                                                                             |
+      | ├── EDITION                 | Magento edition. Available edition: community, enterprise, cloud, mage-os                                                                                                |
       | ├── USE_SAMPLE_DATA         | Should `magento-installer` install magento sample data. Available: true, false, venia                                                                                    |
       | ├── ADMIN_EMAIL             | Recommended use real email because starting from 2.4.0+ magento used 2FA by default                                                                                      |
       | └── CRYPT_KEY               | if not empty `magento-installer` will us this key else will generate random                                                                                              |
@@ -70,7 +70,7 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
       | ├── cron                    | Use cron service? Available options: false, true                                                                                                                         |
       | ├── redis                   | Use redis service? Available options: false, true                                                                                                                        |
       | ├── rabbitmq                | Use rabbitmq service? Available options: false, true                                                                                                                     |
-      | ├── magento-coding-standard | Create separate MCS container (need if project not contain latest MCS version). Available options: false, true                                                           |
+      | ├── magento-coding-standard | Create separate MCS container (need if project not contain latest MCS version: typical cloud and CE/EE before ver.2.4.4). Available options: false, true                 |
       | └── venia                   | Install `venia` PWA and use magento as backend? Available options: false, true [Currently just install venia sample data]                                                |
 
       Section `php-containers` contain configuration for php-fpm, cli, msc container for each php version.
@@ -213,7 +213,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 1) #### PphStorm Magento plugin:
     1. Install & Enable official Magento plugin for PphStorm.
     2. Enabled plugin for project in Settings->PHP->Frameworks->Magento
-    3. Config Project PHP interpreter: 
+    3. Config Project PHP CLI Interpreter: 
     ```plaintext
     Settings->Directories->Excluded files: *Test*
     P.S. not work with vendor/*
@@ -263,44 +263,75 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     
 
 3) #### [Magento Coding Standard][magento-coding-standard]
-    1. On "Prepare all config files" step in `config.json` set `magento-coding-standard` under `DOCKER_SERVICES` to `true`.
-    2. Currently, PhpStorm don't have docker connection for eslint so you need install npm on host machine.
-    3. Install Magento Coding Standard project:
+    Currently CE/EE ver.2.4.4+ contain one of latest 'MCS' package version, so not need use separate 'MCS' container for it.
+    1. If used separate 'MCS' container: on "Prepare all config files" step in `config.json` set `magento-coding-standard` under `DOCKER_SERVICES` to `true`.
+    2. Currently, PhpStorm don't have docker connection for eslint, so you need install npm on host machine.
+    3. If used separate 'MCS' container: install Magento Coding Standard project
         ```shell
         docker-compose run --rm mcs magento-coding-standard-installer
         cd `{{root_directory}}/magento-coding-standard`
         npm init
         ```
-    4. Config PhpStorm (after magento & magento-coding-standard projects was setup):
+    4. Config PhpStorm (after magento, magento-coding-standard projects (optional) was setup):
+        - If used separate 'MCS' container need create 'MCS' CLI Interpreter
         ```plaintext
         Settings->Languages & Frameworks->PHP->Quality tools
             PHP_CodeSniffer:
-            CLI Interpreter: click '...' -> click '+' -> choose 'From Docker,...'
-                Config Remote PHP Interpreter:
-                    choose 'Docker Compose'
-                    Name: 'mcs'
-                    Service: 'mcs'
-            Path mapping: map <Project root>/magento-coding-standard->/var/www/magento-coding-standard.
-            PHP_CodeSniffer path: `/var/www/magento-coding-standard/vendor/bin/phpcs`
-            Path to phpcbf: `/var/www/magento-coding-standard/vendor/bin/phpcbf`
-       
-            PHP Mess Detector:
-            CLI Interpreter: click '...' -> click '+' -> choose already created "cli" remote PHP Interpreter
-            Path mapping: map <Project root>/magento->/var/www/magento
-            PHP Mess Detector path: `/var/www/magento/vendor/bin/phpmd`
-        ```
-        ```plaintext
-        Settings->Editor->Inspection
-        PHP->Quality tools
-            ->PHP Mess Detector validation:
-                Choose all 'Options'
-                Add custom ruleset:
-                path: {{absolute_path}}/magento/dev/tests/static/testsuite/Magento/Test/Php/_files/phpmd/ruleset.xml'
-            ->PHP_CodeSniffer validation: 
+                Configuration: click '...'-> 
+                     PHP_CodeSniffer: click '+' -> 
+                         PHP_CodeSniffer By Interpreter: click '...'-> 
+                             CLI Interpreters: click '+' -> choose 'From Docker,...'
+                                Config Remote PHP Interpreter:
+                                    choose 'Docker Compose'
+                                    Name: 'mcs'
+                                    Service: 'mcs'
+                     Path mapping: map <Project root>/magento-coding-standard->/var/www/magento-coding-standard.
+                     PHP_CodeSniffer path: `/var/www/magento-coding-standard/vendor/bin/phpcs`
+                     Path to phpcbf: `/var/www/magento-coding-standard/vendor/bin/phpcbf`
                 Check files with extensions: 'php,js,css,inc,phtml'
                 Show sniff name: Yes
                 Coding Standard: Magento2 (if not see press reload & scroll up list)
+                Enabled PHP_CodeSniffer by put swith to 'Yes'
+        Settings->Editor->Inspection
+            PHP->Quality tools
+                ->PHP_CodeSniffer validation: Activate
         ```
+        - If used 'MCS' package from magento project just use 'cli' container (see 'PphStorm Magento plugin' section):
+         ```plaintext
+        Settings->Languages & Frameworks->PHP->Quality tools
+            PHP_CodeSniffer:
+                Configuration: choose 'cli' & click '...'-> 
+                    PHP_CodeSniffer: click '+' -> 
+                        PHP_CodeSniffer By Interpreter: choose 'cli'
+                    Path mapping: already filled.
+                    PHP_CodeSniffer path: `/var/www/magento/vendor/bin/phpcs`
+                    Path to phpcbf: `/var/www/magento/vendor/bin/phpcbf`
+                Check files with extensions: 'php,js,css,inc,phtml'
+                Show sniff name: Yes
+                Coding Standard: Magento2 (if not see press reload & scroll up list)
+                Enabled PHP_CodeSniffer by put swith to 'Yes'
+        Settings->Editor->Inspection
+            PHP->Quality tools
+                ->PHP_CodeSniffer validation: Activate
+        ```
+       - Configure Mess Detector:
+        ```plaintext
+        Settings->Languages & Frameworks->PHP->Quality tools
+            Mess Detector:
+                Configuration: choose 'cli' & click '...'-> 
+                    Mess Detector: click '+' -> 
+                         Mess Detector By Interpreter: choose 'cli'
+                    Path mapping: already filled.
+                    PHP Mess Detector path: already filled.
+                Choose all 'Options'
+                Add custom ruleset:
+                path: {{absolute_path}}/magento/dev/tests/static/testsuite/Magento/Test/Php/_files/phpmd/ruleset.xml'
+                Enabled PHP_CodeSniffer by put swith to 'Yes'
+        Settings->Editor->Inspection
+            PHP->Quality tools
+                ->PHP Mess Detector validation: Activate 
+        ```
+        - Configure ESlint:
         ```plaintext
         Settings->Languages & Frameworks
         JavaScript->Code Quality Tools->ESLint:
@@ -309,11 +340,12 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
                 Configuration file: {{absolute_path}}/magento-coding-standard/eslint/.eslintrc
                 Additional rules directory: {{absolute_path}}/magento-coding-standard/eslint/rules
         ```
-    P.S. It enough create mcs container per different php version. If you already have mcs for current php version in another project you can create connect to this mcs container.
 
     For upgrade magento coding standard enter inside mcs container:
     ```shell
     docker-compose run --rm mcs bash
+    <!-- upgrade comands -->
+    ...
     ```
 
 ### Ngrok support (usefully for testing online payment methods etc.)
