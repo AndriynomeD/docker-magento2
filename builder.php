@@ -73,8 +73,7 @@ class ConfigBuilder
     }
 
     /**
-     * @param array $array1
-     * @param array $array2
+     * @param array ...$arrays
      * @return array
      */
     private function array_merge_recursive_distinct(array ...$arrays): array {
@@ -194,10 +193,18 @@ class ConfigBuilder
                 . "\033[0m");
         }
 
-        if ($variables['M2_INSTALL']['EDITION'] === 'cloud' && $variables['M2_INSTALL']['INSTALL_DB']) {
-            throw new Exception( "\033[1;37m\033[0;31m"
-                . sprintf('INSTALL_DB not available \'%s\' edition.', $variables['M2_INSTALL']['EDITION'])
-                . "\033[0m");
+        if ($variables['M2_INSTALL']['EDITION'] === 'cloud') {
+            if ($variables['M2_INSTALL']['INSTALL_DB'] !== 'false') {
+                throw new Exception( "\033[1;37m\033[0;31m"
+                    . sprintf('INSTALL_DB not available \'%s\' edition.', $variables['M2_INSTALL']['EDITION'])
+                    . "\033[0m");
+            }
+            if ($variables['M2_INSTALL']['USE_SAMPLE_DATA'] !== 'false') {
+                throw new Exception( "\033[1;37m\033[0;31m"
+                    . sprintf('USE_SAMPLE_DATA not available \'%s\' edition.', $variables['M2_INSTALL']['EDITION'])
+                    . "\033[0m");
+            }
+
         }
 
         return $variables;
