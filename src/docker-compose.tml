@@ -97,8 +97,10 @@ services:
       - MYSQL_PASSWORD=magento2
       - TERM=meh
     healthcheck:
-<?php if ($DOCKER_SERVICES['database']['TYPE'] == 'mariadb'): ?>
+<?php if ($DOCKER_SERVICES['database']['TYPE'] == 'mariadb' && version_compare($DOCKER_SERVICES['database']['VERSION'], '11.0', '>=')): ?>
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+<?php elseif ($DOCKER_SERVICES['database']['TYPE'] == 'mariadb'): ?>
+      test: 'mysqladmin ping -h localhost -umagento2 -pmagento2'
 <?php elseif ($DOCKER_SERVICES['database']['TYPE'] == 'mysql' || $DOCKER_SERVICES['database']['TYPE'] == 'percona'): ?>
       test: 'mysqladmin ping -h localhost -umagento2 -pmagento2'
 <?php endif; ?>
