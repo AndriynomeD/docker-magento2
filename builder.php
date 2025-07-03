@@ -196,12 +196,12 @@ class ConfigBuilder
         if ($variables['M2_INSTALL']['EDITION'] === 'cloud') {
             if ($variables['M2_INSTALL']['INSTALL_DB'] !== 'false') {
                 throw new Exception( "\033[1;37m\033[0;31m"
-                    . sprintf('INSTALL_DB not available \'%s\' edition.', $variables['M2_INSTALL']['EDITION'])
+                    . sprintf('INSTALL_DB not available \'Cloud\' edition.')
                     . "\033[0m");
             }
             if ($variables['M2_INSTALL']['USE_SAMPLE_DATA'] !== 'false') {
                 throw new Exception( "\033[1;37m\033[0;31m"
-                    . sprintf('USE_SAMPLE_DATA not available \'%s\' edition.', $variables['M2_INSTALL']['EDITION'])
+                    . sprintf('USE_SAMPLE_DATA not available \'Cloud\' edition.')
                     . "\033[0m");
             }
 
@@ -318,11 +318,21 @@ class ConfigBuilder
         $buildPhpVersion = $generalConfig['PHP_VERSION'];
         $phpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
         foreach ($phpContainersConfig as $name => $containerConfig) {
+            /* condition for keep only configs for $buildPhpVersion */
             if ($containerConfig['version'] != $buildPhpVersion
                 || (strpos($name, 'mcs') !== false && !$generalConfig['DOCKER_SERVICES']['magento-coding-standard'])) {
                 // delete not used or just ignore them?
                 continue;
             }
+
+            if ($generalConfig['M2_INSTALL']['EDITION'] === 'cloud') {
+                if (!isset($containerConfig['specificPackages']) || $containerConfig['specificPackages']['calendar'] === false) {
+                    throw new Exception( "\033[1;37m\033[0;31m"
+                        . sprintf('ext-calendar is required for \'Cloud\' edition. Please enable specificPackages/calendar for PHP %s.', $generalConfig['PHP_VERSION'])
+                        . "\033[0m");
+                }
+            }
+
             $this->verbose(sprintf("Building '%s'...", $name), 1);
             $configFiles = $containerConfig['files'];
             unset($containerConfig['files']);
