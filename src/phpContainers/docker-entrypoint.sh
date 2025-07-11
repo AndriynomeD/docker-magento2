@@ -5,8 +5,11 @@
 
 source /usr/local/bin/version_compare.sh
 
+#==============================================================================
+# BLOCK 1: UID/GID SYNCHRONIZATION
+#==============================================================================
 # If asked, we'll ensure that the www-data is set to the same uid/gid as the
-# mounted volume.  This works around permission issues with virtualbox shared
+# mounted volume. This works around permission issues with virtualbox shared
 # folders.
 if [[ "$UPDATE_UID_GID" = "true" ]]; then
     echo "Updating www-data uid and gid"
@@ -22,7 +25,6 @@ if [[ "$UPDATE_UID_GID" = "true" ]]; then
 
     # Once we've established the ids and incumbent ids then we need to free them
     # up (if necessary) and then make the change to www-data.
-
     [ ! -z "${INCUMBENT_USER}" ] && usermod -u 99$DOCKER_UID $INCUMBENT_USER
     usermod -u $DOCKER_UID www-data
 
@@ -30,18 +32,109 @@ if [[ "$UPDATE_UID_GID" = "true" ]]; then
     groupmod -g $DOCKER_GID www-data
 fi
 
-# Ensure our Magento directory exists
+#==============================================================================
+# BLOCK 2: MAGENTO DIRECTORY SETUP
+#==============================================================================
 mkdir -p $MAGENTO_ROOT
 chown www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 
-<?php if ($flavour === 'cli'): ?>
+#==============================================================================
+# BLOCK 3: SENDMAIL CONFIGURATION
+#==============================================================================
+MAIL_SEND_ENABLED=${MAIL_SEND_ENABLED:-false}
+MAIL_SEND_PROVIDER=${MAIL_SEND_PROVIDER:-mailpit-shared}
 
+restore_original_config() {
+    if [ ! -f /etc/postfix/main.cf.original ]; then
+        cp /etc/postfix/main.cf /etc/postfix/main.cf.original
+    fi
+    cp /etc/postfix/main.cf.original /etc/postfix/main.cf
+}
+
+apply_config_without_duplicates() {
+    # SMART CAT FUNCTION - delete duplicates rows from destination file (main.cf)
+    # cat /etc/postfix/config.cf >> /etc/postfix/main.cf
+    local config_file="$1"
+    local main_cf="/etc/postfix/main.cf"
+
+    # Read configuration from config_file & apply it
+    while IFS= read -r line; do
+        if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+
+        param_name=$(echo "$line" | cut -d'=' -f1 | xargs)
+        if [[ -n "$param_name" ]]; then
+            # Delete param from main.cf if exists in config_file
+            sed -i "/^${param_name}[[:space:]]*=/d" "$main_cf"
+            # Add param from config_file
+            echo "$line" >> "$main_cf"
+        fi
+    done < "$config_file"
+}
+
+if [ "$MAIL_SEND_ENABLED" == "true" ]; then
+    echo "Configuring send mail with provider: $MAIL_SEND_PROVIDER"
+
+    case "$MAIL_SEND_PROVIDER" in
+        "postfix-mailtrap")
+            MAIL_SEND_SMTP_CREDENTIALS=${MAIL_SEND_SMTP_CREDENTIALS:?MAIL_SEND_SMTP_CREDENTIALS is required for choosen MAIL_SEND_PROVIDER}
+            cp /etc/postfix/config-mailtrap.cf /etc/postfix/config.cf
+            echo "${MAIL_SEND_SMTP_CREDENTIALS}" > /etc/postfix/sasl_passwd
+            postmap /etc/postfix/sasl_passwd
+            ;;
+        "postfix-google")
+            MAIL_SEND_SMTP_CREDENTIALS=${MAIL_SEND_SMTP_CREDENTIALS:?MAIL_SEND_SMTP_CREDENTIALS is required for choosen MAIL_SEND_PROVIDER}
+            cp /etc/postfix/config-google.cf /etc/postfix/config.cf
+            echo "${MAIL_SEND_SMTP_CREDENTIALS}" > /etc/postfix/sasl_passwd
+            postmap /etc/postfix/sasl_passwd
+            ;;
+        "mailpit-shared")
+            cp /etc/postfix/config-mailpit.cf /etc/postfix/config.cf
+            echo "" > /etc/postfix/sasl_passwd
+            ;;
+    esac
+
+    restore_original_config
+    apply_config_without_duplicates /etc/postfix/config.cf
+    /etc/init.d/postfix restart
+
+    echo "Send mail configuration applied successfully"
+else
+    echo "Mail sending is disabled (MAIL_SEND_ENABLED=false)"
+
+    restore_original_config
+    /etc/init.d/postfix stop 2>/dev/null || true
+fi
+
+#==============================================================================
+# BLOCK 4: PHP CONFIGURATION
+#==============================================================================
+# Substitute in php.ini values
+[ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
+[ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
+
+[ "$PHP_ENABLE_XDEBUG" = "true" ] && \
+    docker-php-ext-enable xdebug && \
+    echo "Xdebug is enabled"
+
+<?php if ($flavour === 'fpm'): ?>
+#==============================================================================
+# BLOCK 5: PHP-FPM CONFIGURATION (FPM only)                      @deprecated???
+#==============================================================================
+[ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
+
+<?php endif; ?>
+<?php if ($flavour === 'cli'): ?>
+#==============================================================================
+# BLOCK 6: MAGENTO CRON SETUP (CLI only)
+#==============================================================================
 CRON_LOG=/var/log/cron.log
 
 # Setup Magento cron
 echo "#~ MAGENTO START c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
-if { [ "$M2SETUP_EDITION" != "mage-os" ] && version_compare "$M2SETUP_VERSION" ">=" "2.3.7"; } \
-    || [ "$M2SETUP_EDITION" = "mage-os" ]; then
+if { [ "$M2_EDITION" != "mage-os" ] && version_compare "$M2_VERSION" ">=" "2.3.7"; } \
+    || [ "$M2_EDITION" = "mage-os" ]; then
   echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
 else
   echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
@@ -55,6 +148,11 @@ touch $CRON_LOG
 #echo "cron.* $CRON_LOG" > /etc/rsyslog.d/cron.conf
 #service rsyslog start
 
+<?php endif; ?>
+<?php if ($flavour === 'cli'): ?>
+#==============================================================================
+# BLOCK 7: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
+#==============================================================================
 # host registration for use in the debugger configuration (remote_host for cli)
 HOST_DOMAIN="host.docker.internal"
 ping -q -c1 HOST_DOMAIN > /dev/null 2>&1
@@ -63,26 +161,11 @@ if [ $? -ne 0 ]; then
   echo -e "$HOST_IP\t$HOST_DOMAIN" >> /etc/hosts
 fi
 
-<?php endif ?>
-
-# Configure Sendmail if required
-if [ "$ENABLE_SENDMAIL" == "true" ]; then
-    echo "${POSTFIX_SASL_PASSWD}" > /etc/postfix/sasl_passwd
-    postmap /etc/postfix/sasl_passwd
-    /etc/init.d/postfix restart
-fi
-
-# Substitute in php.ini values
-[ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
-[ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
-
-[ "$PHP_ENABLE_XDEBUG" = "true" ] && \
-    docker-php-ext-enable xdebug && \
-    echo "Xdebug is enabled"
-
+<?php endif; ?>
 <?php if ($flavour === 'cli'): ?>
-
-# Configure composer
+#==============================================================================
+# BLOCK 8: COMPOSER CONFIGURATION (CLI only)
+#==============================================================================
 [ ! -z "${COMPOSER_GITHUB_TOKEN}" ] && \
     composer config --global github-oauth.github.com $COMPOSER_GITHUB_TOKEN
 
@@ -93,12 +176,9 @@ fi
 [ ! -z "${COMPOSER_BITBUCKET_KEY}" ] && [ ! -z "${COMPOSER_BITBUCKET_SECRET}" ] && \
     composer config --global bitbucket-oauth.bitbucket.org $COMPOSER_BITBUCKET_KEY $COMPOSER_BITBUCKET_SECRET
 
-<?php elseif ($flavour === 'fpm'): ?>
+<?php endif; ?>
 
-# Configure PHP-FPM
-[ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
-
-<?php endif ?>
-
+#==============================================================================
+# BLOCK: EXECUTE MAIN COMMAND
+#==============================================================================
 exec "$@"
-

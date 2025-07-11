@@ -56,34 +56,20 @@
       "version": "7.0",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [],
       "phpExtensions": [
@@ -101,16 +87,13 @@
     },
     "7.0-mcs": {
       "version": "7.0",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "7.0-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -130,13 +113,13 @@
       "version": "7.0",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [],
@@ -155,34 +138,20 @@
       "version": "7.1",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [],
       "phpExtensions": [
@@ -200,16 +169,13 @@
     },
     "7.1-mcs": {
       "version": "7.1",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "7.1-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -229,13 +195,13 @@
       "version": "7.1",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [],
@@ -254,34 +220,20 @@
       "version": "7.2",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [],
       "phpExtensions": [],
@@ -297,16 +249,13 @@
     },
     "7.2-mcs": {
       "version": "7.2",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "7.2-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -324,13 +273,13 @@
       "version": "7.2",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [],
@@ -347,34 +296,20 @@
       "version": "7.3",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [],
       "phpExtensions": [],
@@ -390,16 +325,13 @@
     },
     "7.3-mcs": {
       "version": "7.3",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "7.3-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -417,13 +349,13 @@
       "version": "7.3",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [],
@@ -440,34 +372,20 @@
       "version": "7.4",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
         "libonig-dev"
@@ -485,16 +403,13 @@
     },
     "7.4-mcs": {
       "version": "7.4",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "7.4-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -514,13 +429,13 @@
       "version": "7.4",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -539,34 +454,20 @@
       "version": "8.0",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
         "libonig-dev"
@@ -584,16 +485,13 @@
     },
     "8.0-mcs": {
       "version": "8.0",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "8.0-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -613,13 +511,13 @@
       "version": "8.0",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -638,34 +536,20 @@
       "version": "8.1",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
         "libonig-dev"
@@ -683,16 +567,13 @@
     },
     "8.1-mcs": {
       "version": "8.1",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "8.1-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -712,13 +593,13 @@
       "version": "8.1",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -735,36 +616,23 @@
     },
     "8.2-cli": {
       "version": "8.2",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
         "libonig-dev",
@@ -785,16 +653,13 @@
     },
     "8.2-mcs": {
       "version": "8.2",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "8.2-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -817,13 +682,13 @@
       "version": "8.2",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -845,34 +710,20 @@
       "version": "8.3",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
         "libonig-dev",
@@ -893,16 +744,13 @@
     },
     "8.3-mcs": {
       "version": "8.3",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "8.3-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -925,13 +773,14 @@
       "version": "8.3",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -953,34 +802,20 @@
       "version": "8.4",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "bin/version_compare.sh": {
-          "executable": false
-        },
-        "bin/magento-command": {
-          "executable": true
-        },
-        "bin/magento-fix-permissions": {
-          "executable": true
-        },
-        "bin/magento-installer": {
-          "executable": true
-        },
-        "bin/magento-service-updater": {
-          "executable": true
-        },
-        "bin/run-cron": {
-          "executable": true
-        },
-        "bin/deployVeniaSampleData.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
+        "bin/magento-command": {"executable": true},
+        "bin/magento-fix-permissions": {"executable": true},
+        "bin/magento-installer": {"executable": true},
+        "bin/magento-service-updater": {"executable": true},
+        "bin/run-cron": {"executable": true},
+        "bin/deployVeniaSampleData.sh": {"executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {}
+        "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
         "libonig-dev",
@@ -1001,16 +836,13 @@
     },
     "8.4-mcs": {
       "version": "8.4",
+      "templateSuffix": "mcs",
       "flavour": "cli",
       "context-folder": "8.4-mcs",
       "files": {
-        "Dockerfile-mcs": {},
-        "docker-entrypoint-mcs.sh": {
-          "executable": true
-        },
-        "bin/magento-coding-standard-installer": {
-          "executable": true
-        },
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -1033,13 +865,13 @@
       "version": "8.4",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {},
-        "docker-entrypoint.sh": {
-          "executable": true
-        },
-        "etc/postfix/config.cf": {},
+        "Dockerfile": {"_enable_variables": true},
+        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "etc/postfix/config-google.cf": {},
+        "etc/postfix/config-mailpit.cf": {},
+        "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
-        "etc/php-xdebug.ini": {},
+        "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
       "packages": [

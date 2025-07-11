@@ -1,11 +1,13 @@
-<?php include "Dockerfile"; ?>
+<?php include "includes/Dockerfile"; ?>
 ###########################################################################
 # Final Configuring
 ###########################################################################
 
 ENV UPLOAD_MAX_FILESIZE=64M
 
-ADD etc/php-fpm.ini /usr/local/etc/php/conf.d/zz-magento.ini
-ADD etc/php-fpm.conf /usr/local/etc/
+COPY etc/php-fpm.ini /usr/local/etc/php/conf.d/zz-magento.ini
+COPY etc/php-fpm.conf /usr/local/etc/
+
+COPY bin/version_compare.sh /usr/local/bin/version_compare.sh
 
 CMD ["php-fpm", "-F"]

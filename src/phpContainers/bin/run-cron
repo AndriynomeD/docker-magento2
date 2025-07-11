@@ -1,4 +1,3 @@
-<?php ''; ?>
 #!/usr/bin/env bash
 
 cron && \

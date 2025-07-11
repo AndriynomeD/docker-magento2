@@ -18,7 +18,7 @@ switch ($databaseType) {
         break;
 }
 
-include "Dockerfile";
+include "includes/Dockerfile";
 ?>
 <?php if (array_key_exists('grunt', $specificPackages) && $specificPackages['grunt'] !== false): ?>
 ###########################################################################
@@ -58,7 +58,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Final Configuring
 ###########################################################################
 
-ADD bin/* /usr/local/bin/
+COPY bin/* /usr/local/bin/
 #RUN find /usr/local/bin -type f -exec chmod +x {} +
 RUN for file in \
         /usr/local/bin/magento-installer \

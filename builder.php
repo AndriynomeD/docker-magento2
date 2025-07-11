@@ -1,11 +1,9 @@
 <?php
 
 /**
- * Class Builder2
+ * Class ConfigBuilder
  *
  * Builds files from given configuration and source templates.
- *
- * This extends from the original Builder in the `docker-magento` repository.
  */
 class ConfigBuilder
 {
@@ -13,79 +11,110 @@ class ConfigBuilder
     const CONFIG_FILE = __DIR__ . DIRECTORY_SEPARATOR . self::CONFIG_FILE_NAME;
     const TEMPLATE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'src';
     const GENERAL_CONFIG_KEY = 'general-config';
-
-    /* Php containers consts */
     const PHP_CONTAINERS_CONFIG_KEY = 'php-containers';
-    const PHP_CONTAINERS_TEMPLATE_DIR = 'phpContainers';
-    const PHP_CONTAINERS_DESTINATION_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers' . DIRECTORY_SEPARATOR . 'php';
-    const DEFAULT_COMPOSER1VERSION = '1.10.17';
-    const DEFAULT_XDEBUG2VERSION = '2.9.8';
+    const CONTAINERS_BASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers';
+    const CONTAINERS_DRY_RUN_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers-dry-run';
 
-    /* docker-compose consts */
-    const DOCKER_COMPOSE_TEMPLATE_FILE = 'docker-compose.tml';
-    const DOCKER_COMPOSE_DESTINATION_FILE = __DIR__ . DIRECTORY_SEPARATOR . 'docker-compose.yml';
+    // Message types for colored output
+    const MSG_ERROR = 'error';
+    const MSG_WARNING = 'warning';
+    const MSG_INFO = 'info';
+    const MSG_SUCCESS = 'success';
 
-    /* search_engine consts */
-    const SEARCH_ENGINE_CONTAINERS_TEMPLATE_DIR = 'search_engine';
-    const SEARCH_ENGINE_CONTAINERS_DESTINATION_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'containers' . DIRECTORY_SEPARATOR . 'search_engine';
+    // Message colors
+    const COLORS = [
+        self::MSG_ERROR => "\033[1;37m\033[0;31m",
+        self::MSG_WARNING => "\033[1;37m\033[1;33m",
+        self::MSG_INFO => "\033[1;37m\033[1;34m",
+        self::MSG_SUCCESS => "\033[1;37m\033[1;32m",
+    ];
+    const COLOR_RESET = "\033[0m";
 
     const DEFAULT_EXECUTABLE_PERMISSIONS = 0755;
     const DEFAULT_VERBOSE_LEVEL = 1;
+    const DEFAULT_COMPOSER1VERSION = '1.10.17';
+    const DEFAULT_XDEBUG2VERSION = '2.9.8';
 
     /**
-     * Build targets and their configuration.
-     *
      * @var array
      */
     protected $config = [];
 
     /**
-     * File permissions for executable files.
-     *
      * @var int
      */
     protected $executablePermissions;
 
     /**
-     * Verbosity level.
-     *
      * @var int
      */
     protected $verboseLevel;
 
+    /**
+     * @var bool
+     */
+    protected $dryRun;
+
+    /**
+     * @var array
+     */
+    protected $generalConfig;
+
+    /**
+     * @param $options
+     * @throws Exception
+     */
     public function __construct($options = [])
     {
         $this->executablePermissions = $options['executable_file_permissions'] ?? static::DEFAULT_EXECUTABLE_PERMISSIONS;
         $this->verboseLevel = $options['verbose'] ?? static::DEFAULT_VERBOSE_LEVEL;
-
+        $this->dryRun = $options['dry_run'] ?? false;
+        if ($this->dryRun) {
+            $this->verbose($this->formatMessage('DRY RUN MODE: Files will be created in separate directories for comparison', self::MSG_INFO), 1);
+        }
         $this->loadConfig(static::CONFIG_FILE);
     }
 
     /**
-     * Build the files described in the loaded config.
+     * @param string $file
+     * @return $this
+     * @throws Exception
      */
-    public function run()
+    protected function loadConfig($file)
     {
-        $this->buildPhpContainers();
-        $this->buildNginxContainer();
-        $this->buildSearchEngineContainer();
-        $this->buildDockerCompose();
+        if (!(file_exists($file) && is_readable($file))) {
+            $this->throwError(sprintf("File %s not exist or not readable!", self::CONFIG_FILE_NAME));
+        }
+
+        $config = json_decode(file_get_contents($file), true);
+
+        if (!is_array($config)
+            || !array_key_exists(static::GENERAL_CONFIG_KEY, $config)
+            || (!array_key_exists(static::PHP_CONTAINERS_CONFIG_KEY, $config)
+                || !is_array($config[static::PHP_CONTAINERS_CONFIG_KEY]))
+        ) {
+            $this->throwError(sprintf("Invalid configuration in %s!", $file));
+        }
+
+        $this->config = $config;
+        return $this;
     }
+
+//#==============================================================================
+//# BLOCK: Base helper logic
+//#==============================================================================
 
     /**
      * @param array ...$arrays
      * @return array
      */
-    private function array_merge_recursive_distinct(array ...$arrays): array {
+    protected function array_merge_recursive_distinct(array ...$arrays): array
+    {
         $base = array_shift($arrays);
 
         foreach ($arrays as $array) {
             foreach ($array as $key => $value) {
-                if (
-                    is_array($value)
-                    && isset($base[$key])
-                    && is_array($base[$key])
-                ) {
+                if (is_array($value) && isset($base[$key]) && is_array($base[$key])) {
                     $base[$key] = $this->array_merge_recursive_distinct($base[$key], $value);
                 } else {
                     $base[$key] = $value;
@@ -96,446 +125,536 @@ class ConfigBuilder
         return $base;
     }
 
+//#==============================================================================
+//# BLOCK: error/massage helper logic
+//#==============================================================================
+
     /**
-     * @param $variables
-     * @return array
-     * @throws Exception
+     * Throw formatted error
      */
-    private function getGeneralConfig($variables = [])
+    protected function throwError($message)
     {
-        $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
-        $defaultDockerComposeConfig = [
-            'PHP_VERSION' => '7.4',
-            'M2_VERSION' => '2.4.2',
-            'HTTPS_HOST' => false,
-            'NGINX_PROXY_PATH' => '',
-            'M2_INSTALL' => [],
-            'M2_SETTINGS' => [],
-            'DOCKER_SERVICES' => [
-                'database' => [
-                    '__note_image__'  => 'available image: mariadb|mysql|percona',
-                    'IMAGE'   => 'mariadb:10.4',
-                    'TYPE'    => 'mariadb',
-                    'VERSION' => '10.4',
-                    'VOLUME'  => 'mariadb10'
-                ],
-                'search_engine' => [
-                    '__note_connect_type__' => 'available connect_type: external|internal|none',
-                    'CONNECT_TYPE' => 'external',
-                    '__note_type__' => 'available type: elasticsearch|opensearch',
-                    'TYPE'    => 'elasticsearch',
-                    'VERSION' => '7.7.1'
-                ],
-                '__note_varnish__' => 'available varnish: true|false',
-                'varnish' => true,
-                'cron' => true,
-                'redis' => false,
-                'rabbitmq' => false,
-                '__note_mcs__' => 'available magento-coding-standard: true|false',
-                'magento-coding-standard' => false,
-                '__note_venia__' => 'available venia: true|false',
-                'venia' => false
-            ]
-        ];
-
-        $variables = $this->array_merge_recursive_distinct($defaultDockerComposeConfig, $generalConfig, $variables);
-
-        if (is_array($variables['DOCKER_SERVICES']['search_engine'])
-            && $variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'none'
-        ) {
-            $variables['DOCKER_SERVICES']['search_engine'] = false;
-        }
-        $variables['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE'] = $variables['DOCKER_SERVICES']['search_engine'] !== false
-            && in_array($variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'], ['internal', 'external']);
-        if (!$variables['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE']
-            && version_compare(str_replace('*', 9, $variables['M2_VERSION']), '2.4.0', '>=')
-        ) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'External or Internal Elasticsearch is required for magento 2.4.0+' . "\033[0m");
-        }
-        if (is_array($variables['DOCKER_SERVICES']['search_engine'])
-            && !in_array($variables['DOCKER_SERVICES']['search_engine']['TYPE'], ['elasticsearch', 'opensearch'])
-        ) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'Available search engine: elasticsearch, opensearch' . "\033[0m");
-        }
-
-        if ($generalConfig['DOCKER_SERVICES']['venia']) {
-            if ($variables['DOCKER_SERVICES']['varnish']) {
-                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA not need Varnish on Magento backend' . "\033[0m");
-            }
-//            if (!$variables['NGINX_PROXY_PATH']) {
-//                throw new Exception( "\033[1;37m\033[0;31m" . 'Venia PWA required `NGINX_PROXY_PATH`' . "\033[0m");
-//            }
-            if ($variables['M2_INSTALL']['USE_SAMPLE_DATA']) {
-                $variables['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
-            }
-        }
-
-        if (!$variables['M2_SOURCE_VOLUME'] ) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'Magento source volume required' . "\033[0m");
-        }
-
-        if ($variables['HTTPS_HOST'] && !$variables['NGINX_PROXY_PATH']) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'Https required `NGINX_PROXY_PATH`' . "\033[0m");
-        }
-
-        if ($variables['NGINX_PROXY_PATH']) {
-            $variables['NGINX_PROXY_PATH'] = rtrim($variables['NGINX_PROXY_PATH'], '/');
-        }
-
-        if (!isset($variables['M2_INSTALL']['EDITION'])) {
-            $variables['M2_INSTALL']['EDITION'] = 'community';
-        }
-
-        $availableEdition = ['community', 'enterprise', 'cloud', 'mage-os'];
-        if (!in_array($variables['M2_INSTALL']['EDITION'], $availableEdition)) {
-            throw new Exception( "\033[1;37m\033[0;31m"
-                . sprintf('Incorrect Edition: %s. Available: %s', $variables['M2_INSTALL']['EDITION'], implode(', ', $availableEdition))
-                . "\033[0m");
-        }
-
-        if ($variables['M2_INSTALL']['EDITION'] === 'cloud') {
-            if ($variables['M2_INSTALL']['INSTALL_DB'] !== 'false') {
-                throw new Exception( "\033[1;37m\033[0;31m"
-                    . sprintf('INSTALL_DB not available \'Cloud\' edition.')
-                    . "\033[0m");
-            }
-            if ($variables['M2_INSTALL']['USE_SAMPLE_DATA'] !== 'false') {
-                throw new Exception( "\033[1;37m\033[0;31m"
-                    . sprintf('USE_SAMPLE_DATA not available \'Cloud\' edition.')
-                    . "\033[0m");
-            }
-
-        }
-
-        return $variables;
+        throw new Exception($this->formatMessage($message, self::MSG_ERROR));
     }
 
     /**
-     * @param array $generalConfig
-     * @param array $phpContainerConfig
-     * @param array $variables
-     * @return array
-     * @throws Exception
+     * Show formatted warning
      */
-    private function getPhpContainerVariables(array $generalConfig, array $phpContainerConfig, array $variables = []): array
+    protected function showWarning($message)
     {
-        $defaultPhpContainerConfig = [
-            'composerVersion' => 'latest',
-            'databaseType' => $generalConfig['DOCKER_SERVICES']['database']['TYPE'],
-            'databaseVersion' => $generalConfig['DOCKER_SERVICES']['database']['VERSION'],
-            'specificPackages' => [
-                'gd' => true,
-                'imagick' => false,
-                'calendar' => false,
-                'ioncube' => false,
-                'grunt' => false,
-                'libsodiumfix' => false
-            ]
-        ];
-        $defaultFileVariables = [
-            '_disable_variables' => false,
-            'executable' => false
-        ];
-        $variables = $this->array_merge_recursive_distinct(
-            $defaultPhpContainerConfig,
-            $phpContainerConfig,
-            $defaultFileVariables,
-            $variables
-        );
-
-        if ($variables['specificPackages']['ioncube'] && version_compare($generalConfig['PHP_VERSION'], '8.0', '>=')) {
-            throw new Exception( "\033[1;37m\033[0;31m" . 'IonCube not supported PHP 8 or higher yet.' . "\033[0m");
-        }
-
-        if ($variables['composerVersion'] === 'latest') {
-            if ($generalConfig['M2_INSTALL']['EDITION'] === 'mage-os') {
-                $variables['composerVersion'] = 'latest';
-            } else {
-                $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
-                if (version_compare($magentoVersion, '2.4.2', '>=')) {
-                    $variables['composerVersion'] = 'latest';
-                } elseif (version_compare($magentoVersion, '2.3.7', '>=')) {
-                    $variables['composerVersion'] = 'latest';
-                } else {
-                    $variables['composerVersion'] = self::DEFAULT_COMPOSER1VERSION;
-                }
-            }
-        }
-
-        if (isset($variables['xdebugVersion']) && $variables['xdebugVersion'] == 'latest') {
-            if ($generalConfig['M2_INSTALL']['EDITION'] === 'mage-os') {
-                $variables['composerVersion'] = 'latest';
-            } else {
-                $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
-                if (version_compare($magentoVersion, '2.3.7', '>=')
-                    && version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')
-                ) {
-                    $variables['xdebugVersion'] = 'latest';
-                } else {
-                    $variables['xdebugVersion'] = self::DEFAULT_XDEBUG2VERSION;
-                }
-            }
-        }
-
-        return $variables;
+        $this->verbose($this->formatMessage($message, self::MSG_WARNING), 1);
     }
 
     /**
-     * @param array $generalConfig
-     * @param array $variables
-     * @return array
+     * Format message with colors
      */
-    private function getSearchEngineContainerVariables(array $generalConfig, array $variables = []): array
+    protected function formatMessage($message, $type = self::MSG_INFO)
     {
-        $searchEngineType = $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'];
-        $searchEngineVersion = $generalConfig['DOCKER_SERVICES']['search_engine']['VERSION'];
-        $defaultSearchEngineContainerConfig = [
-            'ELASTICSEARCH_VERSION' => $searchEngineType == 'elasticsearch' ? $searchEngineVersion: '',
-            'OPENSEARCH_VERSION' => $searchEngineType == 'opensearch' ? $searchEngineVersion: ''
-        ];
-        $defaultFileVariables = [
-            '_disable_variables' => false,
-            'executable' => false
-        ];
-        $variables = $this->array_merge_recursive_distinct(
-            $defaultSearchEngineContainerConfig,
-            $defaultFileVariables,
-            $variables
-        );
-
-        return $variables;
-    }
-
-
-    /**
-     * Build the files described in the loaded config.
-     */
-    private function buildPhpContainers()
-    {
-        $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR
-            . self::PHP_CONTAINERS_TEMPLATE_DIR . DIRECTORY_SEPARATOR;
-        $generalConfig = $this->getGeneralConfig();
-        $buildPhpVersion = $generalConfig['PHP_VERSION'];
-        $phpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
-        foreach ($phpContainersConfig as $name => $containerConfig) {
-            /* condition for keep only configs for $buildPhpVersion */
-            if ($containerConfig['version'] != $buildPhpVersion
-                || (strpos($name, 'mcs') !== false && !$generalConfig['DOCKER_SERVICES']['magento-coding-standard'])) {
-                // delete not used or just ignore them?
-                continue;
-            }
-
-            if ($generalConfig['M2_INSTALL']['EDITION'] === 'cloud') {
-                if (!isset($containerConfig['specificPackages']) || $containerConfig['specificPackages']['calendar'] === false) {
-                    throw new Exception( "\033[1;37m\033[0;31m"
-                        . sprintf('ext-calendar is required for \'Cloud\' edition. Please enable specificPackages/calendar for PHP %s.', $generalConfig['PHP_VERSION'])
-                        . "\033[0m");
-                }
-            }
-
-            $this->verbose(sprintf("Building '%s'...", $name), 1);
-            $configFiles = $containerConfig['files'];
-            unset($containerConfig['files']);
-            $containerConfig['phpVersion'] = $containerConfig['version'];
-            $templateConfig = [
-                'templateDirPath' => $templateDirPath,
-                'version' => $containerConfig['version'],
-                'flavour' => $containerConfig['flavour'],
-            ];
-            foreach ($configFiles as $filename => $variables) {
-                $contents = '';
-                if ($templateFile = $this->getTemplateFile($filename, $templateConfig)) {
-                    /* list of all variables
-                    $variables = [
-                        'composerVersion', 'databaseType', 'databaseVersion',
-                        'phpVersion', 'flavour', 'packages', 'phpExtensions', 'specificPackages', 'xdebugVersion',
-                        '_disable_variables', 'executable',
-                    ];
-                    */
-
-                    $variables = $this->getPhpContainerVariables($generalConfig, $containerConfig, $variables);
-
-                    // Determine whether we should load with the template renderer, or whether we should straight up
-                    // just load the file from disk.
-                    if ($variables['_disable_variables']) {
-                        $contents = file_get_contents($templateFile);
-                    } else {
-                        $contents = $this->renderTemplate($templateFile, $variables);
-                    }
-
-                    $contents = str_replace('{{generated_by_builder}}', 'This file is automatically generated. Do not edit directly.', $contents);
-                }
-
-                $destinationFile = $this->getDestinationFile(
-                    $filename,
-                    $containerConfig,
-                    self::PHP_CONTAINERS_DESTINATION_DIR
-                );
-                $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
-                $this->writeFile($destinationFile, $contents);
-
-                if ($variables['executable'] ) {
-                    $this->verbose(sprintf("\tUpdating permissions on '%s' to '%o'...", $destinationFile, $this->executablePermissions), 2);
-                    $this->setFilePermissions($destinationFile, $this->executablePermissions);
-                }
-            }
-        }
+        $color = self::COLORS[$type] ?? self::COLORS[self::MSG_INFO];
+        return $color . $message . self::COLOR_RESET;
     }
 
     /**
-     * Currently only generate ssl certificates
+     * Print an informational message to the command line.
      *
-     * @return void
-     * @throws Exception
-     */
-    private function buildNginxContainer()
-    {
-        $generalConfig = $this->getGeneralConfig();
-        $httpsOn = $generalConfig['HTTPS_HOST'];
-        if ($httpsOn) {
-            $this->verbose(sprintf("Generate ssl sertificates for Magento..."), 1);
-            $hosts = $generalConfig['M2_VIRTUAL_HOSTS'];
-            $nginxProxyPath = $generalConfig['NGINX_PROXY_PATH'];
-            shell_exec(sprintf('bash generateSSL.sh %s %s', $hosts, $nginxProxyPath));
-        }
-    }
-
-    /**
-     * Build the files described in the loaded config.
-     */
-    private function buildSearchEngineContainer()
-    {
-        $generalConfig = $this->getGeneralConfig();
-        $isSearchEngineInternal = $generalConfig['DOCKER_SERVICES']['search_engine'] !== false
-            && $generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'internal';
-        if ($isSearchEngineInternal) {
-            $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR . self::SEARCH_ENGINE_CONTAINERS_TEMPLATE_DIR . DIRECTORY_SEPARATOR . $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE']. DIRECTORY_SEPARATOR;
-            $containerConfig = [
-                'context-folder' => $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'],
-                'files' =>  [
-                    'Dockerfile' => []
-                ]
-            ];
-            $this->verbose(sprintf("Building '%s'...", 'search_engine'), 1);
-            $configFiles = $containerConfig['files'];
-            unset($containerConfig['files']);
-            $templateConfig = [
-                'templateDirPath' => $templateDirPath,
-                'version' => '',
-                'flavour' => '',
-            ];
-            foreach ($configFiles as $filename => $variables) {
-                $contents = '';
-                if ($templateFile = $this->getTemplateFile($filename, $templateConfig)) {
-                    /* list of all variables
-                    $variables = [
-                        'searchEngineImage', 'ELASTICSEARCH_IMAGE', 'OPENSEARCH_IMAGE',
-                        '_disable_variables', 'executable',
-                    ];
-                    */
-                    $variables = $this->getSearchEngineContainerVariables($generalConfig, $variables);
-
-                    // Determine whether we should load with the template renderer, or whether we should straight up
-                    // just load the file from disk.
-                    if ($variables['_disable_variables']) {
-                        $contents = file_get_contents($templateFile);
-                    } else {
-                        $contents = $this->renderTemplate($templateFile, $variables);
-                    }
-
-                    $contents = str_replace('{{generated_by_builder}}', 'This file is automatically generated. Do not edit directly.', $contents);
-                }
-
-                $destinationFile = $this->getDestinationFile(
-                    $filename,
-                    $containerConfig,
-                    self::SEARCH_ENGINE_CONTAINERS_DESTINATION_DIR
-                );
-                $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
-                $this->writeFile($destinationFile, $contents);
-
-                if ($variables['executable'] ) {
-                    $this->verbose(sprintf("\tUpdating permissions on '%s' to '%o'...", $destinationFile, $this->executablePermissions), 2);
-                    $this->setFilePermissions($destinationFile, $this->executablePermissions);
-                }
-            }
-        }
-    }
-
-    /**
-     * @return void
-     * @throws Exception
-     */
-    private function buildDockerCompose()
-    {
-        $templateDirPath = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR;
-        $generalConfig = $this->getGeneralConfig();
-        $this->verbose(sprintf("Building '%s'...", 'docker-compose.yml'), 1);
-        $templateConfig = [
-            'templateDirPath' => $templateDirPath,
-            'version' => '',
-            'flavour' => '',
-        ];
-        $filename = self::DOCKER_COMPOSE_TEMPLATE_FILE;
-        $contents = '';
-        if ($templateFile = $this->getTemplateFile($filename, $templateConfig)) {
-            $variables = $generalConfig;
-            $contents = $this->renderTemplate($templateFile, $variables);
-            $contents = str_replace('{{generated_by_builder}}', 'This file is automatically generated. Do not edit directly.', $contents);
-        }
-
-        if ($generalConfig['DOCKER_SERVICES']['venia']) {
-            $this->verbose("\033[1;37m\033[1;33m" . "P.S. Currently for Venia we just installed Venia sample data on install db phase. \n"
-                . "You should setup Venia separately after setup Magento" . "\033[0m", 1);
-        }
-
-        $destinationFile = self::DOCKER_COMPOSE_DESTINATION_FILE;
-        $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
-        $this->writeFile($destinationFile, $contents);
-        $this->setFilePermissions($destinationFile, $this->executablePermissions);
-    }
-
-    /**
-     * Load the build configuration from the given file.
-     *
-     * @param string $file
-     *
+     * @param string $message
+     * @param int    $level
+     * @param bool   $newline
      * @return $this
-     * @throws Exception
      */
-    protected function loadConfig($file)
+    protected function verbose($message, $level = 1, $newline = true)
     {
-        if (!(file_exists($file) && is_readable($file))) {
-            throw new Exception(sprintf("File %s not exist or not readable!", self::CONFIG_FILE_NAME));
+        if ($level <= $this->verboseLevel) {
+            printf("%s%s", $message, $newline ? PHP_EOL : "");
         }
-
-        $config = json_decode(file_get_contents($file), true);
-
-        if (!is_array($config)
-            || !array_key_exists(static::GENERAL_CONFIG_KEY, $config)
-            || (!array_key_exists(static::PHP_CONTAINERS_CONFIG_KEY, $config)
-                || !is_array($config[static::PHP_CONTAINERS_CONFIG_KEY]))
-        ) {
-            throw new Exception(sprintf("Invalid configuration in %s!", $file));
-        }
-
-        $this->config = $config;
-
         return $this;
     }
 
     /**
-     * Return the template file name for the given file.
-     * Example:
-     * Dockerfile-7.4-cli
-     * Dockerfile-7.4
-     * Dockerfile-cli - found
-     * Dockerfile
+     * @return string
+     */
+    protected function getContainersBaseDir()
+    {
+        return $this->dryRun ? self::CONTAINERS_DRY_RUN_DIR : self::CONTAINERS_BASE_DIR;
+    }
+
+    /**
+     * Get the compose file name based on dry run mode
+     *
+     * @return string
+     */
+    protected function getComposeFileName()
+    {
+        return $this->dryRun ? 'compose-dry-run.yaml' : 'compose.yaml';
+    }
+
+    /**
+     * @param $generalConfig
+     * @return mixed
+     */
+    protected function getActivePhpContainersConfig($generalConfig)
+    {
+        $buildPhpVersion = $generalConfig['PHP_VERSION'];
+        $needMCSphpContainer = $generalConfig['DOCKER_SERVICES']['magento-coding-standard'];
+        $allPhpContainersConfig = $this->config[self::PHP_CONTAINERS_CONFIG_KEY];
+
+        $phpContainersConfig = array_filter(
+            $allPhpContainersConfig,
+            function($containerConfig, $name) use ($buildPhpVersion, $needMCSphpContainer) {
+                return $containerConfig['version'] === $buildPhpVersion
+                    && (!str_contains($name, 'mcs') || $needMCSphpContainer);
+            },
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        return $phpContainersConfig;
+    }
+
+//#==============================================================================
+//# BLOCK: file/template helper logic
+//#==============================================================================
+
+
+
+//#==============================================================================
+//# BLOCK: Main logic
+//#==============================================================================
+
+    /**
+     * Build the docker infrastructure based on the loaded config.
+     */
+    public function run()
+    {
+        $this->validateConfiguration();
+        $this->buildContainers();
+
+        if ($this->dryRun) {
+            $this->verbose($this->formatMessage('DRY RUN COMPLETED', self::MSG_SUCCESS), 1);
+            $this->verbose($this->formatMessage('Check the following for comparison:', self::MSG_INFO), 1);
+            $this->verbose($this->formatMessage('- Containers: ' . $this->getContainersBaseDir(), self::MSG_INFO), 1);
+            $this->verbose($this->formatMessage('- Compose file: ' . $this->getComposeFileName(), self::MSG_INFO), 1);
+        }
+    }
+
+//#==============================================================================
+//# BLOCK: Validation
+//#==============================================================================
+
+    /**
+     * Validate entire configuration
+     */
+    protected function validateConfiguration()
+    {
+        $this->validateGeneralConfig();
+        $this->validateMagentoSettingsConfig();
+        $this->validateMagentoInstallConfig();
+
+        $this->validateDatabaseService();
+        $this->validateSearchEngineService();
+        $this->validateVeniaService();
+        $this->validatePhpContainersConfig();
+    }
+
+    /**
+     * Validate general configuration
+     */
+    protected function validateGeneralConfig()
+    {
+        $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+
+        $requiredVars = ['M2_PROJECT', 'M2_VIRTUAL_HOSTS', 'M2_DB_NAME', 'PHP_VERSION', 'M2_EDITION', 'M2_VERSION', 'M2_SOURCE_VOLUME'];
+        foreach ($requiredVars as $variable) {
+            if (empty($generalConfig[$variable])) {
+                $this->throwError(sprintf('%s is required.', $variable));
+            }
+        }
+
+        $availableEditions = ['community', 'enterprise', 'cloud', 'mage-os'];
+        if (!in_array($generalConfig['M2_EDITION'], $availableEditions)) {
+            $this->throwError(sprintf('Incorrect Edition: %s. Available: %s',
+                $generalConfig['M2_EDITION'], implode(', ', $availableEditions)));
+        }
+
+        /** @deprecated: remove in feature releases */
+//        if ($generalConfig['HTTPS_HOST'] && !$generalConfig['NGINX_PROXY_PATH']) {
+//            $this->throwError('Https required `NGINX_PROXY_PATH`');
+//        }
+    }
+
+    /**
+     * Validate Magento install configuration
+     */
+    protected function validateMagentoInstallConfig()
+    {
+        $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+        $installConfig = $this->config[self::GENERAL_CONFIG_KEY]['M2_INSTALL'];
+
+        if ($generalConfig['M2_EDITION'] === 'cloud') {
+            if ($installConfig['INSTALL_DB'] !== 'false') {
+                $this->throwError('INSTALL_DB not available for \'Cloud\' edition.');
+            }
+            if ($installConfig['USE_SAMPLE_DATA'] !== 'false') {
+                $this->throwError('USE_SAMPLE_DATA not available for \'Cloud\' edition.');
+            }
+        }
+    }
+
+    /**
+     * Validate Magento settings configuration
+     */
+    protected function validateMagentoSettingsConfig()
+    {
+        // Additional validation for M2_SETTINGS if needed
+        // This method can be extended based on specific requirements
+    }
+
+
+    /**
+     * Validate database service
+     */
+    protected function validateDatabaseService()
+    {
+        $services = $this->config[self::GENERAL_CONFIG_KEY]['DOCKER_SERVICES'];
+        $databaseConfig = $services['database'];
+
+        $requiredKeys = ['IMAGE', 'TYPE', 'VERSION', 'VOLUME'];
+        foreach ($requiredKeys as $key) {
+            if (empty($databaseConfig[$key])) {
+                $this->throwError(sprintf('Database %s is required.', $key));
+            }
+        }
+
+        $availableTypes = ['mariadb', 'mysql', 'percona'];
+        if (!in_array($databaseConfig['TYPE'], $availableTypes)) {
+            $this->throwError(sprintf('Available database types: %s', implode(', ', $availableTypes)));
+        }
+    }
+
+    /**
+     * Validate search engine service
+     */
+    protected function validateSearchEngineService()
+    {
+        $services = $this->config[self::GENERAL_CONFIG_KEY]['DOCKER_SERVICES'];
+        $searchEngineConfig = $services['search_engine'];
+
+        if ($searchEngineConfig !== false) {
+            if ($searchEngineConfig['CONNECT_TYPE'] === 'none') {
+                $searchEngineConfig = false;
+            }
+
+            $searchEngineAvailable = $searchEngineConfig !== false
+                && in_array($searchEngineConfig['CONNECT_TYPE'], ['internal', 'external']);
+            $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+            $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
+            if (!$searchEngineAvailable && version_compare($magentoVersion, '2.4.0', '>=')) {
+                $this->throwError('External or Internal Search Engine is required for magento 2.4.0+');
+            }
+
+            if (is_array($searchEngineConfig)
+                && !in_array($searchEngineConfig['TYPE'], ['elasticsearch', 'opensearch'])) {
+                $this->throwError(sprintf('Available search engine: %s',
+                    implode(',', ['elasticsearch', 'opensearch'])));
+            }
+        }
+    }
+
+    /**
+     * Validate Venia service
+     */
+    protected function validateVeniaService()
+    {
+        $services = $this->config[self::GENERAL_CONFIG_KEY]['DOCKER_SERVICES'];
+
+        if ($services['venia']) {
+            if ($services['varnish']) {
+                $this->throwError('Venia PWA not need Varnish on Magento backend');
+            }
+
+//            $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+//            if (!$generalConfig['HTTPS_HOST']) {
+//                $this->throwError('Venia PWA required `HTTPS_HOST`');
+//            }
+
+            // in transformGeneralConfig
+//            $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+//            if ($generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] &&
+//                $generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] !== 'false') {
+//                // Auto-set to venia sample data
+//                $this->config[self::GENERAL_CONFIG_KEY]['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
+//            }
+        }
+    }
+
+    /**
+     * Validate PHP containers configuration
+     */
+    protected function validatePhpContainersConfig()
+    {
+        $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+        $phpContainersConfig = $this->getActivePhpContainersConfig($generalConfig);
+        foreach ($phpContainersConfig as $name => $containerConfig) {
+            $this->validatePhpContainer($name, $containerConfig, $generalConfig);
+        }
+    }
+
+    /**
+     * Validate single PHP container
+     */
+    protected function validatePhpContainer($name, $containerConfig, $generalConfig)
+    {
+        if ($containerConfig['specificPackages']['ioncube'] &&
+            version_compare($containerConfig['version'], '8.0', '>=')) {
+            $this->throwError(sprintf('PHP-%s: %s', $name, 'IonCube not supported PHP 8 or higher yet.'));
+        }
+
+        if ($generalConfig['M2_EDITION'] === 'cloud') {
+            if (!isset($containerConfig['specificPackages']) ||
+                $containerConfig['specificPackages']['calendar'] === false) {
+                $this->throwError(sprintf(
+                    'ext-calendar is required for \'Cloud\' edition. Please enable specificPackages/calendar for PHP %s.',
+                    $generalConfig['PHP_VERSION']
+                ));
+            }
+        }
+    }
+
+//#==============================================================================
+//# BLOCK: Build infrastructure logic
+//#==============================================================================
+
+    /**
+     * Build all containers
+     */
+    protected function buildContainers()
+    {
+        $this->buildPhpContainers();
+        $this->buildNginxContainer();
+        $this->buildSearchEngineContainer();
+        $this->buildDockerCompose();
+    }
+
+    /**
+     * Build PHP containers (refactored)
+     */
+    protected function buildPhpContainers()
+    {
+        $generalConfig = $this->getGeneralConfig();
+        $phpContainersConfig = $this->getActivePhpContainersConfig($generalConfig);
+
+        foreach ($phpContainersConfig as $name => $containerConfig) {
+            $containerConfig['templateDir'] = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR . 'phpContainers' . DIRECTORY_SEPARATOR;
+            $containerConfig['destinationDir'] = $this->getContainersBaseDir() . DIRECTORY_SEPARATOR . 'php';
+
+            /** set used in php container variables */
+            $containerConfig['phpVersion'] = $containerConfig['version'];
+            $containerConfig['databaseType'] = $generalConfig['DOCKER_SERVICES']['database']['TYPE'];
+            $containerConfig['databaseVersion'] = $generalConfig['DOCKER_SERVICES']['database']['VERSION'];
+
+            if (isset($containerConfig['composerVersion']) && $containerConfig['composerVersion'] === 'latest') {
+                if ($generalConfig['M2_EDITION'] === 'mage-os') {
+                    $containerConfig['composerVersion'] = 'latest';
+                } else {
+                    $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
+                    if (version_compare($magentoVersion, '2.4.2', '>=')) {
+                        $containerConfig['composerVersion'] = 'latest';
+                    } elseif (version_compare($magentoVersion, '2.3.7', '>=')) {
+                        $containerConfig['composerVersion'] = 'latest';
+                    } else {
+                        $containerConfig['composerVersion'] = self::DEFAULT_COMPOSER1VERSION;
+                    }
+                }
+            }
+
+            if (isset($containerConfig['xdebugVersion']) && $containerConfig['xdebugVersion'] == 'latest') {
+                if ($generalConfig['M2_EDITION'] === 'mage-os') {
+                    $containerConfig['composerVersion'] = 'latest';
+                } else {
+                    $magentoVersion = str_replace('*', 9, $generalConfig['M2_VERSION']);
+                    if (version_compare($magentoVersion, '2.3.7', '>=')
+                        && version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')
+                    ) {
+                        $containerConfig['xdebugVersion'] = 'latest';
+                    } else {
+                        $containerConfig['xdebugVersion'] = self::DEFAULT_XDEBUG2VERSION;
+                    }
+                }
+            }
+
+            $this->buildContainer($name, $containerConfig);
+        }
+    }
+
+    // Keep existing methods but clean them up
+    protected function buildNginxContainer()
+    {
+        // Currently only generate ssl certificates - can be extended
+        $generalConfig = $this->getGeneralConfig();
+        // SSL generation logic here if needed
+    }
+
+    protected function buildSearchEngineContainer()
+    {
+        $generalConfig = $this->getGeneralConfig();
+        $isSearchEngineInternal = $generalConfig['DOCKER_SERVICES']['search_engine'] !== false
+            && $generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'internal';
+
+        if ($isSearchEngineInternal) {
+            $searchEngineType = $generalConfig['DOCKER_SERVICES']['search_engine']['TYPE'];
+            $searchEngineVersion = $generalConfig['DOCKER_SERVICES']['search_engine']['VERSION'];
+            $containerConfig = [
+                'version' => $searchEngineVersion,
+                'context-folder' => $searchEngineType,
+                'files' => [
+                    'Dockerfile' => ['_enable_variables' => true]
+                ]
+            ];
+
+            $containerConfig['templateDir'] = self::TEMPLATE_DIR . DIRECTORY_SEPARATOR . 'search_engine' . DIRECTORY_SEPARATOR . $searchEngineType. DIRECTORY_SEPARATOR;
+            $containerConfig['destinationDir'] = $this->getContainersBaseDir() . DIRECTORY_SEPARATOR . 'search_engine';
+            $containerConfig['ELASTICSEARCH_VERSION'] = $searchEngineType == 'elasticsearch' ? $searchEngineVersion: '';
+            $containerConfig['OPENSEARCH_VERSION'] = $searchEngineType == 'opensearch' ? $searchEngineVersion: '';
+
+
+            $this->buildContainer('search_engine', $containerConfig);
+        }
+    }
+
+    protected function buildDockerCompose()
+    {
+        $generalConfig = $this->getGeneralConfig();
+        $this->verbose(sprintf("Building '%s'...", $this->getComposeFileName()), 1);
+
+        $templateConfig = [
+            'templateDirPath' => self::TEMPLATE_DIR . DIRECTORY_SEPARATOR,
+            'version' => '',
+            'flavour' => '',
+            'templateSuffix' => ''
+        ];
+
+        $filename = 'compose-template.php';
+        $fileVariables = ['_enable_variables' => true, 'executable' => true];
+        /** buildComposeFile inspired buildContainerFile */
+//        $destinationDir = $containerConfig['destinationDir']; // __DIR__ . DIRECTORY_SEPARATOR
+        $templateFile = $this->getTemplateFile($filename, $templateConfig);
+        if (!$templateFile) {
+            $this->throwError(sprintf('Template file %s not found.', $templateConfig['templateDirPath'] . $filename));
+        }
+
+        $variables = $this->array_merge_recursive_distinct($generalConfig, $fileVariables);
+        $contents = $this->renderFileContents($templateFile, $variables);
+
+//        $destinationFile = $this->getDestinationFile($filename, $containerConfig, $destinationDir);
+        $destinationFile = __DIR__ . DIRECTORY_SEPARATOR . $this->getComposeFileName();;
+        $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
+        $this->writeFile($destinationFile, $contents);
+
+        if ($variables['executable'] ?? false) {
+            $this->verbose(sprintf("\tUpdating permissions on '%s' to '%o'...",
+                $destinationFile, $this->executablePermissions), 2);
+            $this->setFilePermissions($destinationFile, $this->executablePermissions);
+        }
+
+
+
+        if ($generalConfig['DOCKER_SERVICES']['venia']) {
+            $this->showWarning(
+                "P.S. Currently for Venia we just installed Venia sample data on install db phase. \n" .
+                "You should setup Venia separately after setup Magento"
+            );
+        }
+    }
+
+//#==============================================================================
+//# BLOCK: Common Build logic
+//#==============================================================================
+
+    /**
+     * Universal container builder
+     */
+    protected function buildContainer($containerName, $containerConfig)
+    {
+        $requiredKeys = ['templateDir', 'destinationDir'];
+        $isValid = is_array($containerConfig) &&
+            !array_diff($requiredKeys, array_keys($containerConfig)) &&
+            !in_array('', array_intersect_key($containerConfig, array_flip($requiredKeys)));
+        if (!$isValid) {
+            $this->throwError(sprintf("Container %s doesn't have required params: %s",
+                $containerName, implode(',', $requiredKeys)));
+        }
+
+        $this->verbose(sprintf("Building '%s'...", $containerName), 1);
+        $configFiles = $containerConfig['files'];
+        unset($containerConfig['files']);
+
+        $templateConfig = $this->getTemplateConfig($containerConfig);
+        $defaultFileVariables = [
+            '_enable_variables' => false,
+            'executable' => false
+        ];
+        foreach ($configFiles as $filename => $fileVariables) {
+            $fileVariables = $this->array_merge_recursive_distinct($defaultFileVariables, $fileVariables);
+            $this->buildContainerFile($filename, $fileVariables, $containerConfig, $templateConfig);
+        }
+    }
+
+    /**
+     * Build single container file
+     */
+    protected function buildContainerFile($filename, $fileVariables, $containerConfig, $templateConfig)
+    {
+        $destinationDir = $containerConfig['destinationDir'];
+        $templateFile = $this->getTemplateFile($filename, $templateConfig);
+
+        if (!$templateFile) {
+            $this->throwError(sprintf('Template file %s not found.', $templateConfig['templateDirPath'] . $filename));
+        }
+
+        $variables = $this->array_merge_recursive_distinct($containerConfig, $fileVariables);
+        $contents = $this->renderFileContents($templateFile, $variables);
+
+        $destinationFile = $this->getDestinationFile($filename, $containerConfig, $destinationDir);
+        $this->verbose(sprintf("\tWriting '%s'...", $destinationFile), 2);
+
+        $this->writeFile($destinationFile, $contents);
+
+        if ($variables['executable'] ?? false) {
+            $this->verbose(sprintf("\tUpdating permissions on '%s' to '%o'...",
+                $destinationFile, $this->executablePermissions), 2);
+            $this->setFilePermissions($destinationFile, $this->executablePermissions);
+        }
+    }
+
+    /**
+     * Render file contents based on variables
+     */
+    protected function renderFileContents($templateFile, $fileVariables)
+    {
+        if ($fileVariables['_enable_variables'] ?? false) {
+            $contents = $this->renderTemplate($templateFile, $fileVariables);
+        } else {
+            $contents = file_get_contents($templateFile);
+        }
+
+        $contents = str_replace('{{generated_by_builder}}',
+            'This file is automatically generated. Do not edit directly.', $contents);
+
+        return $contents;
+    }
+
+    /**
+     * Return the first found template file name for the given file.
+     * Example for 'Dockerfile':
+     * [
+     *      'Dockerfile-7.4-cli'
+     *      'Dockerfile-7.4'
+     *      'Dockerfile-cli' - found
+     *      'Dockerfile'
+     * ]
      *
      * @param string $filename
      * @param array  $config
-     *
-     * @return null|string
+     * @return string|null
      */
     protected function getTemplateFile($filename, $config)
     {
@@ -546,9 +665,23 @@ class ConfigBuilder
             sprintf("%s-%s", $filename, $config['flavour']),
             $filename,
         ];
+
+        if ($config['templateSuffix']) {
+            $potentialFilenames = [
+                sprintf("%s-%s-%s-%s", $filename, $config['version'], $config['templateSuffix'], $config['flavour']),
+                sprintf("%s-%s-%s", $filename, $config['version'], $config['templateSuffix']),
+                sprintf("%s-%s-%s", $filename, $config['templateSuffix'], $config['flavour']),
+                sprintf("%s-%s", $filename, $config['templateSuffix']),
+                ...$potentialFilenames
+            ];
+        }
+
         foreach ($potentialFilenames as $potentialFilename) {
-            $path =  $templateDirPath . $potentialFilename;
-            if (file_exists($path) && is_readable($path)) {
+            $path = $templateDirPath . $potentialFilename;
+            if (file_exists($path)) {
+                if (!is_readable($path)) {
+                    $this->throwError(sprintf('Template file %s not readable.', $path));
+                }
                 return $path;
             }
         }
@@ -561,7 +694,6 @@ class ConfigBuilder
      *
      * @param string $filename
      * @param array  $config
-     *
      * @return string
      */
     protected function getDestinationFile($filename, $config, $destinationFolder)
@@ -578,18 +710,14 @@ class ConfigBuilder
      *
      * @param string $templateFile
      * @param array  $variables
-     *
      * @return string
      */
     protected function renderTemplate($templateFile, $variables)
     {
         extract($variables, EXTR_OVERWRITE);
         ob_start();
-
         include $templateFile;
-
         $output = ob_get_clean();
-
         return $output ?: "";
     }
 
@@ -598,7 +726,6 @@ class ConfigBuilder
      *
      * @param string $filename
      * @param string $contents
-     *
      * @return $this
      * @throws Exception
      */
@@ -606,16 +733,14 @@ class ConfigBuilder
     {
         $directory = dirname($filename);
 
-        // If the directory doesn't created then try to create the directory.
         if (!is_dir($directory)) {
-            // Create the directory, preventing race conditions if another process creates the directory for us.
             if (!@mkdir($directory, 0755, true) && !is_dir($directory)) {
-                throw new Exception(sprintf("Unable to create directory %s!", $directory));
+                $this->throwError(sprintf("Unable to create directory %s!", $directory));
             }
         }
 
         if (file_put_contents($filename, $contents) === false) {
-            throw new Exception(sprintf("Failed to write %s!", $filename));
+            $this->throwError(sprintf("Failed to write %s!", $filename));
         }
 
         return $this;
@@ -626,40 +751,238 @@ class ConfigBuilder
      *
      * @param string $filename
      * @param int    $permissions
-     *
      * @return $this
      */
     protected function setFilePermissions($filename, $permissions = 0644)
     {
         chmod($filename, $permissions);
-
         return $this;
     }
 
+//#==============================================================================
+//# BLOCK: Get/Prepare Configuration
+//#==============================================================================
+
     /**
-     * Print an informational message to the command line.
-     *
-     * @param string $message
-     * @param int    $level
-     * @param bool   $newline
-     *
-     * @return $this
+     * Get general configuration with defaults
      */
-    protected function verbose($message, $level = 1, $newline = true)
+    protected function getGeneralConfig($variables = [])
     {
-        if ($level <= $this->verboseLevel) {
-            printf("%s%s", $message, $newline ? PHP_EOL : "");
+        if ($this->generalConfig === null) {
+            $this->generalConfig = $this->buildGeneralConfig($variables);
         }
 
-        return $this;
+        return $this->generalConfig;
+    }
+
+    /**
+     * @TODO: remove $variables = [] param
+     * Build general configuration
+     */
+    protected function buildGeneralConfig($variables = [])
+    {
+        $generalConfig = $this->config[self::GENERAL_CONFIG_KEY];
+        $defaultConfig = $this->getDefaultGeneralConfig();
+
+        $variables = $this->array_merge_recursive_distinct($defaultConfig, $generalConfig, $variables);
+
+        // Apply configuration transformations
+        $variables = $this->transformGeneralConfig($variables);
+
+        $phpContainersConfig = $this->getActivePhpContainersConfig2(
+            $this->config['php-containers'],
+            $variables
+        );
+        $this->config['php-containers'] = $this->transformPhpContainersConfig(
+            $phpContainersConfig,
+            $variables
+        );
+
+        return $variables;
+    }
+
+    /**
+     * Get default general configuration
+     */
+    protected function getDefaultGeneralConfig()
+    {
+        return [
+            'M2_INSTALL' => [],
+            'M2_SETTINGS' => [],
+            'DOCKER_SERVICES' => [
+                'database' => [],
+                'search_engine' => false,
+                '__note_varnish__' => 'available varnish: true|false',
+                'varnish' => false,
+                'cron' => false,
+                'redis' => false,
+                'rabbitmq' => false,
+                '__note_mcs__' => 'available magento-coding-standard: true|false',
+                'magento-coding-standard' => false,
+                '__note_venia__' => 'available venia: true|false',
+                'venia' => false
+            ],
+        ];
+        /** just reference for elasticsearch configuration */
+//        'search_engine' => [
+//            '__note_connect_type__' => 'available connect_type: external|internal|none',
+//            'CONNECT_TYPE' => 'internal',
+//            '__note_type__' => 'available type: elasticsearch|opensearch',
+//            'TYPE' => 'elasticsearch',
+//            'VERSION' => '7.7.1'
+//        ]
+    }
+
+    /**
+     * Modify general configuration
+     */
+    protected function transformGeneralConfig($variables)
+    {
+        // Handle search engine configuration
+        if (is_array($variables['DOCKER_SERVICES']['search_engine'])
+            && $variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'none') {
+            $variables['DOCKER_SERVICES']['search_engine'] = false;
+        }
+
+        // Set search engine availability
+        $variables['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE'] =
+            $variables['DOCKER_SERVICES']['search_engine'] !== false
+            && in_array($variables['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'], ['internal', 'external']);
+
+        /** @deprecated: remove in feature releases */
+//        if ($variables['NGINX_PROXY_PATH']) {
+//            $variables['NGINX_PROXY_PATH'] = rtrim($variables['NGINX_PROXY_PATH'], '/');
+//        }
+
+        if ($generalConfig['DOCKER_SERVICES']['venia'] ?? false) {
+            if ($variables['M2_INSTALL']['USE_SAMPLE_DATA'] &&
+                $variables['M2_INSTALL']['USE_SAMPLE_DATA'] !== 'false') {
+                $variables['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
+            }
+        }
+
+        return $variables;
+    }
+
+    /**
+     * Get active PHP containers configuration (фільтрація)
+     * @param array $allPhpContainersConfig
+     * @param array $generalConfig
+     * @return array
+     */
+    private function getActivePhpContainersConfig2(array $allPhpContainersConfig, array $generalConfig): array
+    {
+        $buildPhpVersion = $generalConfig['PHP_VERSION'];
+        $needMCSphpContainer = $generalConfig['DOCKER_SERVICES']['magento-coding-standard'] ?? false;
+
+        return array_filter(
+            $allPhpContainersConfig,
+            function ($containerConfig, $name) use ($buildPhpVersion, $needMCSphpContainer) {
+                return ($containerConfig['version'] ?? '') === $buildPhpVersion
+                    && (!str_contains($name, 'mcs') || $needMCSphpContainer);
+            },
+            ARRAY_FILTER_USE_BOTH
+        );
+    }
+
+    /**
+     * Transform PHP containers configuration
+     * @param array $phpContainersConfig
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformPhpContainersConfig(array $phpContainersConfig, array $generalConfig): array
+    {
+        foreach ($phpContainersConfig as $name => &$containerConfig) {
+            $containerConfig = $this->transformPhpContainer($containerConfig, $generalConfig);
+        }
+
+        return $phpContainersConfig;
+    }
+
+    /**
+     * Transform single PHP container configuration
+     * @param array $containerConfig
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformPhpContainer(array $containerConfig, array $generalConfig): array
+    {
+        /** set used in php container variables */
+        $containerConfig['phpVersion'] = $containerConfig['version'];
+        $containerConfig['databaseType'] = $generalConfig['DOCKER_SERVICES']['database']['TYPE'];
+        $containerConfig['databaseVersion'] = $generalConfig['DOCKER_SERVICES']['database']['VERSION'];
+
+        if (isset($containerConfig['composerVersion']) && $containerConfig['composerVersion'] === 'latest') {
+            $containerConfig['composerVersion'] = $this->resolveComposerVersion($generalConfig);
+        }
+
+        if (isset($containerConfig['xdebugVersion']) && $containerConfig['xdebugVersion'] === 'latest') {
+            $containerConfig['xdebugVersion'] = $this->resolveXdebugVersion($generalConfig);
+        }
+
+        return $containerConfig;
+    }
+
+    /**
+     * Resolve Composer version
+     * @param array $generalConfig
+     * @return string
+     */
+    private function resolveComposerVersion(array $generalConfig): string
+    {
+        if ($generalConfig['M2_EDITION'] === 'mage-os') {
+            return 'latest';
+        }
+
+        $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
+        if (version_compare($magentoVersion, '2.4.0', '>=')
+            || (version_compare($magentoVersion, '2.3.7', '>=') && version_compare($magentoVersion, '2.4.0', '<'))
+        ) {
+            return 'latest';
+        }
+
+        return self::DEFAULT_COMPOSER1VERSION;
+    }
+
+    /**
+     * Resolve XDebug version
+     * @param array $generalConfig
+     * @return string
+     */
+    private function resolveXdebugVersion(array $generalConfig): string
+    {
+        if ($generalConfig['M2_EDITION'] === 'mage-os') {
+            return 'latest';
+        }
+
+        $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
+        if (version_compare($magentoVersion, '2.3.7', '>=') &&
+            version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')) {
+            return 'latest';
+        }
+
+        return self::DEFAULT_XDEBUG2VERSION;
+    }
+
+    /**
+     * Get template configuration
+     */
+    protected function getTemplateConfig($containerConfig)
+    {
+        return [
+            'templateDirPath' => $containerConfig['templateDir'],
+            'version' => $containerConfig['version'] ?? '',
+            'flavour' => $containerConfig['flavour'] ?? '',
+            'templateSuffix' => $containerConfig['templateSuffix'] ?? '',
+        ];
     }
 }
 
 /**
  * __MAIN__
  */
-
-$args = getopt("hvq");
+$args = getopt("hvq", ["dry-run"]);
 $options = [];
 
 if (isset($args["h"])) {
@@ -669,6 +992,7 @@ Usage: php builder.php [options]
 Options:
     -h  Print out this help message.
     -v  Enable verbose output. Can be used multiple times to increase verbosity level.
+    --dry-run Will create containers inside 'containers-dry-run' folder & 'compose-dry-run.yaml' (Good for compare prev & new configuration)
     -q  Silence informational messages.
 USAGE;
     exit;
@@ -677,7 +1001,11 @@ USAGE;
 if (isset($args["q"])) {
     $options["verbose"] = 0;
 } else if (isset($args["v"])) {
-    $options["verbose"] = count($args["v"]);
+    $options["verbose"] = is_array($args["v"]) ? count($args["v"]) : 1;
+}
+
+if (isset($args["dry-run"])) {
+    $options["dry_run"] = true;
 }
 
 $builder = new ConfigBuilder($options);

@@ -76,16 +76,40 @@ RUN apt-get update \
 
 <?php include "Dockerfile-specific-packages"; ?>
 ###########################################################################
+# Install Xdebug (but don't enable)
+###########################################################################
+
+<?php $xdebugVersion = ($xdebugVersion == 'latest' || $xdebugVersion == '') ? '' : '-' . $xdebugVersion; ?>
+RUN pecl install -o -f <?php printf("xdebug%s", $xdebugVersion) ?> && rm -rf /tmp/pear
+ADD etc/php-xdebug.ini /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+
+###########################################################################
+# Install Postfix
+###########################################################################
+
+RUN apt-get update \
+    && echo "postfix postfix/mailname string dockerized.site" | debconf-set-selections \
+    && echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections \
+    && apt-get install -y  \
+        postfix \
+        libsasl2-modules \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+COPY etc/postfix/* /etc/postfix/
+RUN chmod u=rw,g=r,o=r /etc/postfix/config-*.cf \
+    && sed -i "s/relayhost =[ ]*$//g" /etc/postfix/main.cf
+
+###########################################################################
 # Configuring...
 ###########################################################################
 
 ENV PHP_MEMORY_LIMIT=2G \
     PHP_ENABLE_XDEBUG=false \
-    MCS_ROOT=/var/www/magento-coding-standard \
+    MAGENTO_ROOT=/var/www/magento \
     DEBUG=false \
     UPDATE_UID_GID=false
 
-COPY docker-entrypoint-mcs.sh /docker-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN ["chmod", "+x", "/docker-entrypoint.sh"]
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

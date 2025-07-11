@@ -1,7 +1,7 @@
 #
 # {{generated_by_builder}}
 #
-version: "3.9"
+#version: "3.9"
 services:
 <?php
 //###########################################################################
@@ -16,6 +16,14 @@ services:
       - VIRTUAL_HOST=<?= $M2_VIRTUAL_HOSTS . PHP_EOL ?>
       - VIRTUAL_PORT=80
       - HTTPS_METHOD=noredirect
+<?php
+    /**
+     * Multi-domains certificates
+     * Specify multiple hosts with a comma delimiter to create multi-domains (SAN) certificates
+     * (the first domain in the list will be the base domain).
+     */
+?>
+      - CERT_NAME=<?= trim(explode(',', $M2_VIRTUAL_HOSTS)[0]) . PHP_EOL ?>
     ports:
       - 80
     depends_on:
@@ -49,6 +57,7 @@ services:
       - VIRTUAL_HOST=<?= $M2_VIRTUAL_HOSTS . PHP_EOL ?>
       - VIRTUAL_PORT=80
       - HTTPS_METHOD=noredirect
+      - CERT_NAME=<?= trim(explode(',', $M2_VIRTUAL_HOSTS)[0]) . PHP_EOL ?>
 <?php endif; ?>
     networks:
       default:
@@ -74,6 +83,7 @@ services:
       - ./global.env
     networks:
       default:
+      mail-services:
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
       search-engine-net:
 <?php endif; ?>
@@ -149,6 +159,9 @@ services:
       - ./global.env
       - ./composer.env
     environment:
+      - M2_VERSION=<?= $M2_VERSION . PHP_EOL ?><?php /** for correct cron setup according to M2_VERSION */ ?>
+      - M2_EDITION=<?= $M2_EDITION . PHP_EOL ?>
+
       - M2SETUP_INSTALL_DB=<?= $M2_INSTALL['INSTALL_DB'] . PHP_EOL ?>
       - M2SETUP_DB_HOST=db
       - M2SETUP_DB_NAME=<?= $M2_DB_NAME . PHP_EOL ?>
@@ -166,7 +179,7 @@ services:
       - M2SETUP_CRYPT_KEY=<?= $M2_INSTALL['CRYPT_KEY'] . PHP_EOL ?>
 <?php endif; ?>
       - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>
-      - M2SETUP_EDITION=<?= $M2_INSTALL['EDITION'] . PHP_EOL ?>
+      - M2SETUP_EDITION=<?= $M2_EDITION . PHP_EOL ?>
       - M2SETUP_USE_SAMPLE_DATA=<?= $M2_INSTALL['USE_SAMPLE_DATA'] . PHP_EOL ?>
       - M2_SEARCH_ENGINE_SETTINGS=<?= ($M2_SETTINGS['SEARCH_ENGINE_AVAILABLE'] ? $M2_SETTINGS['SEARCH_ENGINE_SETTINGS'] : '') . PHP_EOL ?>
       - M2_AMQ_SETTINGS=<?= ($DOCKER_SERVICES['rabbitmq'] ? $M2_SETTINGS['AMQ_SETTINGS'] : '') . PHP_EOL ?>
@@ -174,6 +187,7 @@ services:
       - M2_VARNISH_SETTINGS=<?= ($DOCKER_SERVICES['varnish'] ? $M2_SETTINGS['VARNISH_SETTINGS'] : ''). PHP_EOL ?>
     networks:
       default:
+      mail-services:
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
       search-engine-net:
 <?php endif; ?>
@@ -215,12 +229,13 @@ services:
     env_file:
       - ./global.env
     environment:
-      - ENABLE_SENDMAIL=false
-      - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>
+      M2SETUP_EDITION: <?= $M2_EDITION . PHP_EOL ?><?php /** for correct cron setup according to M2_VERSION */ ?>
+      M2SETUP_VERSION: <?= $M2_VERSION . PHP_EOL ?>
     networks:
-      - default
+      default:
+      mail-services:
 <?php if ($DOCKER_SERVICES['search_engine'] && $DOCKER_SERVICES['search_engine']['CONNECT_TYPE'] == 'external'): ?>
-      - search-engine-net
+      search-engine-net:
 <?php endif; ?>
 <?php endif; ?>
 
@@ -272,16 +287,16 @@ services:
       memlock:
         soft: -1
         hard: -1
-#    healthcheck:
-#      test: [
-#        "CMD-SHELL",
-#        "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"' || exit 1"
-#      ]
-#      interval: 10s
-#      timeout: 10s
-#      retries: 12
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -s -u 'admin:admin' -k http://localhost:9200/_cluster/health | grep -E -q '\"status\":\"(green|yellow)\"' || exit 1"
+      ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
 
-<?php else: ?>
+<?php elseif ($DOCKER_SERVICES['search_engine']['TYPE'] == 'opensearch'): ?>
   opensearch:
     hostname: opensearch.<?= $M2_PROJECT . PHP_EOL ?>
     build:
@@ -304,14 +319,14 @@ services:
       memlock:
         soft: -1
         hard: -1
-#    healthcheck:
-#      test: [
-#        "CMD-SHELL",
-#        "curl -s -u 'admin:admin' -k https://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"' || exit 1"
-#      ]
-#      interval: 10s
-#      timeout: 10s
-#      retries: 12
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -s -u 'admin:admin' -k http://localhost:9200/_cluster/health | grep -E -q '\"status\":\"(green|yellow)\"' || exit 1"
+      ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
 
 <?php endif; ?>
 <?php endif; ?>
@@ -323,7 +338,7 @@ services:
 <?php if (isset($DOCKER_SERVICES['redis']) && $DOCKER_SERVICES['redis']): ?>
   redis:
     hostname: redis.<?= $M2_PROJECT . PHP_EOL ?>
-    image: 'redis'
+    image: redis:7.2
     ports:
       - 6379
 #    healthcheck:
@@ -368,3 +383,5 @@ networks:
   search-engine-net:
     external: true
 <?php endif; ?>
+  mail-services:
+    external: true

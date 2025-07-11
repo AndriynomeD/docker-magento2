@@ -1,0 +1,3 @@
+# Mailpit relay
+relayhost = [mailpit]:1025
+# No authentication for local Mailpit

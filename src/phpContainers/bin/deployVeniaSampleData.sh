@@ -1,4 +1,3 @@
-<?php ''; ?>
 #!/usr/bin/env bash
 add_composer_repository () {
     name=$1

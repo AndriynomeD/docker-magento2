@@ -1,4 +1,3 @@
-<?php ''; ?>
 #!/bin/bash
 
 [ "$DEBUG" = "true" ] && set -x
