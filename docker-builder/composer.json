@@ -1,0 +1,18 @@
+{
+    "name": "docker-builder/core",
+    "description": "Docker environment builder for Magento 2",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "symfony/console": "^6.0",
+        "symfony/dependency-injection": "^6.0",
+        "symfony/config": "^6.0",
+        "symfony/yaml": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DockerBuilder\\Core\\": "src/"
+        }
+    },
+    "bin": ["bin/console"]
+}

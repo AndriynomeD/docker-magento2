@@ -1,0 +1,88 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Docker Builder - Hybrid execution script
+ *
+ * This script can run in two modes:
+ * 1. Composer mode - if vendor/autoload.php exists
+ * 2. Standalone mode - using custom autoloader
+ */
+
+$dockerBuilderDir = __DIR__ . '/docker-builder';
+$composerMode = file_exists($dockerBuilderDir . '/vendor/autoload.php');
+$composerMode = false;
+if ($composerMode) {
+    // Composer + Symfony Console mode
+    $args = array_slice($argv, 1);
+    $command = $dockerBuilderDir . '/bin/console build ' . implode(' ', $args);
+    passthru($command, $exitCode);
+    exit($exitCode);
+
+} else {
+    require $dockerBuilderDir . '/autoload.php';
+
+    $args = getopt("hvq", ["dry-run", "help"]);
+
+    if (isset($args["h"]) || isset($args["help"])) {
+        echo <<<USAGE
+Docker Builder - Standalone Mode
+
+Usage: php docker-builder-run [options]
+
+Options:
+    -h, --help     Show this help message
+    -v             Enable verbose output
+    -q             Quiet mode (suppress informational messages)
+    --dry-run      Run in dry-run mode (create files in separate directories)
+
+Note: For full functionality, install dependencies with:
+    cd docker-builder && composer install
+
+USAGE;
+        exit(0);
+    }
+
+    $options = [];
+
+    $verbosity = \DockerBuilder\Core\Builder\MyOutput::VERBOSITY_NORMAL;
+
+    if (isset($args['q'])) {
+        $verbosity = \DockerBuilder\Core\Builder\MyOutput::VERBOSITY_QUIET;
+    } elseif (isset($args['v'])) {
+        $count = is_array($args['v']) ? count($args['v']) : 1;
+
+        switch ($count) {
+            case 1:
+                $verbosity = \DockerBuilder\Core\Builder\MyOutput::VERBOSITY_VERBOSE;
+                break;
+            case 2:
+                $verbosity = \DockerBuilder\Core\Builder\MyOutput::VERBOSITY_VERY_VERBOSE;
+                break;
+            default:
+                $verbosity = \DockerBuilder\Core\Builder\MyOutput::VERBOSITY_DEBUG;
+                break;
+        }
+    }
+
+    if (isset($args["dry-run"])) {
+        $options["dry_run"] = true;
+    }
+
+    try {
+        $builder = new \DockerBuilder\Core\Builder\ConfigBuilder(
+            new \DockerBuilder\Core\Config\JsonConfigLoader(),
+            new \DockerBuilder\Core\Config\ConfigValidator(),
+            new \DockerBuilder\Core\Config\ConfigGenerator(),
+            new \DockerBuilder\Core\Template\TemplateRenderer(),
+            new \DockerBuilder\Core\File\FileManager(),
+            new \DockerBuilder\Core\Logger\ConsoleLogger($verbosity),
+            $options
+        );
+        $builder->run();
+
+        echo "\033[1;32mBuild completed successfully!\033[0m" . PHP_EOL;
+    } catch (Exception $e) {
+        echo "\033[1;31mBuild failed: " . $e->getMessage() . "\033[0m" . PHP_EOL;
+        exit(1);
+    }
+}

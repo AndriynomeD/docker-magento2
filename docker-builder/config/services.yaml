@@ -1,0 +1,24 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: true
+
+  DockerBuilder\Core\:
+    resource: '../src/*'
+    exclude: '../src/{Entity,Exception,Contract}'
+
+  DockerBuilder\Core\Contract\ConfigGeneratorInterface: '@DockerBuilder\Core\Config\ConfigGenerator'
+  DockerBuilder\Core\Contract\ConfigLoaderInterface: '@DockerBuilder\Core\Config\JsonConfigLoader'
+  DockerBuilder\Core\Contract\ConfigValidatorInterface: '@DockerBuilder\Core\Config\ConfigValidator'
+  DockerBuilder\Core\Contract\FileManagerInterface: '@DockerBuilder\Core\File\FileManager'
+  DockerBuilder\Core\Contract\TemplateRendererInterface: '@DockerBuilder\Core\Template\TemplateRenderer'
+  DockerBuilder\Core\Contract\LoggerInterface: '@DockerBuilder\Core\Logger\ConsoleLogger'
+  DockerBuilder\Contract\LoggerInterface:
+    class: DockerBuilder\Logger\ConsoleLogger
+    shared: true
+
+  DockerBuilder\Core\Builder\ConfigBuilderFactory: ~
+
+  DockerBuilder\Core\Console\Command\BuildCommand:
+    tags: ['console.command']

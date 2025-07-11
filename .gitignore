@@ -4,15 +4,17 @@
 #whitelist for /folders
 /*/
 !/containers
-!/examples
 !/mysql_volumes
-!/src
+!/docker-builder
 
 /global.env
 /composer.env
 /config.json
-/docker-compose.yml
+/compose.yaml
+/docker-builder/vendor/*
 
+/containers/nginx/etc/multi_vhost/*
+!/containers/nginx/etc/multi_vhost/example_vhost.conf
 /containers/php/*
 !/containers/php/.gitkeep
 /containers/search_engine/*
@@ -28,3 +30,12 @@
 !/volumes/elasticsearch/.gitkeep
 /volumes/opensearch/*
 !/volumes/opensearch/.gitkeep
+
+#Dry-run
+/compose-dry-run.yaml
+/containers-dry-run/*
+
+#deprecated
+!/examples
+!/src
+/docker-compose.yml
