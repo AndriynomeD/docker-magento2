@@ -23,11 +23,8 @@ class ConfigBuilder
     private const APP_DIR = __DIR__ . '/../../'; /* docker-builder folder */
     private const ROOT_DIR = self::APP_DIR . '../';  /* 1 level up from the docker-builder folder */
 
-    const CONFIG_FILE_NAME = 'config.json';
-    const CONFIG_FILE = self::ROOT_DIR . self::CONFIG_FILE_NAME;
+    const CONFIG_FILEPATH = self::ROOT_DIR . 'config.json';
     const TEMPLATE_DIR = self::APP_DIR . 'resources/templates/';
-    const CONTAINERS_BASE_DIR = self::ROOT_DIR . 'containers';
-    const CONTAINERS_DRY_RUN_DIR = self::ROOT_DIR . 'containers-dry-run';
 
     const DEFAULT_EXECUTABLE_PERMISSIONS = 0755;
 
@@ -40,7 +37,7 @@ class ConfigBuilder
 
     private array $config = [];
     private int $executablePermissions;
-    private bool $dryRun;
+    private bool $isDryRun;
 
     /**
      * @param ConfigLoaderInterface $configLoader
@@ -72,13 +69,7 @@ class ConfigBuilder
         if (isset($options['verbose'])) {
             $this->logger->setVerbosity($options['verbose']);
         }
-
-        $this->dryRun = $options['dry_run'] ?? false;
-        if ($this->dryRun) {
-            $this->logger->info('DRY RUN MODE: Files will be created in separate directories for comparison', MyOutput::VERBOSITY_NORMAL);
-        }
-
-        $this->loadAndProcessConfig();
+        $this->isDryRun = $options['dry_run'] ?? false;
     }
 
     /**
@@ -88,7 +79,7 @@ class ConfigBuilder
     private function loadAndProcessConfig(): void
     {
         try {
-            $rawConfig = $this->configLoader->loadConfig(self::CONFIG_FILE);
+            $rawConfig = $this->configLoader->loadConfig(self::CONFIG_FILEPATH);
             $this->configValidator->validate($rawConfig);
             $this->config = $this->configGenerator->generate($rawConfig);
             $this->logger->success('Configuration loaded and processed successfully', MyOutput::VERBOSITY_VERBOSE);
@@ -103,9 +94,13 @@ class ConfigBuilder
      */
     public function run(): void
     {
+        if ($this->isDryRun) {
+            $this->logger->info('DRY RUN MODE: Files will be created in separate directories for comparison', MyOutput::VERBOSITY_NORMAL);
+        }
+        $this->loadAndProcessConfig();
         $this->buildContainers();
 
-        if ($this->dryRun) {
+        if ($this->isDryRun) {
             $this->logger->success('DRY RUN COMPLETED', MyOutput::VERBOSITY_NORMAL);
             $this->logger->info('Check the following for comparison:', MyOutput::VERBOSITY_NORMAL);
             $this->logger->info('- Containers: ' . $this->getContainersBaseDirPath(), MyOutput::VERBOSITY_NORMAL);
@@ -118,10 +113,15 @@ class ConfigBuilder
      */
     protected function buildContainers(): void
     {
-        $this->buildPhpContainers();
-        $this->buildNginxContainer();
-        $this->buildSearchEngineContainer();
-        $this->buildDockerCompose();
+        try {
+            $this->buildPhpContainers();
+            $this->buildNginxContainer();
+            $this->buildSearchEngineContainer();
+            $this->buildDockerCompose();
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());
+            throw new Exception($e->getMessage());
+        }
     }
 
     /**
@@ -198,27 +198,22 @@ class ConfigBuilder
         $filename = 'compose-template.php';
         $fileVariables = ['_enable_variables' => true, 'executable' => true];
 
-        try {
-            $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
-            if (!$templateFile) {
-                $this->logger->error(sprintf('Template file %s not found.', $templateConfig['templateDirPath'] . $filename));
-            }
+        $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
+        if (!$templateFile) {
+            throw new Exception(sprintf('Template file %s not found in %s', $filename, $templateConfig['templateDirPath']));
+        }
 
-            $variables = ArrayUtil::arrayMergeRecursiveDistinct($generalConfig, $fileVariables);
-            $content = $this->templateRenderer->render($templateFile, $variables);
+        $variables = ArrayUtil::arrayMergeRecursiveDistinct($generalConfig, $fileVariables);
+        $content = $this->templateRenderer->render($templateFile, $variables);
 
-            $destinationFile = self::ROOT_DIR . $this->getComposeFileName();
-            $this->logger->infoLight(sprintf("\tWriting '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
-            $this->fileManager->writeFile($destinationFile, $content);
+        $destinationFile = self::ROOT_DIR . $this->getComposeFileName();
+        $this->logger->infoLight(sprintf("\tWriting '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
+        $this->fileManager->writeFile($destinationFile, $content);
 
-            if ($variables['executable'] ?? false) {
-                $this->logger->infoLight(sprintf("\tUpdating permissions on '%s' to '%o'...",
-                    $destinationFile, $this->executablePermissions), MyOutput::VERBOSITY_VERBOSE);
-                $this->fileManager->setPermissions($destinationFile, $this->executablePermissions);
-            }
-        } catch (Exception $e) {
-            $this->logger->error($e->getMessage());
-            throw new Exception($e->getMessage());
+        if ($variables['executable'] ?? false) {
+            $this->logger->infoLight(sprintf("\tUpdating permissions on '%s' to '%o'...",
+                $destinationFile, $this->executablePermissions), MyOutput::VERBOSITY_VERBOSE);
+            $this->fileManager->setPermissions($destinationFile, $this->executablePermissions);
         }
 
         if ($generalConfig['DOCKER_SERVICES']['venia'] ?? false) {
@@ -242,8 +237,8 @@ class ConfigBuilder
             !in_array('', array_intersect_key($containerConfig, array_flip($requiredKeys)));
 
         if (!$isValid) {
-            $this->logger->error(sprintf("Container %s doesn't have required params: %s",
-                $containerName, implode(',', $requiredKeys)));
+            throw new Exception(sprintf("Container %s doesn't have required params: %s",
+                $containerName, implode(', ', $requiredKeys)));
         }
 
         $this->logger->infoLight(sprintf("Building container '%s'...", $containerName), MyOutput::VERBOSITY_NORMAL);
@@ -276,32 +271,27 @@ class ConfigBuilder
         array $containerConfig,
         array $templateConfig
     ): void {
-        try {
-            $destinationDir = $containerConfig['destinationDir'];
-            $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
+        $destinationDir = $containerConfig['destinationDir'];
+        $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
 
-            if (!$templateFile) {
-                $this->logger->error(sprintf('Template file %s not found in %s', $filename, $templateConfig['templateDirPath']));
-            }
+        if (!$templateFile) {
+            throw new Exception(sprintf('Template file %s not found in %s', $filename, $templateConfig['templateDirPath']));
+        }
 
-            $fileVariables = [
-                '_enable_variables' => $fileConfig['_enable_variables'] ?? false,
-                'executable' => $fileConfig['executable'] ?? false
-            ];
-            $variables = ArrayUtil::arrayMergeRecursiveDistinct($containerConfig, $fileVariables);
-            $content = $this->templateRenderer->render($templateFile, $variables);
+        $fileVariables = [
+            '_enable_variables' => $fileConfig['_enable_variables'] ?? false,
+            'executable' => $fileConfig['executable'] ?? false
+        ];
+        $variables = ArrayUtil::arrayMergeRecursiveDistinct($containerConfig, $fileVariables);
+        $content = $this->templateRenderer->render($templateFile, $variables);
 
-            $destinationFile = $destinationDir . DIRECTORY_SEPARATOR . $filename;
-            $this->logger->infoLight(sprintf("\tWriting '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
-            $this->fileManager->writeFile($destinationFile, $content);
+        $destinationFile = $destinationDir . DIRECTORY_SEPARATOR . $filename;
+        $this->logger->infoLight(sprintf("\tWriting '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
+        $this->fileManager->writeFile($destinationFile, $content);
 
-            if ($fileConfig['executable'] ?? false) {
-                $this->logger->infoLight(sprintf("\tSetting executable permissions on '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
-                $this->fileManager->setPermissions($destinationFile, $this->executablePermissions);
-            }
-        } catch (Exception $e) {
-            $this->logger->error($e->getMessage());
-            throw new Exception($e->getMessage());
+        if ($fileConfig['executable'] ?? false) {
+            $this->logger->infoLight(sprintf("\tSetting executable permissions on '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
+            $this->fileManager->setPermissions($destinationFile, $this->executablePermissions);
         }
     }
 
@@ -313,11 +303,11 @@ class ConfigBuilder
     // Helper методи
     protected function getContainersBaseDirPath(): string
     {
-        return $this->dryRun ? self::CONTAINERS_DRY_RUN_DIR : self::CONTAINERS_BASE_DIR;
+        return $this->isDryRun ? self::ROOT_DIR . 'containers-dry-run' : self::ROOT_DIR . 'containers';
     }
 
     protected function getComposeFileName(): string
     {
-        return $this->dryRun ? 'compose-dry-run.yaml' : 'compose.yaml';
+        return $this->isDryRun ? 'compose-dry-run.yaml' : 'compose.yaml';
     }
 }

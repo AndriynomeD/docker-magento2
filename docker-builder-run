@@ -63,6 +63,7 @@ USAGE;
                 break;
         }
     }
+    $options["verbose"] = $verbosity;
 
     if (isset($args["dry-run"])) {
         $options["dry_run"] = true;
@@ -75,7 +76,7 @@ USAGE;
             new \DockerBuilder\Core\Config\ConfigGenerator(),
             new \DockerBuilder\Core\Template\TemplateRenderer(),
             new \DockerBuilder\Core\File\FileManager(),
-            new \DockerBuilder\Core\Logger\ConsoleLogger($verbosity),
+            new \DockerBuilder\Core\Logger\ConsoleLogger(),
             $options
         );
         $builder->run();

@@ -67,11 +67,11 @@ class BuildCommand extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $output->writeln('<error>Build failed: ' . $e->getMessage() . '</error>');
-            if ($output->getVerbosity()) {
-                $output->writeln('<comment>Stack trace:</comment>');
-                $output->writeln($e->getTraceAsString());
-            }
+//            $output->writeln('<error>Build failed: ' . $e->getMessage() . '</error>');
+//            if ($output->getVerbosity()) {
+//                $output->writeln('<comment>Stack trace:</comment>');
+//                $output->writeln($e->getTraceAsString());
+//            }
             return Command::FAILURE;
         }
     }
