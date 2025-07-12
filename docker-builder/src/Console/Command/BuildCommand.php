@@ -34,7 +34,7 @@ class BuildCommand extends Command
         $this
             ->setName('build')
             ->setDescription('Build Docker environment from configuration')
-            ->setHelp('This command allows you to build Docker environtment files from templates')
+            ->setHelp('This command allows you to build Docker environment files from templates')
             ->addOption(
                 'dry-run',
                 null,

@@ -98,22 +98,24 @@ class ConfigBuilder
             $this->logger->info('DRY RUN MODE: Files will be created in separate directories for comparison', MyOutput::VERBOSITY_NORMAL);
         }
         $this->loadAndProcessConfig();
-        $this->buildContainers();
+        $this->build();
 
         if ($this->isDryRun) {
             $this->logger->success('DRY RUN COMPLETED', MyOutput::VERBOSITY_NORMAL);
             $this->logger->info('Check the following for comparison:', MyOutput::VERBOSITY_NORMAL);
+            $this->logger->info('- Env Files: ' . $this->getEnvFilesDirPath(), MyOutput::VERBOSITY_NORMAL);
             $this->logger->info('- Containers: ' . $this->getContainersBaseDirPath(), MyOutput::VERBOSITY_NORMAL);
             $this->logger->info('- Compose file: ' . $this->getComposeFileName(), MyOutput::VERBOSITY_NORMAL);
         }
     }
 
     /**
-     * Build all containers and compose.yaml file
+     * Build infrastructure
      */
-    protected function buildContainers(): void
+    protected function build(): void
     {
         try {
+            $this->buildEnvFiles();
             $this->buildPhpContainers();
             $this->buildNginxContainer();
             $this->buildSearchEngineContainer();
@@ -124,15 +126,42 @@ class ConfigBuilder
         }
     }
 
+    protected function buildEnvFiles(): void
+    {
+        $this->logger->infoLight("Building env files...", MyOutput::VERBOSITY_NORMAL);
+
+        $generalConfig = $this->config['general-config'];
+        $envFilesConfig = [
+            'files' => [
+                'm2_install.env' => [
+                    '_enable_variables' => true,
+                    'template_name' => 'm2_install.env.tml'
+                ],
+            ]
+        ];
+
+        /** Prepare data for buildFile */
+        $configFiles = $envFilesConfig['files'] ?? [];
+        $commonVariables = $generalConfig;
+        $templateConfig = [
+            'templateDirPath' => self::TEMPLATE_DIR . 'envs' . DIRECTORY_SEPARATOR,
+            'destinationDir' => $this->getEnvFilesDirPath()
+        ];
+
+        foreach ($configFiles as $filename => $fileConfig) {
+            $templateConfig['template_name'] = $fileConfig['template_name'] ?? '';
+            $this->buildFile($filename, $fileConfig, $commonVariables, $templateConfig);
+        }
+    }
+
     /**
-     * Build PHP containers (множинний - містить цикл)
+     * Build PHP containers
      */
     protected function buildPhpContainers(): void
     {
         $phpContainersConfig = $this->config['php-containers'];
 
         foreach ($phpContainersConfig as $name => $containerConfig) {
-            // Підготовка параметрів для PHP контейнера
             $containerConfig['templateDir'] = self::TEMPLATE_DIR . 'phpContainers' . DIRECTORY_SEPARATOR;
             $containerConfig['destinationDir'] = $this->getContainersDirPath('php');
 
@@ -145,12 +174,7 @@ class ConfigBuilder
      */
     protected function buildNginxContainer(): void
     {
-        $generalConfig = $this->config['general-config'];
-
-        // Поки що тільки SSL сертифікати, але можна розширити
-        // SSL generation logic here if needed
-
-        $this->logger->success("Nginx container configuration completed", MyOutput::VERBOSITY_VERBOSE);
+        /** Now it just placeholder */
     }
 
     /**
@@ -188,32 +212,26 @@ class ConfigBuilder
         $this->logger->infoLight(sprintf("Building '%s'...", $this->getComposeFileName()), MyOutput::VERBOSITY_NORMAL);
 
         $generalConfig = $this->config['general-config'];
-        $templateConfig = [
-            'templateDirPath' => self::TEMPLATE_DIR,
-            'version' => '',
-            'flavour' => '',
-            'templateSuffix' => ''
+        $composeFileConfig = [
+            'files' => [
+                $this->getComposeFileName() => [
+                    '_enable_variables' => true,
+                    'template_name' => 'compose-template.php'
+                ],
+            ]
         ];
 
-        $filename = 'compose-template.php';
-        $fileVariables = ['_enable_variables' => true, 'executable' => true];
+        /** Prepare data for buildFile */
+        $configFiles = $composeFileConfig['files'] ?? [];
+        $commonVariables = $generalConfig;
+        $templateConfig = [
+            'templateDirPath' => self::TEMPLATE_DIR,
+            'destinationDir' => self::ROOT_DIR,
+        ];
 
-        $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
-        if (!$templateFile) {
-            throw new Exception(sprintf('Template file %s not found in %s', $filename, $templateConfig['templateDirPath']));
-        }
-
-        $variables = ArrayUtil::arrayMergeRecursiveDistinct($generalConfig, $fileVariables);
-        $content = $this->templateRenderer->render($templateFile, $variables);
-
-        $destinationFile = self::ROOT_DIR . $this->getComposeFileName();
-        $this->logger->infoLight(sprintf("\tWriting '%s'...", $destinationFile), MyOutput::VERBOSITY_VERBOSE);
-        $this->fileManager->writeFile($destinationFile, $content);
-
-        if ($variables['executable'] ?? false) {
-            $this->logger->infoLight(sprintf("\tUpdating permissions on '%s' to '%o'...",
-                $destinationFile, $this->executablePermissions), MyOutput::VERBOSITY_VERBOSE);
-            $this->fileManager->setPermissions($destinationFile, $this->executablePermissions);
+        foreach ($configFiles as $filename => $fileConfig) {
+            $templateConfig['template_name'] = $fileConfig['template_name'] ?? '';
+            $this->buildFile($filename, $fileConfig, $commonVariables, $templateConfig);
         }
 
         if ($generalConfig['DOCKER_SERVICES']['venia'] ?? false) {
@@ -225,8 +243,7 @@ class ConfigBuilder
     }
 
     /**
-     * Universal container builder (уніфікована логіка)
-     * @param string $containerName - використовується для додавання до destinationDir
+     * @param string $containerName
      * @param array $containerConfig
      */
     protected function buildContainer(string $containerName, array $containerConfig): void
@@ -243,35 +260,53 @@ class ConfigBuilder
 
         $this->logger->infoLight(sprintf("Building container '%s'...", $containerName), MyOutput::VERBOSITY_NORMAL);
         $containerConfig['destinationDir'] .= DIRECTORY_SEPARATOR . $containerName;
-        $configFiles = $containerConfig['files'] ?? [];
-        unset($containerConfig['files']);
 
+        /** Prepare data for buildContainerFile */
+        $configFiles = $containerConfig['files'] ?? [];
+        $commonVariables = $containerConfig;
+        unset($commonVariables['files'], $commonVariables['templateDir'], $commonVariables['destinationDir']);
         $templateConfig = [
             'templateDirPath' => $containerConfig['templateDir'],
             'version' => $containerConfig['version'] ?? '',
             'flavour' => $containerConfig['flavour'] ?? '',
-            'templateSuffix' => $containerConfig['templateSuffix'] ?? ''
+            'templateSuffix' => $containerConfig['templateSuffix'] ?? '',
+            'destinationDir' => $containerConfig['destinationDir']
         ];
 
         foreach ($configFiles as $filename => $fileConfig) {
-            $this->buildContainerFile($filename, $fileConfig, $containerConfig, $templateConfig);
+            $templateConfig['template_name'] = $fileConfig['template_name'] ?? '';
+            $this->buildContainerFile($filename, $fileConfig, $commonVariables, $templateConfig);
         }
     }
 
     /**
-     * Build single container file (уніфікована логіка для файлів)
      * @param string $filename
      * @param array $fileConfig
-     * @param array $containerConfig
+     * @param array $commonVariables
      * @param array $templateConfig
      */
     protected function buildContainerFile(
         string $filename,
-        array $fileConfig,
-        array $containerConfig,
-        array $templateConfig
+        array  $fileConfig,
+        array  $commonVariables,
+        array  $templateConfig
     ): void {
-        $destinationDir = $containerConfig['destinationDir'];
+        $this->buildFile($filename, $fileConfig, $commonVariables, $templateConfig);
+    }
+
+    /**
+     * @param string $filename
+     * @param array $fileConfig
+     * @param array $commonVariables
+     * @param array $templateConfig
+     */
+    protected function buildFile(
+        string $filename,
+        array  $fileConfig,
+        array  $commonVariables,
+        array  $templateConfig
+    ): void {
+        $destinationDir = $templateConfig['destinationDir'];
         $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
 
         if (!$templateFile) {
@@ -282,7 +317,7 @@ class ConfigBuilder
             '_enable_variables' => $fileConfig['_enable_variables'] ?? false,
             'executable' => $fileConfig['executable'] ?? false
         ];
-        $variables = ArrayUtil::arrayMergeRecursiveDistinct($containerConfig, $fileVariables);
+        $variables = ArrayUtil::arrayMergeRecursiveDistinct($commonVariables, $fileVariables);
         $content = $this->templateRenderer->render($templateFile, $variables);
 
         $destinationFile = $destinationDir . DIRECTORY_SEPARATOR . $filename;
@@ -300,14 +335,24 @@ class ConfigBuilder
         return $this->getContainersBaseDirPath() . DIRECTORY_SEPARATOR . $containersDir;
     }
 
-    // Helper методи
     protected function getContainersBaseDirPath(): string
     {
-        return $this->isDryRun ? self::ROOT_DIR . 'containers-dry-run' : self::ROOT_DIR . 'containers';
+        return $this->isDryRun
+            ? self::ROOT_DIR . 'containers-dry-run'
+            : self::ROOT_DIR . 'containers';
+    }
+
+    protected function getEnvFilesDirPath(): string
+    {
+        return $this->isDryRun
+            ? self::ROOT_DIR . 'envs-dry-run'
+            : self::ROOT_DIR . 'envs';
     }
 
     protected function getComposeFileName(): string
     {
-        return $this->isDryRun ? 'compose-dry-run.yaml' : 'compose.yaml';
+        return $this->isDryRun
+            ? 'compose-dry-run.yaml'
+            : 'compose.yaml';
     }
 }

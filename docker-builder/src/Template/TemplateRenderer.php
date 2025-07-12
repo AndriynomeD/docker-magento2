@@ -52,13 +52,6 @@ class TemplateRenderer implements TemplateRendererInterface
 
     /**
      * Return the first found template file name for the given file.
-     * Example for 'Dockerfile':
-     * [
-     *      'Dockerfile-7.4-cli'
-     *      'Dockerfile-7.4'
-     *      'Dockerfile-cli' - found
-     *      'Dockerfile'
-     * ]
      *
      * @param string $filename
      * @param array $config
@@ -66,24 +59,12 @@ class TemplateRenderer implements TemplateRendererInterface
      */
     public function findTemplate(string $filename, array $config): ?string
     {
-        $templateDirPath = $config['templateDirPath'];
-        $potentialFilenames = [
-            sprintf("%s-%s-%s", $filename, $config['version'], $config['flavour']),
-            sprintf("%s-%s", $filename, $config['version']),
-            sprintf("%s-%s", $filename, $config['flavour']),
-            $filename,
-        ];
-
-        if ($config['templateSuffix']) {
-            $potentialFilenames = [
-                sprintf("%s-%s-%s-%s", $filename, $config['version'], $config['templateSuffix'], $config['flavour']),
-                sprintf("%s-%s-%s", $filename, $config['version'], $config['templateSuffix']),
-                sprintf("%s-%s-%s", $filename, $config['templateSuffix'], $config['flavour']),
-                sprintf("%s-%s", $filename, $config['templateSuffix']),
-                ...$potentialFilenames
-            ];
+        foreach (['templateDirPath', 'version', 'flavour', 'templateSuffix', 'template_name'] as $key) {
+            $config[$key] = $config[$key] ?? '';
         }
 
+        $templateDirPath = $config['templateDirPath'];
+        $potentialFilenames = $this->getPotentialFilenames($filename, $config);;
         foreach ($potentialFilenames as $potentialFilename) {
             $path = $templateDirPath . $potentialFilename;
             if (file_exists($path)) {
@@ -95,5 +76,59 @@ class TemplateRenderer implements TemplateRendererInterface
         }
 
         return null;
+    }
+
+    /**
+     * Example for 'Dockerfile' + ['template_name' => 'Dockerfile.tml']:
+     *    [
+     *       'Dockerfile.tml' - will be found
+     *    ]
+     * Example for 'Dockerfile' + ['version' => '7.4', 'flavour' => 'cli']:
+     *   [
+     *      'Dockerfile-7.4-cli'
+     *      'Dockerfile-7.4'
+     *      'Dockerfile-cli' - will be found
+     *      'Dockerfile'
+     *   ]
+     * Example for 'Dockerfile' + ['version' => '7.4', 'flavour' => 'cli', 'templateSuffix' => 'mcs']:
+     *    [
+     *      'Dockerfile-7.4-mcs-cli'
+     *      'Dockerfile-7.4-mcs'
+     *      'Dockerfile-mcs-cli' - will be found
+     *      'Dockerfile-mcs'
+     *      'Dockerfile-7.4-cli'
+     *      'Dockerfile-7.4'
+     *      'Dockerfile-cli'
+     *      'Dockerfile'
+     *    ]
+     *
+     * @param string $filename
+     * @param array $config
+     * @return array
+     */
+    private function getPotentialFilenames(string $filename, array $config): array
+    {
+        if (!!$config['template_name']) {
+            return [$config['template_name']];
+        }
+
+        $potentialFilenames = [
+            sprintf("%s-%s-%s", $filename, $config['version'], $config['flavour']),
+            sprintf("%s-%s", $filename, $config['version']),
+            sprintf("%s-%s", $filename, $config['flavour']),
+            $filename,
+        ];
+
+        if (!$config['templateSuffix']) {
+            return $potentialFilenames;
+        }
+
+        return [
+            sprintf("%s-%s-%s-%s", $filename, $config['version'], $config['templateSuffix'], $config['flavour']),
+            sprintf("%s-%s-%s", $filename, $config['version'], $config['templateSuffix']),
+            sprintf("%s-%s-%s", $filename, $config['templateSuffix'], $config['flavour']),
+            sprintf("%s-%s", $filename, $config['templateSuffix']),
+            ...$potentialFilenames
+        ];
     }
 }

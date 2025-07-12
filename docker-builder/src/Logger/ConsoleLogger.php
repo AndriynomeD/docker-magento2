@@ -65,7 +65,6 @@ class ConsoleLogger implements LoggerInterface
         return $this->verbosity;
     }
 
-
     private function formatMessage(string $message, string $type = self::MSG_INFO): string
     {
         $color = self::COLORS[$type] ?? self::COLORS[self::MSG_INFO];

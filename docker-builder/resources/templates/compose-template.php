@@ -51,7 +51,7 @@ services:
     volumes:
       - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
-      - ./global.env
+      - ./envs/global.env
 <?php if (!(isset($DOCKER_SERVICES['varnish']) && $DOCKER_SERVICES['varnish'])): ?>
     environment:
       - VIRTUAL_HOST=<?= $M2_VIRTUAL_HOSTS . PHP_EOL ?>
@@ -80,7 +80,7 @@ services:
     volumes:
       - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
-      - ./global.env
+      - ./envs/global.env
     networks:
       default:
       mail-services:
@@ -156,35 +156,12 @@ services:
       - ~/.composer/cache:/root/.composer/cache
       - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
-      - ./global.env
-      - ./composer.env
+      - ./envs/global.env
+      - ./envs/composer.env
+      - ./envs/m2_install.env
     environment:
       - M2_VERSION=<?= $M2_VERSION . PHP_EOL ?><?php /** for correct cron setup according to M2_VERSION */ ?>
       - M2_EDITION=<?= $M2_EDITION . PHP_EOL ?>
-
-      - M2SETUP_INSTALL_DB=<?= $M2_INSTALL['INSTALL_DB'] . PHP_EOL ?>
-      - M2SETUP_DB_HOST=db
-      - M2SETUP_DB_NAME=<?= $M2_DB_NAME . PHP_EOL ?>
-      - M2SETUP_DB_USER=magento2
-      - M2SETUP_DB_PASSWORD=magento2
-      - M2SETUP_BASE_URL=<?= $M2_INSTALL['BASE_URL'] . PHP_EOL ?>
-      # - M2SETUP_SECURE_BASE_URL=<?= $M2_INSTALL['SECURE_BASE_URL'] . PHP_EOL ?>
-      - M2SETUP_BACKEND_FRONTNAME=admin
-      - M2SETUP_ADMIN_FIRSTNAME=AdminFirstName
-      - M2SETUP_ADMIN_LASTNAME=AdminLastName
-      - M2SETUP_ADMIN_EMAIL=<?= $M2_INSTALL['ADMIN_EMAIL'] . PHP_EOL ?>
-      - M2SETUP_ADMIN_USER=admin
-      - M2SETUP_ADMIN_PASSWORD=admin123
-<?php if (isset($M2_INSTALL['CRYPT_KEY']) && $M2_INSTALL['CRYPT_KEY']): ?>
-      - M2SETUP_CRYPT_KEY=<?= $M2_INSTALL['CRYPT_KEY'] . PHP_EOL ?>
-<?php endif; ?>
-      - M2SETUP_VERSION=<?= $M2_VERSION . PHP_EOL ?>
-      - M2SETUP_EDITION=<?= $M2_EDITION . PHP_EOL ?>
-      - M2SETUP_USE_SAMPLE_DATA=<?= $M2_INSTALL['USE_SAMPLE_DATA'] . PHP_EOL ?>
-      - M2_SEARCH_ENGINE_SETTINGS=<?= ($M2_SETTINGS['SEARCH_ENGINE_AVAILABLE'] ? $M2_SETTINGS['SEARCH_ENGINE_SETTINGS'] : '') . PHP_EOL ?>
-      - M2_AMQ_SETTINGS=<?= ($DOCKER_SERVICES['rabbitmq'] ? $M2_SETTINGS['AMQ_SETTINGS'] : '') . PHP_EOL ?>
-      - M2_REDIS_SETTINGS=<?= ($DOCKER_SERVICES['redis'] ? $M2_SETTINGS['REDIS_SETTINGS'] : '') . PHP_EOL ?>
-      - M2_VARNISH_SETTINGS=<?= ($DOCKER_SERVICES['varnish'] ? $M2_SETTINGS['VARNISH_SETTINGS'] : ''). PHP_EOL ?>
     networks:
       default:
       mail-services:
@@ -227,7 +204,7 @@ services:
     volumes:
       - <?= $M2_SOURCE_VOLUME; ?>:/var/www/magento
     env_file:
-      - ./global.env
+      - ./envs/global.env
     environment:
       M2SETUP_EDITION: <?= $M2_EDITION . PHP_EOL ?><?php /** for correct cron setup according to M2_VERSION */ ?>
       M2SETUP_VERSION: <?= $M2_VERSION . PHP_EOL ?>
@@ -254,8 +231,8 @@ services:
       - ~/.composer/cache:/root/.composer/cache
       - ./magento-coding-standard:/var/www/magento-coding-standard
     env_file:
-      - ./global.env
-      - ./composer.env
+      - ./envs/global.env
+      - ./envs/composer.env
     networks:
       default:
 

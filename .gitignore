@@ -4,11 +4,13 @@
 #whitelist for /folders
 /*/
 !/containers
+!/envs
 !/mysql_volumes
 !/docker-builder
 
-/global.env
-/composer.env
+/envs/global.env
+/envs/composer.env
+/envs/m2_install.env
 /config.json
 /compose.yaml
 /docker-builder/vendor/*
@@ -19,6 +21,7 @@
 !/containers/php/.gitkeep
 /containers/search_engine/*
 !/containers/search_engine/.gitkeep
+
 /mysql_volumes/*
 !/mysql_volumes/mariadb10/
 /mysql_volumes/mariadb10/*
@@ -34,8 +37,11 @@
 #Dry-run
 /compose-dry-run.yaml
 /containers-dry-run/*
+/envs-dry-run/*
 
 #deprecated
 !/examples
 !/src
 /docker-compose.yml
+/global.env
+/composer.env

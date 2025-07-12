@@ -12,7 +12,7 @@ use Exception;
 interface ConfigLoaderInterface
 {
     /**
-     * Load configuration from file
+     * Load configuration from a file
      * @param string $configFile
      * @return array
      * @throws Exception

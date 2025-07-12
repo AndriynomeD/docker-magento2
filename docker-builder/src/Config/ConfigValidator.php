@@ -149,7 +149,6 @@ class ConfigValidator implements ConfigValidatorInterface
         }
 
         $searchEngineConfig = $generalConfig['DOCKER_SERVICES']['search_engine'];
-
         if ($searchEngineConfig === false) {
             return;
         }
@@ -181,7 +180,6 @@ class ConfigValidator implements ConfigValidatorInterface
     public function validateVeniaService(array $generalConfig): void
     {
         $services = $generalConfig['DOCKER_SERVICES'] ?? [];
-
         if (!($services['venia'] ?? false)) {
             return;
         }
@@ -206,7 +204,7 @@ class ConfigValidator implements ConfigValidatorInterface
     }
 
     /**
-     * Get active PHP containers configuration (фільтрація)
+     * Get active PHP containers configuration
      * @param array $allPhpContainersConfig
      * @param array $generalConfig
      * @return array
