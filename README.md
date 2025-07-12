@@ -20,90 +20,86 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
 ### Usage 
 
 1) Install & Configure [nginx-proxy][nginx-proxy]
-2) Make directory `magento` (`{{magento_root}}`) inside project root directory `{{root_directory}}`.
-3) Prepare all config files:
-   1) Copy `composer.env.sample` as `composer.env`, `global.env.sample` as `global.env`.
-   2) Fill COMPOSER_MAGENTO_USERNAME, COMPOSER_MAGENTO_PASSWORD, POSTFIX_SASL_PASSWD with you're data.
-       Example of required field for `composer.env` file:
+2) Prepare all config files:
+   1) Run `make copy-configs` - it will create config files from samples (will create `./envs/composer.env`, `./envs/global.env`, `config.json`).
+   2) Fill COMPOSER_MAGENTO_USERNAME, COMPOSER_MAGENTO_PASSWORD, POSTFIX_SASL_PASSWD with you're data in `./envs/composer.env`, `./envs/global.env`.
+       Example of required field for `./envs/composer.env` file:
        ```env
        COMPOSER_MAGENTO_USERNAME={{repo.magento.com_username}}
        COMPOSER_MAGENTO_PASSWORD={{repo.magento.com_password}}
        ``` 
        P.S. For existing project `{{repo.magento.com_username}}` & `{{repo.magento.com_password}}` for `composer.env` can be found inside `{{magento_root}}/auth.json`
-   3) Copy `config.json.sample` to `config.json`:
-   4) Update sections with you data (read 'Single-store', 'Multi-store', 'Grunt' sections first), also check [magento 2 system requirements][magento-system-requirements]:
+   3) In `config.json` update sections with you're data (read 'Single-store', 'Multi-store', 'Grunt' sections first), also check [magento 2 system requirements][magento-system-requirements]:
       
-      | Option name                 | Description                                                                                                                                                              |
-      |-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-      | M2_PROJECT                  | Project name (`{{project_name}}`) used to fill container hostname, etc. Example: magento2.docker                                                                         |
-      | M2_VIRTUAL_HOSTS            | Comma separated list of all site domains (`{{all_site_domain}}`). See `Single-store` or `Multi-store` section                                                            |
-      | M2_DB_NAME                  | Database name (`{{database_name}}`) with pattern: `{{client}}_{{project-name}}_{{dump-date}}`. Example: someclient_someproject_20190710                                  |
-      | PHP_VERSION                 | PHP version, available: 7.0, 7.1, 7.2, 7.3, 7.4, 8.0, 8.1, 8.2, 8.3, 8.4                                                                                                 |
-      | M2_VERSION                  | Magento 2 version                                                                                                                                                        |
-      | HTTPS_HOST                  | Is site domains use https? If yes will generate self-signed certificate in [nginx-proxy][nginx-proxy] folder(required `NGINX_PROXY_PATH`) [Not tested with Multi-stores] |
-      | NGINX_PROXY_PATH            | Path to [nginx-proxy][nginx-proxy] folder                                                                                                                                |
-      | M2_SOURCE_VOLUME            | Magento root folder `{{magento_root}}`. Default: "./magento", example: "./source/src"                                                                                    |
-      | M2_INSTALL:                 | `magento-installer` config section                                                                                                                                       |
-      | ├── BASE_URL                | Main domain "http://`{{main_domain}}`/" or "https" if HTTPS_HOST==true. See `Single-store` or `Multi-store` section                                                      |
-      | ├── SECURE_BASE_URL         | Main domain "https://`{{main_domain}}`/". See `Single-store` or `Multi-store` section                                                                                    |
-      | ├── INSTALL_DB              | Should `magento-installer` install database.                                                                                                                             |
-      | ├── EDITION                 | Magento edition. Available edition: community, enterprise, cloud, mage-os                                                                                                |
-      | ├── USE_SAMPLE_DATA         | Should `magento-installer` install magento sample data. Available: true, false, venia                                                                                    |
-      | ├── ADMIN_EMAIL             | Recommended use real email because starting from 2.4.0+ magento used 2FA by default                                                                                      |
-      | └── CRYPT_KEY               | if not empty `magento-installer` will us this key else will generate random                                                                                              |
-      | M2_SETTINGS:                | Magento additional services settings                                                                                                                                     |
-      | ├── SEARCH_ENGINE_SETTINGS  | Search engine settings (Required unique index-prefix). If `search_engine`==false or `search_engine/CONNECT_TYPE`==none will be ignore                                    |
-      | ├── AMQ_SETTINGS            | AMQ settings. If `rabbitmq`==false will be ignore                                                                                                                        |
-      | ├── REDIS_SETTINGS          | Redis settings. If `redis`==false will be ignore                                                                                                                         |
-      | └── VARNISH_SETTINGS        | Varnish setting. If `varnish`==false will be ignore                                                                                                                      |
-      | DOCKER_SERVICES:            |                                                                                                                                                                          |
-      | ├── database:               |                                                                                                                                                                          |
-      | │   ├── IMAGE:              | Database image with tag. Example: mariadb:11.4, percona:8.0                                                                                                              |
-      | │   ├── TYPE:               | Image type. Available option: mariadb, mysql, percona                                                                                                                    |
-      | │   ├── VERSION:            | Image version                                                                                                                                                            |
-      | │   └── VOLUME:             | Folder under mysql_volumes` that will be mounted to db container                                                                                                         |
-      | ├── search_engine:          | Use search engine service? Available options: false, {}                                                                                                                  |
-      | │   ├── CONNECT_TYPE:       | Available options: external (use shared search engine), internal (create separate container for project), none (skip search_engine config)                               |
-      | │   ├── TYPE:               | Search engine type: elasticsearch, opensearch                                                                                                                            |
-      | │   └── VERSION:            | Search engine version - will be used as image tag. If `CONNECT_TYPE`!=internal will be ignore                                                                            |
-      | ├── varnish                 | Use varnish service? Available options: false, true                                                                                                                      |
-      | ├── cron                    | Use cron service? Available options: false, true                                                                                                                         |
-      | ├── redis                   | Use redis service? Available options: false, true                                                                                                                        |
-      | ├── rabbitmq                | Use rabbitmq service? Available options: false, true                                                                                                                     |
-      | ├── magento-coding-standard | Create separate MCS container (need if project not contain latest MCS version: typical cloud and CE/EE before ver.2.4.4). Available options: false, true                 |
-      | └── venia                   | Install `venia` PWA and use magento as backend? Available options: false, true [Currently just install venia sample data]                                                |
+      | Option name                 | Description                                                                                                                                                  |
+      |-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+      | M2_PROJECT                  | Project name (`{{project_name}}`) used to fill container hostname, etc. Example: magento2.docker                                                             |
+      | M2_VIRTUAL_HOSTS            | Comma separated list of all site domains (`{{all_site_domain}}`). See `Single-store` or `Multi-store` section. `mkcert` will automatically create ssl certs. |
+      | M2_DB_NAME                  | Database name (`{{database_name}}`) with pattern: `{{client}}_{{project-name}}_{{dump-date}}`. Example: someclient_someproject_20190710                      |
+      | PHP_VERSION                 | PHP version, available: 7.0, 7.1, 7.2, 7.3, 7.4, 8.0, 8.1, 8.2, 8.3, 8.4                                                                                     |
+      | M2_EDITION                  | Magento edition. Available edition: community, enterprise, cloud, mage-os                                                                                    |
+      | M2_VERSION                  | Magento 2 version                                                                                                                                            |
+      | M2_SOURCE_VOLUME            | Magento root folder `{{magento_root}}`. Default: "./magento", example: "./source/src"                                                                        |
+      | M2_INSTALL:                 | `magento-installer` config section                                                                                                                           |
+      | ├── BASE_URL                | Main domain "http://`{{main_domain}}`/" or "https". See `Single-store` or `Multi-store` section                                                              |
+      | ├── SECURE_BASE_URL         | Main domain "https://`{{main_domain}}`/". See `Single-store` or `Multi-store` section                                                                        |
+      | ├── INSTALL_DB              | Should `magento-installer` install database.                                                                                                                 |
+      | ├── USE_SAMPLE_DATA         | Should `magento-installer` install magento sample data. Available: true, false, venia                                                                        |
+      | ├── ADMIN_EMAIL             | Recommended use real email because starting from 2.4.0+ magento used 2FA by default                                                                          |
+      | └── CRYPT_KEY               | if not empty `magento-installer` will us this key else will generate random                                                                                  |
+      | M2_SETTINGS:                | Magento additional services settings                                                                                                                         |
+      | ├── SEARCH_ENGINE_SETTINGS  | Search engine settings (Required unique index-prefix). If `search_engine`==false or `search_engine/CONNECT_TYPE`==none will be ignore                        |
+      | ├── AMQ_SETTINGS            | AMQ settings. If `rabbitmq`==false will be ignore                                                                                                            |
+      | ├── REDIS_SETTINGS          | Redis settings. If `redis`==false will be ignore                                                                                                             |
+      | └── VARNISH_SETTINGS        | Varnish setting. If `varnish`==false will be ignore                                                                                                          |
+      | DOCKER_SERVICES:            |                                                                                                                                                              |
+      | ├── database:               |                                                                                                                                                              |
+      | │   ├── IMAGE:              | Database image with tag. Example: mariadb:11.4, percona:8.0                                                                                                  |
+      | │   ├── TYPE:               | Image type. Available option: mariadb, mysql, percona                                                                                                        |
+      | │   ├── VERSION:            | Image version                                                                                                                                                |
+      | │   └── VOLUME:             | Folder under mysql_volumes` that will be mounted to db container                                                                                             |
+      | ├── search_engine:          | Use search engine service? Available options: false, {}                                                                                                      |
+      | │   ├── CONNECT_TYPE:       | Available options: external (use shared search engine), internal (create separate container for project), none (skip search_engine config)                   |
+      | │   ├── TYPE:               | Search engine type: elasticsearch, opensearch                                                                                                                |
+      | │   └── VERSION:            | Search engine version - will be used as image tag. If `CONNECT_TYPE`!=internal will be ignore                                                                |
+      | ├── varnish                 | Use varnish service? Available options: false, true                                                                                                          |
+      | ├── cron                    | Use cron service? Available options: false, true                                                                                                             |
+      | ├── redis                   | Use redis service? Available options: false, true                                                                                                            |
+      | ├── rabbitmq                | Use rabbitmq service? Available options: false, true                                                                                                         |
+      | ├── magento-coding-standard | Create separate MCS container (need if project not contain latest MCS version: typical cloud and CE/EE before ver.2.4.4). Available options: false, true     |
+      | └── venia                   | Install `venia` PWA and use magento as backend? Available options: false, true [Currently just install venia sample data]                                    |
 
       Section `php-containers` contain configuration for php-fpm, cli, msc container for each php version.
       Now `"composerVersion": "latest"` will set version 2.X for Magento 2.3.7 & 2.4.2+, in another case will set 1.10.17
 
 
-4) Build php containers & `docker-compose.yml`:
+3) Build magento 2 docker infrastructure:
     ```shell
-    php builder.php
+    php docker-builder-run
     ```
+4) Make directory `{{magento_root}}` inside project root directory `{{root_directory}}`. 
 
-5) Up containers (first time up better don't add key `-d` for check if all okay):
+5) Up containers (first time up better don't add key `-d` for check if all okay, `--remove-orphans` - required, because latest compose doesn't always properly remove containers):
     ```shell
-    docker-compose up -d
+    docker compose up -d --remove-orphans
     ```
 
 6) Clone existing repo with magento into `{{magento_root}}` folder or run next command for install magento from scratch:
     ```shell
-    docker-compose run --rm cli magento-installer
+    docker compose run --rm cli magento-installer
     ```
-7) Now you can enter to cli (you should run all magento command under cli).
+7) Now you can enter to cli (you should run all magento commands under cli).
    P.S. Instead of `php bin/magento` use `sudo -uwww-data php bin/magento`:
-   NOTE: Please set `--rm` to remove a created container after run.
    Example :
     ```shell
-    docker-compose run --rm cli bash
+    docker compose run --rm cli bash
     ```
    
 8) If you clone  existing repo import database:
     1) Copy database dump into `{{magento_root}}`.
     2) Go to cli-container & import database dump:
 	    ```shell
-	    docker-compose run --rm cli bash
+	    docker compose run --rm cli bash
 	    ```
 	    Import dump:
 	    ```shell
@@ -116,14 +112,14 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
 	    source {{youre_database_dump}}
 	    ```
 	    Copy into right places under `{{magento_root}}` all magento required secure sensitive file like `app/etc/env.php` file.  
-	    In `env.php` file use next config for database:
+	    In `env.php` file used next config for a database:
 	    ```php
 	    'host' => 'db',
 	    'dbname' => `{{database_name}}`,
 	    'username' => 'magento2',
 	    'password' => 'magento2',
 	    ```
-	    Maybe after you want create admin user:
+	    Maybe after you want to create admin user:
 	    ```shell
 	    sudo -uwww-data php bin/magento admin:user:create --admin-user="admin" --admin-password="admin123" --admin-email="admin@example.com" --admin-firstname="AdminFirstName" --admin-lastname="AdminLastName"
 	    ```
@@ -159,7 +155,7 @@ Example: we have 3 store/website: someproject.site, someproject-vip.site, somepr
 1) `config.json` params:
     1) `{{all_site_domain}}` - comma separated all site domains (example: `someproject.site,someproject-vip.site,someproject-retail.site`)
     2) `{{main_domain}}` - So you should choose one domain main (example: we choose `someproject.site` like a `{{main_domain}}`)
-2) In folder `{{root_directory}}/nginx/etc/multi_vhost/` create one/multiple own config file(s) for multi-store. Use file `example_vhost.conf` as example.
+2) In folder `{{root_directory}}/nginx/etc/multi_vhost/` create one or ultiple own config file(s) for multi-store. Use file `example_vhost.conf` as example.
 3) Add space separated all you're site domain to `/etc/hosts` file:
     ```hosts
     # multi-store {{unique project name or main_domain or unique number}} (docker):
@@ -182,11 +178,11 @@ Rename (create renamed copy) the following files in your Magento `{{magento_root
 1. package.json.sample to package.json
 2. Gruntfile.js.sample to Gruntfile.js
 Rename (create renamed copy) the following file:
-3. {{magento_root}}/dev/tools/grunt/configs/themes.js to {{magento_root}}/dev/tools/grunt/configs/local-themes.js
+3. `{{magento_root}}/dev/tools/grunt/configs/themes.js` to `{{magento_root}}/dev/tools/grunt/configs/local-themes.js`
 4. Update local-themes.js by include your local site theme
 5. Inside `{{root_directory}}`: 
     ```shell
-    docker-compose run --rm cli bash
+    docker compose run --rm cli bash
     npm install
     npm update
     ```
@@ -200,19 +196,19 @@ Rename (create renamed copy) the following file:
     ```
     Example of run grunt watch:
     ```shell
-    docker-compose run --rm cli bash
+    docker compose run --rm cli bash
     sudo -uwww-data grunt exec:all && sudo -uwww-data grunt less
     sudo -uwww-data grunt watch
     ```
 
-P.S. Reloads the page in the browser not working.  
+P.S. LiveReloads the page in the browser not working.  
 Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to continue.` - it's magento native bug. 
 
 ### PphStorm
 
 1) #### PphStorm Magento plugin:
-    1. Install & Enable official Magento plugin for PphStorm.
-    2. Enabled plugin for project in Settings->PHP->Frameworks->Magento
+    1. Install & Enable the official Magento plugin for PphStorm.
+    2. Enabled plugin for the project in Settings->PHP->Frameworks->Magento
     3. Config Project PHP CLI Interpreter: 
     ```plaintext
     Settings->Directories->Excluded files: *Test*
@@ -231,7 +227,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
    
 2) #### Xdebug config:
     
-    1. Enabled Xdebug in global.env file (PHP_ENABLE_XDEBUG=true).
+    1. Enabled Xdebug in `./envs/global.env` file (`PHP_ENABLE_XDEBUG=true`).
     2. `Add Configuration` or `Edit Configuration`
     3. Add `PHP remote debug`
         ```plaintext
@@ -263,12 +259,12 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
     
 
 3) #### [Magento Coding Standard][magento-coding-standard]
-    Currently CE/EE ver.2.4.4+ contain one of latest 'MCS' package version, so not need use separate 'MCS' container for it.
+    Currently, CE/EE ver.2.4.4+ contain one of the latest 'MCS' package version, so not need use separate 'MCS' container for it.
     1. If used separate 'MCS' container: on "Prepare all config files" step in `config.json` set `magento-coding-standard` under `DOCKER_SERVICES` to `true`.
     2. Currently, PhpStorm don't have docker connection for eslint, so you need install npm on host machine.
     3. If used separate 'MCS' container: install Magento Coding Standard project
         ```shell
-        docker-compose run --rm mcs magento-coding-standard-installer
+        docker compose run --rm mcs magento-coding-standard-installer
         cd `{{root_directory}}/magento-coding-standard`
         npm init
         ```
@@ -343,7 +339,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
     For upgrade magento coding standard enter inside mcs container:
     ```shell
-    docker-compose run --rm mcs bash
+    docker compose run --rm mcs bash
     <!-- upgrade comands -->
     ...
     ```
@@ -418,7 +414,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
 
 ### Problem
 
-If you can't edit magento file in Phpstorm try it:
+If you can't edit the magento files in PhpStorm, try it:
 ```shell
     sudo usermod -aG www-data ${USER}
     sudo chmod -R g+w magento
@@ -437,7 +433,7 @@ Example of fix permission problem inside cli-container:
 - [x] Implement Venia Sample Data.
 - [ ] Implement configuration for Magento PWA.
 Because Venia required worked connection to magento 2 think at least as next step is create separate docker-compose.yml in `{{root_directory}}/magento_venia` directory. PWA project should be initiated in `{{root_directory}}/magento_venia/source`. In Venia `DEV_SERVER_HOST`==`{{main_domain}}`, `DEV_SERVER_PORT`==`443`.
-Also need create custom makeHostAndCert.js that respect `NGINX_PROXY_PATH`
+Also need to create custom makeHostAndCert.js that respect `NGINX_PROXY_PATH`
 venia docker-compose.yml example for connect to magento 2 as backend (need check if exists better way):
 ```yml
 version: '2'
@@ -479,16 +475,17 @@ networks:
 ### TODO
 - [x] Add additional service configuration (redis, rabbitmq)
 - [x] Implement https functional for single store. 
-- [ ] Implement https functional for multi-stores. 
+- [x] Implement https functional for multi-stores. 
 - [ ] Implement configuration for Magento PWA.
 - [x] Implement configuration for Magento Coding Standard.
 - [x] Implement internal elasticsearch/opensearch service.
-- [x] Implement bash scripts for generate ssl certificate
+- [x] ~~Implement bash scripts for auto-generate ssl certificate~~
+- [x] Implement auto-generate ssl certificate (`mkcert` from [nginx-proxy][nginx-proxy])
 - [x] Implement bash scripts for set/update default services configs to env.php
 - [ ] Implement LiveReload
-- [ ] Implement dynamic varnish configs during build.php run (like it was done for php containers)
-- [x] Implement dynamic internal elasticsearch configs during build.php run (like it was done for php containers)
-- [ ] Implement dynamic redis configs during build.php run (like it was done for php containers)
+- [ ] Implement dynamic varnish configs during build docker infrastructure (like it was done for php containers)
+- [x] Implement dynamic internal elasticsearch/opensearch configs during build docker infrastructure (like it was done for php containers)
+- [ ] Implement dynamic redis configs during build docker infrastructure (like it was done for php containers)
 - [x] Implement ngrok support via [magento ngrok extension][magento-ngrok]
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square

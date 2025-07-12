@@ -5,8 +5,6 @@
     "M2_DB_NAME": "magento2_database",
     "PHP_VERSION": "8.3",
     "M2_VERSION": "2.4.*",
-    "HTTPS_HOST": true,
-    "NGINX_PROXY_PATH": "",
     "M2_SOURCE_VOLUME": "./magento",
     "M2_INSTALL": {
       "BASE_URL": "http://magento2.docker/",
