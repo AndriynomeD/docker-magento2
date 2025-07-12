@@ -85,7 +85,7 @@
     },
     "7.0-mcs": {
       "version": "7.0",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "7.0-mcs",
       "files": {
@@ -167,7 +167,7 @@
     },
     "7.1-mcs": {
       "version": "7.1",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "7.1-mcs",
       "files": {
@@ -247,7 +247,7 @@
     },
     "7.2-mcs": {
       "version": "7.2",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "7.2-mcs",
       "files": {
@@ -323,7 +323,7 @@
     },
     "7.3-mcs": {
       "version": "7.3",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "7.3-mcs",
       "files": {
@@ -401,7 +401,7 @@
     },
     "7.4-mcs": {
       "version": "7.4",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "7.4-mcs",
       "files": {
@@ -483,7 +483,7 @@
     },
     "8.0-mcs": {
       "version": "8.0",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "8.0-mcs",
       "files": {
@@ -565,7 +565,7 @@
     },
     "8.1-mcs": {
       "version": "8.1",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "8.1-mcs",
       "files": {
@@ -614,7 +614,7 @@
     },
     "8.2-cli": {
       "version": "8.2",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
         "Dockerfile": {"_enable_variables": true},
@@ -651,7 +651,7 @@
     },
     "8.2-mcs": {
       "version": "8.2",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "8.2-mcs",
       "files": {
@@ -742,7 +742,7 @@
     },
     "8.3-mcs": {
       "version": "8.3",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "8.3-mcs",
       "files": {
@@ -834,7 +834,7 @@
     },
     "8.4-mcs": {
       "version": "8.4",
-      "templateSuffix": "mcs",
+      "template_infix": "mcs",
       "flavour": "cli",
       "context-folder": "8.4-mcs",
       "files": {

@@ -269,7 +269,7 @@ class ConfigBuilder
             'templateDirPath' => $containerConfig['templateDir'],
             'version' => $containerConfig['version'] ?? '',
             'flavour' => $containerConfig['flavour'] ?? '',
-            'templateSuffix' => $containerConfig['templateSuffix'] ?? '',
+            'template_infix' => $containerConfig['template_infix'] ?? '',
             'destinationDir' => $containerConfig['destinationDir']
         ];
 

@@ -487,6 +487,7 @@ networks:
 - [x] Implement dynamic internal elasticsearch/opensearch configs during build docker infrastructure (like it was done for php containers)
 - [ ] Implement dynamic redis configs during build docker infrastructure (like it was done for php containers)
 - [x] Implement ngrok support via [magento ngrok extension][magento-ngrok]
+- [ ] Replace the custom template engine via [Twig templae engine][twig]
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
@@ -500,3 +501,4 @@ networks:
 [magento-coding-standard]: https://github.com/magento/magento-coding-standard
 [magento-system-requirements]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html
 [magento-ngrok]: https://github.com/AndriynomeD/magento-ngrok
+[twig]: https://twig.symfony.com/

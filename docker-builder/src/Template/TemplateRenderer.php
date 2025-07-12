@@ -59,7 +59,7 @@ class TemplateRenderer implements TemplateRendererInterface
      */
     public function findTemplate(string $filename, array $config): ?string
     {
-        foreach (['templateDirPath', 'version', 'flavour', 'templateSuffix', 'template_name'] as $key) {
+        foreach (['templateDirPath', 'version', 'flavour', 'template_infix', 'template_name'] as $key) {
             $config[$key] = $config[$key] ?? '';
         }
 
@@ -90,7 +90,7 @@ class TemplateRenderer implements TemplateRendererInterface
      *      'Dockerfile-cli' - will be found
      *      'Dockerfile'
      *   ]
-     * Example for 'Dockerfile' + ['version' => '7.4', 'flavour' => 'cli', 'templateSuffix' => 'mcs']:
+     * Example for 'Dockerfile' + ['version' => '7.4', 'flavour' => 'cli', 'template_infix' => 'mcs']:
      *    [
      *      'Dockerfile-7.4-mcs-cli'
      *      'Dockerfile-7.4-mcs'
@@ -119,15 +119,15 @@ class TemplateRenderer implements TemplateRendererInterface
             $filename,
         ];
 
-        if (!$config['templateSuffix']) {
+        if (!$config['template_infix']) {
             return $potentialFilenames;
         }
 
         return [
-            sprintf("%s-%s-%s-%s", $filename, $config['version'], $config['templateSuffix'], $config['flavour']),
-            sprintf("%s-%s-%s", $filename, $config['version'], $config['templateSuffix']),
-            sprintf("%s-%s-%s", $filename, $config['templateSuffix'], $config['flavour']),
-            sprintf("%s-%s", $filename, $config['templateSuffix']),
+            sprintf("%s-%s-%s-%s", $filename, $config['version'], $config['template_infix'], $config['flavour']),
+            sprintf("%s-%s-%s", $filename, $config['version'], $config['template_infix']),
+            sprintf("%s-%s-%s", $filename, $config['template_infix'], $config['flavour']),
+            sprintf("%s-%s", $filename, $config['template_infix']),
             ...$potentialFilenames
         ];
     }
