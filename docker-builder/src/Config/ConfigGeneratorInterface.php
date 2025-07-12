@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DockerBuilder\Core\Contract;
+namespace DockerBuilder\Core\Config;
 
 /**
  * Interface for configuration generation

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DockerBuilder\Core\Contract;
+namespace DockerBuilder\Core\Logger;
 
 use DockerBuilder\Core\Builder\MyOutput;
 

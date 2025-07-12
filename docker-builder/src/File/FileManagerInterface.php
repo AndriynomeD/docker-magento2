@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DockerBuilder\Core\Contract;
+namespace DockerBuilder\Core\File;
 
 use Exception;
 
@@ -29,8 +29,8 @@ interface FileManagerInterface
     /**
      * Set file permissions
      * @param string $path
-     * @param int $permissions
+     * @param int|null $permissions
      * @throws Exception
      */
-    public function setPermissions(string $path, int $permissions): void;
+    public function setPermissions(string $path, ?int $permissions = null): void;
 }

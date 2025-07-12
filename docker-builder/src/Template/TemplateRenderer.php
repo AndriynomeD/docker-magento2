@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DockerBuilder\Core\Template;
 
-use DockerBuilder\Core\Contract\TemplateRendererInterface;
 use Exception;
 
 /**

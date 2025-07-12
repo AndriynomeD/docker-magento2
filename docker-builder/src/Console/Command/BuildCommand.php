@@ -65,7 +65,6 @@ class BuildCommand extends Command
             $configBuilder->run();
 
             return Command::SUCCESS;
-
         } catch (\Exception $e) {
 //            $output->writeln('<error>Build failed: ' . $e->getMessage() . '</error>');
 //            if ($output->getVerbosity()) {

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DockerBuilder\Core\File;
 
-use DockerBuilder\Core\Contract\FileManagerInterface;
 use Exception;
 
 /**
@@ -20,7 +19,7 @@ class FileManager implements FileManagerInterface
     }
 
     /**
-     * Write content to file
+     * Write content to a file
      * @param string $path
      * @param string $content
      * @throws Exception
@@ -39,7 +38,7 @@ class FileManager implements FileManagerInterface
     }
 
     /**
-     * Create directory if not exists
+     * Create a directory if not exists
      * @param string $path
      * @throws Exception
      */
@@ -58,15 +57,16 @@ class FileManager implements FileManagerInterface
     /**
      * Set file permissions
      * @param string $path
-     * @param int $permissions
+     * @param int|null $permissions
      * @throws Exception
      */
-    public function setPermissions(string $path, int $permissions): void
+    public function setPermissions(string $path, ?int $permissions = null): void
     {
         if (!file_exists($path)) {
             throw new Exception(sprintf("File %s does not exist", $path));
         }
 
+        $permissions = $permissions ?? $this->defaultPermissions;
         $result = chmod($path, $permissions);
         if (!$result) {
             throw new Exception(sprintf("Failed to set permissions for %s", $path));

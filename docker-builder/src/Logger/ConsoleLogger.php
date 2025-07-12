@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DockerBuilder\Core\Logger;
 
 use DockerBuilder\Core\Builder\MyOutput;
-use DockerBuilder\Core\Contract\LoggerInterface;
 
 class ConsoleLogger implements LoggerInterface
 {

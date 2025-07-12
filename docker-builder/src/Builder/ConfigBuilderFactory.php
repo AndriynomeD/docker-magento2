@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DockerBuilder\Core\Builder;
 
-use DockerBuilder\Core\Contract\ConfigGeneratorInterface;
-use DockerBuilder\Core\Contract\ConfigLoaderInterface;
-use DockerBuilder\Core\Contract\ConfigValidatorInterface;
-use DockerBuilder\Core\Contract\FileManagerInterface;
-use DockerBuilder\Core\Contract\LoggerInterface;
-use DockerBuilder\Core\Contract\TemplateRendererInterface;
+use DockerBuilder\Core\Config\ConfigGeneratorInterface;
+use DockerBuilder\Core\Config\ConfigLoaderInterface;
+use DockerBuilder\Core\Config\ConfigValidatorInterface;
+use DockerBuilder\Core\File\FileManagerInterface;
+use DockerBuilder\Core\Logger\LoggerInterface;
+use DockerBuilder\Core\Template\TemplateRendererInterface;
 use Exception;
 
 class ConfigBuilderFactory

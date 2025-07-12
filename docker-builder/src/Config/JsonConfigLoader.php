@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DockerBuilder\Core\Config;
 
-use DockerBuilder\Core\Contract\ConfigLoaderInterface;
 use Exception;
 
 /**
