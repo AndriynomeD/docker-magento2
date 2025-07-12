@@ -70,15 +70,15 @@ USAGE;
     }
 
     try {
-        $builder = new \DockerBuilder\Core\Builder\ConfigBuilder(
+        $builderFactory = new \DockerBuilder\Core\Builder\ConfigBuilderFactory(
             new \DockerBuilder\Core\Config\JsonConfigLoader(),
             new \DockerBuilder\Core\Config\ConfigValidator(),
             new \DockerBuilder\Core\Config\ConfigGenerator(),
             new \DockerBuilder\Core\Template\TemplateRenderer(),
             new \DockerBuilder\Core\File\FileManager(),
-            new \DockerBuilder\Core\Logger\ConsoleLogger(),
-            $options
+            new \DockerBuilder\Core\Logger\ConsoleLogger()
         );
+        $builder = $builderFactory->create($options);
         $builder->run();
 
         echo "\033[1;32mBuild completed successfully!\033[0m" . PHP_EOL;
