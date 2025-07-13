@@ -24,7 +24,7 @@ class ConfigBuilder
     private const ROOT_DIR = self::APP_DIR . '../';  /* 1 level up from the docker-builder folder */
 
     const CONFIG_FILEPATH = self::ROOT_DIR . 'config.json';
-    const TEMPLATE_DIR = self::APP_DIR . 'resources/templates/';
+    const TEMPLATE_DIR = self::APP_DIR . 'resources' . DIRECTORY_SEPARATOR . 'templates';
 
     const DEFAULT_EXECUTABLE_PERMISSIONS = 0755;
 
@@ -70,6 +70,7 @@ class ConfigBuilder
             $this->logger->setVerbosity($options['verbose']);
         }
         $this->isDryRun = $options['dry_run'] ?? false;
+        $this->templateRenderer->setTemplatesPath(self::TEMPLATE_DIR);
     }
 
     /**
@@ -144,7 +145,7 @@ class ConfigBuilder
         $configFiles = $envFilesConfig['files'] ?? [];
         $commonVariables = $generalConfig;
         $templateConfig = [
-            'templateDirPath' => self::TEMPLATE_DIR . 'envs' . DIRECTORY_SEPARATOR,
+            'templateSubDir' => 'envs' . DIRECTORY_SEPARATOR,
             'destinationDir' => $this->getEnvFilesDirPath()
         ];
 
@@ -162,7 +163,7 @@ class ConfigBuilder
         $phpContainersConfig = $this->config['php-containers'];
 
         foreach ($phpContainersConfig as $name => $containerConfig) {
-            $containerConfig['templateDir'] = self::TEMPLATE_DIR . 'phpContainers' . DIRECTORY_SEPARATOR;
+            $containerConfig['templateSubDir'] = 'phpContainers' . DIRECTORY_SEPARATOR;
             $containerConfig['destinationDir'] = $this->getContainersDirPath('php');
 
             $this->buildContainer($name, $containerConfig);
@@ -191,7 +192,7 @@ class ConfigBuilder
 
             $containerConfig = [
                 'version' => $searchEngineVersion,
-                'templateDir' => self::TEMPLATE_DIR . 'search_engine' . DIRECTORY_SEPARATOR . $searchEngineType . DIRECTORY_SEPARATOR,
+                'templateSubDir' => 'search_engine' . DIRECTORY_SEPARATOR . $searchEngineType . DIRECTORY_SEPARATOR,
                 'destinationDir' => $this->getContainersDirPath('search_engine'),
                 'files' => [
                     'Dockerfile' => ['_enable_variables' => true]
@@ -225,7 +226,7 @@ class ConfigBuilder
         $configFiles = $composeFileConfig['files'] ?? [];
         $commonVariables = $generalConfig;
         $templateConfig = [
-            'templateDirPath' => self::TEMPLATE_DIR,
+            'templateSubDir' => '',
             'destinationDir' => self::ROOT_DIR,
         ];
 
@@ -248,7 +249,7 @@ class ConfigBuilder
      */
     protected function buildContainer(string $containerName, array $containerConfig): void
     {
-        $requiredKeys = ['templateDir', 'destinationDir'];
+        $requiredKeys = ['templateSubDir', 'destinationDir'];
         $isValid = is_array($containerConfig) &&
             !array_diff($requiredKeys, array_keys($containerConfig)) &&
             !in_array('', array_intersect_key($containerConfig, array_flip($requiredKeys)));
@@ -264,9 +265,9 @@ class ConfigBuilder
         /** Prepare data for buildContainerFile */
         $configFiles = $containerConfig['files'] ?? [];
         $commonVariables = $containerConfig;
-        unset($commonVariables['files'], $commonVariables['templateDir'], $commonVariables['destinationDir']);
+        unset($commonVariables['files'], $commonVariables['templateSubDir'], $commonVariables['destinationDir']);
         $templateConfig = [
-            'templateDirPath' => $containerConfig['templateDir'],
+            'templateSubDir' => $containerConfig['templateSubDir'],
             'version' => $containerConfig['version'] ?? '',
             'flavour' => $containerConfig['flavour'] ?? '',
             'template_infix' => $containerConfig['template_infix'] ?? '',
@@ -310,7 +311,7 @@ class ConfigBuilder
         $templateFile = $this->templateRenderer->findTemplate($filename, $templateConfig);
 
         if (!$templateFile) {
-            throw new Exception(sprintf('Template file %s not found in %s', $filename, $templateConfig['templateDirPath']));
+            throw new Exception(sprintf('Template file %s not found in %s', $filename, $templateConfig['templateSubDir']));
         }
 
         $fileVariables = [

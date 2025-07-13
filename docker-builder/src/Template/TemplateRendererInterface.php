@@ -11,14 +11,14 @@ interface TemplateRendererInterface
 {
     /**
      * Render template with variables
-     * @param string $templatePath
+     * @param string $templateFilePath Relative file path from 'templates' folder
      * @param array $variables
      * @return string
      */
-    public function render(string $templatePath, array $variables): string;
+    public function render(string $templateFilePath, array $variables): string;
 
     /**
-     * Find a template file
+     * Return the first found template file name for the given file
      * @param string $filename
      * @param array $config
      * @return string|null
