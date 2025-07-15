@@ -210,7 +210,6 @@ services:
     hostname: mcs.{{ M2_PROJECT }}
     build:
       context: containers/php/{{ PHP_VERSION }}-mcs/
-      dockerfile: Dockerfile-mcs
     volumes:
       - ~/.composer/cache:/root/.composer/cache
       - ./magento-coding-standard:/var/www/magento-coding-standard
