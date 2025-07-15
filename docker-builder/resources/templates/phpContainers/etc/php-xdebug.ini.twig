@@ -3,23 +3,56 @@
 ; Xdebug settings will only kick in if the Xdebug module is loaded
 
 {% if xdebugVersion == 'latest' or version_compare(xdebugVersion, '3.0', '>=') %}
-xdebug.mode = debug
+xdebug.mode = off
+
+; Debug settings
 xdebug.discover_client_host = 1
+{#xdebug.client_host = host.docker.internal#}
 xdebug.client_port = 9000
+{#xdebug.start_with_request = trigger#}
+xdebug.idekey = PHPSTORM
 
+; Development settings
 xdebug.scream = 0
 xdebug.show_local_vars = 1
 xdebug.max_nesting_level = 2000
 
-xdebug.idekey = PHPSTORM
+; Profiler settings
+xdebug.output_dir = /var/www/magento/var/profile
+xdebug.profiler_output_name = cachegrind.out.%t.%p
+
 {% else %}
-xdebug.remote_enable = 1
+; Debug settings
+xdebug.remote_enable = 0
 xdebug.remote_connect_back = 1
+{#xdebug.remote_host = host.docker.internal#}
 xdebug.remote_port = 9000
+xdebug.idekey = PHPSTORM
 
+; Development settings
 xdebug.scream = 0
 xdebug.show_local_vars = 1
 xdebug.max_nesting_level = 2000
 
-xdebug.idekey = PHPSTORM
+; Coverage settings
+xdebug.coverage_enable = 0
+
+; Profiler settings (commented until tested)
+{#xdebug.profiler_enable = 0#}
+{#xdebug.profiler_enable_trigger = 0#}
+{#xdebug.profiler_output_dir = /tmp#}
+{#xdebug.output_dir = /var/www/magento/var/profile#}
+{#xdebug.profiler_output_name = cachegrind.out.%t.%p#}
+
+; Trace settings (commented until tested)
+{#xdebug.auto_trace = 0#}
+{#xdebug.trace_enable_trigger = 0#}
+{#xdebug.trace_output_dir = /var/www/magento/var/trace#}
+{#xdebug.trace_output_name = trace.%c.%p#}
+
+; GC Stats settings (commented until tested)
+{#xdebug.gc_stats_enable = 0#}
+{#xdebug.gc_stats_output_dir = /var/www/magento/var/gc_stats#}
+{#xdebug.gc_stats_output_name = gcstats.%c.%p#}
+
 {% endif %}

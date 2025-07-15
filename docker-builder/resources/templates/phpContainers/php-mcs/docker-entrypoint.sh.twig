@@ -3,7 +3,7 @@
 [ "$DEBUG" = "true" ] && set -x
 
 #==============================================================================
-# BLOCK 1: UID/GID SYNCHRONIZATION
+# BLOCK: UID/GID SYNCHRONIZATION
 #==============================================================================
 # If asked, we'll ensure that the www-data is set to the same uid/gid as the
 # mounted volume. This works around permission issues with virtualbox shared
@@ -30,29 +30,21 @@ if [[ "$UPDATE_UID_GID" = "true" ]]; then
 fi
 
 #==============================================================================
-# BLOCK 2: MCS DIRECTORY SETUP
+# BLOCK: MCS DIRECTORY SETUP
 #==============================================================================
-# Ensure our Magento directory exists
 mkdir -p $MCS_ROOT
 chown www-data:www-data $MCS_ROOT && chmod -R g+w $MCS_ROOT
 
 #==============================================================================
-# BLOCK 4: PHP CONFIGURATION
+# BLOCK: PHP CONFIGURATION
 #==============================================================================
 # Substitute in php.ini values
 [ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
 
-{% if flavour == 'fpm' %}
-#==============================================================================
-# BLOCK 5: PHP-FPM CONFIGURATION (FPM only)
-#==============================================================================
-[ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
-
-{% endif %}
 {% if flavour == 'cli' %}
 #==============================================================================
-# BLOCK 7: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
+# BLOCK: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
 #==============================================================================
 # host registration for use in the debugger configuration (remote_host for cli)
 HOST_DOMAIN="host.docker.internal"
@@ -65,7 +57,7 @@ fi
 {% endif %}
 {% if flavour == 'cli' %}
 #==============================================================================
-# BLOCK 8: COMPOSER CONFIGURATION (CLI only)
+# BLOCK: COMPOSER CONFIGURATION (CLI only)
 #==============================================================================
 [ ! -z "${COMPOSER_GITHUB_TOKEN}" ] && \
     composer config --global github-oauth.github.com $COMPOSER_GITHUB_TOKEN

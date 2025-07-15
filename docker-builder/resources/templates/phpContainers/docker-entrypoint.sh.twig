@@ -5,7 +5,7 @@
 source /usr/local/bin/version_compare.sh
 
 #==============================================================================
-# BLOCK 1: UID/GID SYNCHRONIZATION
+# BLOCK: UID/GID SYNCHRONIZATION
 #==============================================================================
 # If asked, we'll ensure that the www-data is set to the same uid/gid as the
 # mounted volume. This works around permission issues with virtualbox shared
@@ -32,13 +32,13 @@ if [[ "$UPDATE_UID_GID" = "true" ]]; then
 fi
 
 #==============================================================================
-# BLOCK 2: MAGENTO DIRECTORY SETUP
+# BLOCK: MAGENTO DIRECTORY SETUP
 #==============================================================================
 mkdir -p $MAGENTO_ROOT
 chown www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 
 #==============================================================================
-# BLOCK 3: SENDMAIL CONFIGURATION
+# BLOCK: SENDMAIL CONFIGURATION
 #==============================================================================
 MAIL_SEND_ENABLED=${MAIL_SEND_ENABLED:-false}
 MAIL_SEND_PROVIDER=${MAIL_SEND_PROVIDER:-mailpit-shared}
@@ -96,37 +96,77 @@ if [ "$MAIL_SEND_ENABLED" == "true" ]; then
 
     restore_original_config
     apply_config_without_duplicates /etc/postfix/config.cf
-    /etc/init.d/postfix restart
+    /etc/init.d/postfix restart 2>&1 | grep -v "^\.$" || true
 
     echo "Send mail configuration applied successfully"
 else
     echo "Mail sending is disabled (MAIL_SEND_ENABLED=false)"
 
     restore_original_config
-    /etc/init.d/postfix stop 2>/dev/null || true
+    /etc/init.d/postfix stop 2>&1 | grep -v "^\.$" || true
 fi
 
 #==============================================================================
-# BLOCK 4: PHP CONFIGURATION
+# BLOCK: PHP CONFIGURATION
 #==============================================================================
 # Substitute in php.ini values
 [ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
 
-[ "$PHP_ENABLE_XDEBUG" = "true" ] && \
-    docker-php-ext-enable xdebug && \
-    echo "Xdebug is enabled"
 
-{% if flavour == 'fpm' %}
-#==============================================================================
-# BLOCK 5: PHP-FPM CONFIGURATION (FPM only)                      @deprecated???
-#==============================================================================
-[ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
+{% if xdebugVersion == 'latest' or version_compare(xdebugVersion, '3.0', '>=') %}
+# Xdebug 3.0+ logic
+if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
+    sed -i "s/^xdebug\.mode = .*/xdebug.mode = $PHP_XDEBUG_MODE/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    echo "Xdebug mode set to: $PHP_XDEBUG_MODE"
+else
+    sed -i "s/^xdebug\.mode = .*/xdebug.mode = off/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    echo "Xdebug is disabled (mode=off)"
+fi
+{% else %}
+# Xdebug 2.x logic (part of logic commented until tested)
+if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
+    # Reset all to 0 first
+    sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
 
+    if echo "$PHP_XDEBUG_MODE" | grep -q "debug"; then
+        sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    fi
+    if echo "$PHP_XDEBUG_MODE" | grep -q "develop"; then
+        sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    fi
+    if echo "$PHP_XDEBUG_MODE" | grep -q "coverage"; then
+        sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    fi
+    # if echo "$PHP_XDEBUG_MODE" | grep -q "profile"; then
+    #     sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # fi
+    # if echo "$PHP_XDEBUG_MODE" | grep -q "trace"; then
+    #     sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # fi
+    # if echo "$PHP_XDEBUG_MODE" | grep -q "gcstats"; then
+    #     sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # fi
+
+    echo "Xdebug mode set to: $PHP_XDEBUG_MODE"
+else
+    # Default: disable all features
+    sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    # sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    echo "Xdebug is disabled (mode=off)"
+fi
 {% endif %}
+
 {% if flavour == 'cli' %}
 #==============================================================================
-# BLOCK 6: MAGENTO CRON SETUP (CLI only)
+# BLOCK: MAGENTO CRON SETUP (CLI only)
 #==============================================================================
 CRON_LOG=/var/log/cron.log
 
@@ -150,7 +190,7 @@ touch $CRON_LOG
 {% endif %}
 {% if flavour == 'cli' %}
 #==============================================================================
-# BLOCK 7: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
+# BLOCK: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
 #==============================================================================
 # host registration for use in the debugger configuration (remote_host for cli)
 HOST_DOMAIN="host.docker.internal"
@@ -163,7 +203,7 @@ fi
 {% endif %}
 {% if flavour == 'cli' %}
 #==============================================================================
-# BLOCK 8: COMPOSER CONFIGURATION (CLI only)
+# BLOCK: COMPOSER CONFIGURATION (CLI only)
 #==============================================================================
 [ ! -z "${COMPOSER_GITHUB_TOKEN}" ] && \
     composer config --global github-oauth.github.com $COMPOSER_GITHUB_TOKEN
