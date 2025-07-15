@@ -47,13 +47,13 @@ class ConfigGenerator implements ConfigGeneratorInterface
     private function getActivePhpContainersConfig(array $allPhpContainersConfig, array $generalConfig): array
     {
         $buildPhpVersion = $generalConfig['PHP_VERSION'];
-        $needMCSphpContainer = $generalConfig['DOCKER_SERVICES']['magento-coding-standard'] ?? false;
+        $needMcsPhpContainer = $generalConfig['DOCKER_SERVICES']['magento-coding-standard'] ?? false;
 
         return array_filter(
             $allPhpContainersConfig,
-            function ($containerConfig, $name) use ($buildPhpVersion, $needMCSphpContainer) {
+            function ($containerConfig, $name) use ($buildPhpVersion, $needMcsPhpContainer) {
                 return ($containerConfig['version'] ?? '') === $buildPhpVersion
-                    && (!str_contains($name, 'mcs') || $needMCSphpContainer);
+                    && (!str_contains($name, 'mcs') || $needMcsPhpContainer);
             },
             ARRAY_FILTER_USE_BOTH
         );
