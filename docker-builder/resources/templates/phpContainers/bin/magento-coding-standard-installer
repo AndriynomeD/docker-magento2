@@ -2,7 +2,7 @@
 
 [ "$DEBUG" = "true" ] && set -x
 
-MCS_ROOT=/var/www/magento-coding-standard
+MCS_ROOT=/var/www/html
 
 AUTH_JSON_FILE="$(composer -g config data-dir 2>/dev/null)/auth.json"
 

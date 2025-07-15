@@ -212,7 +212,7 @@ services:
       context: containers/php/{{ PHP_VERSION }}-mcs/
     volumes:
       - ~/.composer/cache:/root/.composer/cache
-      - ./magento-coding-standard:/var/www/magento-coding-standard
+      - ./magento-coding-standard:/var/www/html
     env_file:
       - ./envs/global.env
       - ./envs/composer.env

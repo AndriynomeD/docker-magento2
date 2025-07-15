@@ -11,8 +11,8 @@
 if [[ "$UPDATE_UID_GID" = "true" ]]; then
     echo "Updating www-data uid and gid"
 
-    DOCKER_UID=`stat -c "%u" $MCS_ROOT`
-    DOCKER_GID=`stat -c "%g" $MCS_ROOT`
+    DOCKER_UID=`stat -c "%u" $APP_ROOT`
+    DOCKER_GID=`stat -c "%g" $APP_ROOT`
 
     INCUMBENT_USER=`getent passwd $DOCKER_UID | cut -d: -f1`
     INCUMBENT_GROUP=`getent group $DOCKER_GID | cut -d: -f1`
@@ -32,8 +32,8 @@ fi
 #==============================================================================
 # BLOCK: MCS DIRECTORY SETUP
 #==============================================================================
-mkdir -p $MCS_ROOT
-chown www-data:www-data $MCS_ROOT && chmod -R g+w $MCS_ROOT
+mkdir -p $APP_ROOT
+chown www-data:www-data $APP_ROOT && chmod -R g+w $APP_ROOT
 
 #==============================================================================
 # BLOCK: PHP CONFIGURATION

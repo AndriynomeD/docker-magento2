@@ -75,9 +75,9 @@ RUN apt-get update \
 # Configuring...
 ###########################################################################
 
-ENV PHP_MEMORY_LIMIT=2G \
+ENV PHP_MEMORY_LIMIT=4G \
     PHP_ENABLE_XDEBUG=false \
-    MCS_ROOT=/var/www/magento-coding-standard \
+    APP_ROOT=/var/www/html \
     DEBUG=false \
     UPDATE_UID_GID=false
 
