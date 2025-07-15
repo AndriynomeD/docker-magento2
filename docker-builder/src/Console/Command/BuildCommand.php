@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DockerBuilder\Core\Console\Command;
 
 use DockerBuilder\Core\Builder\ConfigBuilderFactory;
-use DockerBuilder\Core\Builder\MyOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -50,14 +49,7 @@ class BuildCommand extends Command
     {
         $options = [
             'dry_run' => $input->getOption('dry-run'),
-            'verbose' => match ($output->getVerbosity()) {
-                OutputInterface::VERBOSITY_QUIET => MyOutput::VERBOSITY_QUIET,
-                OutputInterface::VERBOSITY_NORMAL => MyOutput::VERBOSITY_NORMAL,
-                OutputInterface::VERBOSITY_VERBOSE => MyOutput::VERBOSITY_VERBOSE,
-                OutputInterface::VERBOSITY_VERY_VERBOSE => MyOutput::VERBOSITY_VERY_VERBOSE,
-                OutputInterface::VERBOSITY_DEBUG => MyOutput::VERBOSITY_DEBUG,
-                default => MyOutput::VERBOSITY_NORMAL,
-            }
+            'verbose' => $output->getVerbosity()
         ];
 
         try {

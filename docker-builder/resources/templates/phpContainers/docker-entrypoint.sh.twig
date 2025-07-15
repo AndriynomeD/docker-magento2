@@ -1,4 +1,3 @@
-<?php ''; ?>
 #!/bin/bash
 
 [ "$DEBUG" = "true" ] && set -x
@@ -118,14 +117,14 @@ fi
     docker-php-ext-enable xdebug && \
     echo "Xdebug is enabled"
 
-<?php if ($flavour === 'fpm'): ?>
+{% if flavour == 'fpm' %}
 #==============================================================================
 # BLOCK 5: PHP-FPM CONFIGURATION (FPM only)                      @deprecated???
 #==============================================================================
 [ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
 
-<?php endif; ?>
-<?php if ($flavour === 'cli'): ?>
+{% endif %}
+{% if flavour == 'cli' %}
 #==============================================================================
 # BLOCK 6: MAGENTO CRON SETUP (CLI only)
 #==============================================================================
@@ -148,8 +147,8 @@ touch $CRON_LOG
 #echo "cron.* $CRON_LOG" > /etc/rsyslog.d/cron.conf
 #service rsyslog start
 
-<?php endif; ?>
-<?php if ($flavour === 'cli'): ?>
+{% endif %}
+{% if flavour == 'cli' %}
 #==============================================================================
 # BLOCK 7: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
 #==============================================================================
@@ -161,8 +160,8 @@ if [ $? -ne 0 ]; then
   echo -e "$HOST_IP\t$HOST_DOMAIN" >> /etc/hosts
 fi
 
-<?php endif; ?>
-<?php if ($flavour === 'cli'): ?>
+{% endif %}
+{% if flavour == 'cli' %}
 #==============================================================================
 # BLOCK 8: COMPOSER CONFIGURATION (CLI only)
 #==============================================================================
@@ -176,7 +175,7 @@ fi
 [ ! -z "${COMPOSER_BITBUCKET_KEY}" ] && [ ! -z "${COMPOSER_BITBUCKET_SECRET}" ] && \
     composer config --global bitbucket-oauth.bitbucket.org $COMPOSER_BITBUCKET_KEY $COMPOSER_BITBUCKET_SECRET
 
-<?php endif; ?>
+{% endif %}
 
 #==============================================================================
 # BLOCK: EXECUTE MAIN COMMAND

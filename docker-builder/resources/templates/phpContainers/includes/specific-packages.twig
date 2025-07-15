@@ -1,25 +1,25 @@
-<?php if (array_key_exists('gd', $specificPackages) && $specificPackages['gd'] !== false): ?>
+{% if specificPackages.gd is defined and specificPackages.gd != false %}
 ###########################################################################
 # Configure the gd library
 ###########################################################################
 
 RUN docker-php-ext-configure \
-<?php if (version_compare($phpVersion, '7.4', '>=')): ?>
+{% if version_compare(phpVersion, '7.4', '>=') %}
   gd --prefix=/usr --with-freetype --with-jpeg \
-<?php else: ?>
+{% else %}
   gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-<?php endif; ?>
+{% endif %}
   && docker-php-ext-install gd
 
-<?php endif; ?>
-<?php /** imagick can be false|true|{imagick_version} */ ?>
-<?php if (array_key_exists('imagick', $specificPackages) && $specificPackages['imagick'] !== false): ?>
+{% endif %}
+{# imagick can be false|true|{imagick_version} #}
+{% if specificPackages.imagick is defined and specificPackages.imagick != false %}
 ###########################################################################
 # Imagemagick (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
 ###########################################################################
 
-ARG INSTALL_IMAGEMAGICK=<?= $specificPackages['imagick'] !== false ? 'true' : 'false'; ?><?= PHP_EOL ?>
-ARG IMAGEMAGICK_VERSION=<?= ($specificPackages['imagick'] !== true)? $specificPackages['imagick'] : 'latest'; ?><?= PHP_EOL ?>
+ARG INSTALL_IMAGEMAGICK={{ specificPackages.imagick != false ? 'true' : 'false' }}
+ARG IMAGEMAGICK_VERSION={{ (specificPackages.imagick != true) ? specificPackages.imagick : 'latest' }}
 ENV IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
@@ -49,14 +49,14 @@ RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     php -m | grep -q 'imagick' \
 ;fi
 
-<?php endif; ?>
-<?php if (array_key_exists('ioncube', $specificPackages) && $specificPackages['ioncube'] !== false): ?>
+{% endif %}
+{% if specificPackages.ioncube is defined and specificPackages.ioncube != false %}
 ###########################################################################
 # IonCube Loader (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
 ###########################################################################
 
 ARG $PHP_INI_DIR=/usr/local/etc/php
-ARG INSTALL_IONCUBE=<?= $specificPackages['ioncube'] !== false ? 'true' : 'false'; ?>
+ARG INSTALL_IONCUBE={{ specificPackages.ioncube != false ? 'true' : 'false' }}
 
 RUN if [ ${INSTALL_IONCUBE} = true ]; then \
     if [ ${PHP_VERSION} != "8.4" ] \
@@ -71,21 +71,21 @@ RUN if [ ${INSTALL_IONCUBE} = true ]; then \
     ;fi \
 ;fi
 
-<?php endif; ?>
-<?php if (array_key_exists('calendar', $specificPackages) && $specificPackages['calendar'] !== false): ?>
+{% endif %}
+{% if specificPackages.calendar is defined and specificPackages.calendar != false %}
 ###########################################################################
 # Calendar (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
 ###########################################################################
 
-ARG INSTALL_CALENDAR=<?= $specificPackages['calendar'] !== false ? 'true' : 'false'; ?>
+ARG INSTALL_CALENDAR={{ specificPackages.calendar != false ? 'true' : 'false' }}
 
 RUN if [ ${INSTALL_CALENDAR} = true ]; then \
     docker-php-ext-configure calendar && \
     docker-php-ext-install calendar \
 ;fi
 
-<?php endif; ?>
-<?php if (array_key_exists('libsodiumfix', $specificPackages) && $specificPackages['libsodiumfix'] !== false): ?>
+{% endif %}
+{% if specificPackages.libsodiumfix is defined and specificPackages.libsodiumfix != false %}
 ###########################################################################
 # Fix bug: libsodium 1.0.13 or higher required for Magento 2.3.2 but newest version 1.0.11
 ###########################################################################
@@ -94,4 +94,4 @@ RUN apt-get update && apt-get -t stretch-backports install -y \
   libsodium-dev
 RUN pecl install -f libsodium-1.0.17 && rm -rf /tmp/pear
 
-<?php endif; ?>
+{% endif %}

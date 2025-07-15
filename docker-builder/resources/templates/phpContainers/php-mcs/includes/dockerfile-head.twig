@@ -3,42 +3,39 @@
 # {{generated_by_builder}}
 #--------------------------------------------------------------------------
 
-FROM <?php printf("php:%s-%s\n", $phpVersion, $flavour) ?>
+FROM php:{{ phpVersion }}-{{ flavour }}
 
 LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
 
-<?php
- $parts = explode('.', $phpVersion);
- $shortVersion = $parts[0] . '.' . $parts[1];
-?>
-ARG PHP_VERSION=<?= $shortVersion . PHP_EOL; ?>
+{% set phpVersionParts = phpVersion|split('.') %}
+{% set shortVersion = phpVersionParts[0] ~ '.' ~ phpVersionParts[1] %}
+ARG PHP_VERSION={{ shortVersion }}
+
 ###########################################################################
 # Install dependencies
 ###########################################################################
-<?php
-    $imagePackages = array_merge([
-        'libicu-dev',
-        'libfreetype6-dev',
-        'libjpeg62-turbo-dev',
-        'libpng-dev',
-        'libmcrypt-dev',
-        'libxslt1-dev',
-        'libzip-dev',
-        'sudo',
-        'git'
-    ], $packages ?? [], $flavourPackages ?? [])
-?>
+{% set imagePackages = [
+    'libicu-dev',
+    'libfreetype6-dev',
+    'libjpeg62-turbo-dev',
+    'libpng-dev',
+    'libmcrypt-dev',
+    'libxslt1-dev',
+    'libzip-dev',
+    'sudo',
+    'git'
+]|merge(packages|default([]))|merge(flavourPackages|default([])) %}
 
 RUN apt-get update \
   && apt-get install -y \
-    <?= join(" \\ \n    ", $imagePackages) ?> \
+    {{ imagePackages|join(" \\ \n    ") }} \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ###########################################################################
 # Install required PHP extensions
 ###########################################################################
-<?php $imagePhpExtensions = array_merge([
+{% set imagePhpExtensions = [
   'dom',
   'intl',
   'mbstring',
@@ -48,11 +45,10 @@ RUN apt-get update \
   'bcmath',
   'pcntl',
   'sockets'
-], $phpExtensions ?? [], $flavourPhpExtensions ?? []);
-?>
+]|merge(phpExtensions|default([]))|merge(flavourPhpExtensions|default([])) %}
 
 RUN docker-php-ext-install -j$(nproc) \
-  <?= join(" \\ \n  ", $imagePhpExtensions) ?> \
+  {{ imagePhpExtensions|join(" \\ \n  ") }} \
     && docker-php-source delete
 
 ###########################################################################
@@ -74,7 +70,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-<?php include "Dockerfile-specific-packages"; ?>
+{% include "phpContainers/includes/specific-packages.twig" %}
 ###########################################################################
 # Configuring...
 ###########################################################################

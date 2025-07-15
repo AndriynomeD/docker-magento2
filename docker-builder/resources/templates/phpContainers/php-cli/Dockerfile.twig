@@ -1,26 +1,20 @@
-<?php
-$flavourPackages = [
+{% set flavourPackages = [
     'cron',
     'rsyslog',
     'iproute2'
-];
+] %}
+{%- if databaseType == 'mysql' or databaseType == 'percona' %}
+    {%- if version_compare(databaseVersion, '7.0', '<=') %}
+        {%- set flavourPackages = flavourPackages|merge(['mysql-client']) %}
+    {%- else %}
+        {%- set flavourPackages = flavourPackages|merge(['default-mysql-client']) %}
+    {%- endif %}
+{%- else %}
+    {%- set flavourPackages = flavourPackages|merge(['mariadb-client']) %}
+{%- endif %}
+{% include "phpContainers/includes/dockerfile-head.twig" %}
 
-switch ($databaseType) {
-    case 'mysql':
-    case 'percona':
-        $flavourPackages[] = version_compare($databaseVersion, '7.0', '<=')
-            ? 'mysql-client'
-            : 'default-mysql-client';
-        break;
-    case 'mariadb':
-    default:
-        $flavourPackages[] = 'mariadb-client';
-        break;
-}
-
-include "includes/Dockerfile-mcs";
-?>
-<?php if (array_key_exists('grunt', $specificPackages) && $specificPackages['grunt'] !== false): ?>
+{% if specificPackages.grunt is defined and specificPackages.grunt != false %}
 ###########################################################################
 # Install Grunt
 ###########################################################################
@@ -32,7 +26,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-<?php endif; ?>
+{% endif %}
 ###########################################################################
 # Configuring...
 ###########################################################################
@@ -51,16 +45,25 @@ COPY etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
 ###########################################################################
 # Get composer installed to /usr/local/bin/composer
 ###########################################################################
-<?php $composerVersion = ($composerVersion === 'latest' || $composerVersion == '') ? '' : '--version=' . $composerVersion; ?>
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer <?= $composerVersion; ?>
+{% set composerVersionFlag = (composerVersion == 'latest' or composerVersion == '') ? '' : '--version=' ~ composerVersion %}
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer {{ composerVersionFlag }}
 
 ###########################################################################
 # Final Configuring
 ###########################################################################
 
 COPY bin/* /usr/local/bin/
-RUN ["chmod", "+x", "/usr/local/bin/magento-coding-standard-installer"]
+#RUN find /usr/local/bin -type f -exec chmod +x {} +
+RUN for file in \
+        /usr/local/bin/magento-installer \
+        /usr/local/bin/magento-command \
+        /usr/local/bin/magento-service-updater \
+        /usr/local/bin/deployVeniaSampleData.sh \
+        /usr/local/bin/run-cron; \
+    do \
+        chmod +x "$file"; \
+    done
 
-WORKDIR $MCS_ROOT
+WORKDIR $MAGENTO_ROOT
 
 CMD ["bash"]

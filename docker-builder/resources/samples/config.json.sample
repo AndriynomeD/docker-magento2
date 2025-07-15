@@ -54,7 +54,7 @@
       "version": "7.0",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -85,11 +85,10 @@
     },
     "7.0-mcs": {
       "version": "7.0",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -110,7 +109,7 @@
       "version": "7.0",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -135,7 +134,7 @@
       "version": "7.1",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -166,11 +165,10 @@
     },
     "7.1-mcs": {
       "version": "7.1",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -191,7 +189,7 @@
       "version": "7.1",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -216,7 +214,7 @@
       "version": "7.2",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -245,11 +243,10 @@
     },
     "7.2-mcs": {
       "version": "7.2",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -268,7 +265,7 @@
       "version": "7.2",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -291,7 +288,7 @@
       "version": "7.3",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -320,11 +317,10 @@
     },
     "7.3-mcs": {
       "version": "7.3",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -343,7 +339,7 @@
       "version": "7.3",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -366,7 +362,7 @@
       "version": "7.4",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -397,11 +393,10 @@
     },
     "7.4-mcs": {
       "version": "7.4",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -422,7 +417,7 @@
       "version": "7.4",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -447,7 +442,7 @@
       "version": "8.0",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -478,11 +473,10 @@
     },
     "8.0-mcs": {
       "version": "8.0",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -503,7 +497,7 @@
       "version": "8.0",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -528,7 +522,7 @@
       "version": "8.1",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -559,11 +553,10 @@
     },
     "8.1-mcs": {
       "version": "8.1",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -584,7 +577,7 @@
       "version": "8.1",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -607,10 +600,9 @@
     },
     "8.2-cli": {
       "version": "8.2",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -644,11 +636,10 @@
     },
     "8.2-mcs": {
       "version": "8.2",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -672,7 +663,7 @@
       "version": "8.2",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
@@ -700,7 +691,7 @@
       "version": "8.3",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -734,11 +725,10 @@
     },
     "8.3-mcs": {
       "version": "8.3",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -762,7 +752,7 @@
       "version": "8.3",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
@@ -791,7 +781,7 @@
       "version": "8.4",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-cli/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "bin/version_compare.sh": {"executable": false},
         "bin/magento-command": {"executable": true},
@@ -825,11 +815,10 @@
     },
     "8.4-mcs": {
       "version": "8.4",
-      "template_infix": "mcs",
       "flavour": "cli",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
-        "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
+        "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
         "bin/magento-coding-standard-installer": {"executable": true},
         "etc/php-cli.ini": {}
       },
@@ -853,7 +842,7 @@
       "version": "8.4",
       "flavour": "fpm",
       "files": {
-        "Dockerfile": {"_enable_variables": true},
+        "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},

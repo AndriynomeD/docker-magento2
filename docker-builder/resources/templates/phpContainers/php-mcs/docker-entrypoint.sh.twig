@@ -1,4 +1,3 @@
-<?php ''; ?>
 #!/bin/bash
 
 [ "$DEBUG" = "true" ] && set -x
@@ -44,14 +43,14 @@ chown www-data:www-data $MCS_ROOT && chmod -R g+w $MCS_ROOT
 [ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
 
-<?php if ($flavour === 'fpm'): ?>
+{% if flavour == 'fpm' %}
 #==============================================================================
 # BLOCK 5: PHP-FPM CONFIGURATION (FPM only)
 #==============================================================================
 [ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
 
-<?php endif; ?>
-<?php if ($flavour === 'cli'): ?>
+{% endif %}
+{% if flavour == 'cli' %}
 #==============================================================================
 # BLOCK 7: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
 #==============================================================================
@@ -63,8 +62,8 @@ if [ $? -ne 0 ]; then
   echo -e "$HOST_IP\t$HOST_DOMAIN" >> /etc/hosts
 fi
 
-<?php endif; ?>
-<?php if ($flavour === 'cli'): ?>
+{% endif %}
+{% if flavour == 'cli' %}
 #==============================================================================
 # BLOCK 8: COMPOSER CONFIGURATION (CLI only)
 #==============================================================================
@@ -78,7 +77,7 @@ fi
 [ ! -z "${COMPOSER_BITBUCKET_KEY}" ] && [ ! -z "${COMPOSER_BITBUCKET_SECRET}" ] && \
     composer config --global bitbucket-oauth.bitbucket.org $COMPOSER_BITBUCKET_KEY $COMPOSER_BITBUCKET_SECRET
 
-<?php endif; ?>
+{% endif %}
 
 #==============================================================================
 # BLOCK: EXECUTE MAIN COMMAND

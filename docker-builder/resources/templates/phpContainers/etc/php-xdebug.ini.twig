@@ -2,7 +2,7 @@
 
 ; Xdebug settings will only kick in if the Xdebug module is loaded
 
-<?php if ($xdebugVersion === 'latest' || version_compare($xdebugVersion, '3.0', '>=')): ?>
+{% if xdebugVersion == 'latest' or version_compare(xdebugVersion, '3.0', '>=') %}
 xdebug.mode = debug
 xdebug.discover_client_host = 1
 xdebug.client_port = 9000
@@ -12,7 +12,7 @@ xdebug.show_local_vars = 1
 xdebug.max_nesting_level = 2000
 
 xdebug.idekey = PHPSTORM
-<?php else: ?>
+{% else %}
 xdebug.remote_enable = 1
 xdebug.remote_connect_back = 1
 xdebug.remote_port = 9000
@@ -22,4 +22,4 @@ xdebug.show_local_vars = 1
 xdebug.max_nesting_level = 2000
 
 xdebug.idekey = PHPSTORM
-<?php endif ?>
+{% endif %}
