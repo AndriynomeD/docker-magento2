@@ -1,0 +1,11 @@
+{% set versionSpecificPhpExtensions = (phpExtensions|default([]))|merge(flavourPhpExtensions|default([])) %}
+{% if versionSpecificPhpExtensions|length > 0 %}
+###########################################################################
+# Install version-specific PHP extensions (from phpExtensions[] config)
+###########################################################################
+
+RUN docker-php-ext-install -j$(nproc) \
+  {{ versionSpecificPhpExtensions|join(' \\\n  ') }} \
+    && docker-php-source delete
+
+{% endif %}

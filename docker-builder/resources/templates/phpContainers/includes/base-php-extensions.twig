@@ -1,0 +1,25 @@
+###########################################################################
+# Install required PHP extensions
+###########################################################################
+
+{% set basePhpExtensions = [
+    'bcmath',
+    'bz2',
+    'calendar',
+    'exif',
+    'gettext',
+    'pcntl',
+    'dba',
+    'soap',
+    'mysqli',
+    'opcache',
+    'pdo_mysql',
+    'xsl',
+    'intl',
+    'sockets'
+] %}
+{#dom, mbstring#}
+RUN docker-php-ext-install -j$(nproc) \
+  {{ basePhpExtensions|join(' \\\n  ') }} \
+    && docker-php-source delete
+

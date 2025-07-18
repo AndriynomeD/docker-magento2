@@ -147,8 +147,8 @@ services:
       - ./envs/m2_install.env
     environment:
 {# for correct ??? setup according to M2_VERSION #}
-      - M2_VERSION={{ M2_VERSION }}
       - M2_EDITION={{ M2_EDITION }}
+      - M2_VERSION={{ M2_VERSION }}
     networks:
       default:
       mail-services:

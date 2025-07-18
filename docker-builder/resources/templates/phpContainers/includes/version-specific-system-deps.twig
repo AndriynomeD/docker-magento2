@@ -1,0 +1,13 @@
+{% set versionSpecificPackages = (packages|default([]))|merge(flavourPackages|default([])) %}
+{% if versionSpecificPackages|length > 0 %}
+###########################################################################
+# Install version-specific system dependencies (from packages[] config)
+##########################################################################
+
+RUN apt-get update \
+  && apt-get install -y \
+    {{ versionSpecificPackages|join(' \\\n    ') }} \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+{% endif %}

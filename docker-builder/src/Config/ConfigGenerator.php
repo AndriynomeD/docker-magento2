@@ -110,6 +110,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
     private function transformPhpContainer(array $containerConfig, array $generalConfig): array
     {
         /** set used in php container variables */
+        $containerConfig['M2_EDITION'] = $generalConfig['M2_EDITION'];
         $containerConfig['phpVersion'] = $containerConfig['version'];
         $containerConfig['databaseType'] = $generalConfig['DOCKER_SERVICES']['database']['TYPE'];
         $containerConfig['databaseVersion'] = $generalConfig['DOCKER_SERVICES']['database']['VERSION'];

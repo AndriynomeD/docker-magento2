@@ -69,15 +69,17 @@
         "etc/php-cli.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true}
       },
-      "packages": [],
+      "packages": [
+        "libmcrypt-dev"
+      ],
       "phpExtensions": [
         "mcrypt"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -93,16 +95,8 @@
         "etc/php-cli.ini": {}
       },
       "packages": [],
-      "phpExtensions": [
-        "mcrypt"
-      ],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "phpExtensions": [],
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "7.0-fpm": {
@@ -118,15 +112,17 @@
         "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
-      "packages": [],
+      "packages": [
+        "libmcrypt-dev"
+      ],
       "phpExtensions": [
         "mcrypt"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "2.8.1"
     },
@@ -149,15 +145,17 @@
         "etc/php-cli.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true}
       },
-      "packages": [],
+      "packages": [
+        "libmcrypt-dev"
+      ],
       "phpExtensions": [
         "mcrypt"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -173,16 +171,8 @@
         "etc/php-cli.ini": {}
       },
       "packages": [],
-      "phpExtensions": [
-        "mcrypt"
-      ],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "phpExtensions": [],
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "7.1-fpm": {
@@ -198,15 +188,17 @@
         "etc/php-xdebug.ini": {"_enable_variables": true},
         "etc/php-fpm.conf": {}
       },
-      "packages": [],
+      "packages": [
+        "libmcrypt-dev"
+      ],
       "phpExtensions": [
         "mcrypt"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -233,9 +225,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -252,13 +244,7 @@
       },
       "packages": [],
       "phpExtensions": [],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "7.2-fpm": {
@@ -278,9 +264,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -307,9 +293,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -326,13 +312,7 @@
       },
       "packages": [],
       "phpExtensions": [],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "7.3-fpm": {
@@ -352,9 +332,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -383,9 +363,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -404,13 +384,7 @@
         "libonig-dev"
       ],
       "phpExtensions": [],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "7.4-fpm": {
@@ -432,9 +406,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -463,9 +437,8 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
+        "imagick": true,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -484,13 +457,7 @@
         "libonig-dev"
       ],
       "phpExtensions": [],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "8.0-fpm": {
@@ -512,9 +479,8 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ssh2": false
       },
       "xdebugVersion": "3.1.2"
     },
@@ -543,9 +509,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -564,13 +530,7 @@
         "libonig-dev"
       ],
       "phpExtensions": [],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "8.1-fpm": {
@@ -592,9 +552,9 @@
       "phpExtensions": [],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "3.1.2"
     },
@@ -618,17 +578,16 @@
         "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -644,19 +603,12 @@
         "etc/php-cli.ini": {}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "8.2-fpm": {
@@ -673,17 +625,16 @@
         "etc/php-fpm.conf": {}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "3.3.1"
     },
@@ -707,17 +658,16 @@
         "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -733,19 +683,10 @@
         "etc/php-cli.ini": {}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
-      "phpExtensions": [
-        "ftp"
-      ],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "phpExtensions": [],
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "8.3-fpm": {
@@ -763,17 +704,16 @@
         "etc/php-fpm.conf": {}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "3.4.3"
     },
@@ -797,17 +737,16 @@
         "etc/php-xdebug.ini": {"_enable_variables": true}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
+        "imagick": true,
         "ioncube": false,
+        "ssh2": false,
         "grunt": true
       },
       "composerVersion": "latest",
@@ -823,19 +762,12 @@
         "etc/php-cli.ini": {}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
-      "specificPackages": {
-        "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false,
-        "grunt": true
-      },
+      "specificPackages": {},
       "composerVersion": "latest"
     },
     "8.4-fpm": {
@@ -852,17 +784,16 @@
         "etc/php-fpm.conf": {}
       },
       "packages": [
-        "libonig-dev",
-        "libssl-dev"
+        "libonig-dev"
       ],
       "phpExtensions": [
         "ftp"
       ],
       "specificPackages": {
         "gd": true,
-        "imagick": false,
-        "calendar": false,
-        "ioncube": false
+        "imagick": true,
+        "ioncube": false,
+        "ssh2": false
       },
       "xdebugVersion": "3.4.3"
     }

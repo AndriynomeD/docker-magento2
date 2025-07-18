@@ -1,0 +1,56 @@
+{#{% if specificPackages.cloud is defined and specificPackages.cloud != false %}#}
+{% if M2_EDITION == 'cloud' %}
+###########################################################################
+# Cloud: shared memory, IPC
+###########################################################################
+
+RUN docker-php-ext-install  \
+    gmp \
+    tidy \
+    shmop \
+    sysvmsg \
+    sysvsem \
+    sysvshm \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ 
+###########################################################################
+# Cloud: LDAP+IMAP
+###########################################################################
+
+RUN apt-get update \
+  && apt-get install -y \
+    libldap2-dev \
+    libimap-dev \
+    libkrb5-dev \
+  && docker-php-ext-configure \
+    ldap --with-libdir=lib/x86_64-linux-gnu/ \
+    imap --with-kerberos --with-imap-ssl \
+  && docker-php-ext-install ldap imap \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+###########################################################################
+# Cloud: Swoole EXTENSION
+###########################################################################
+
+ARG INSTALL_SWOOLE=true
+RUN set -eux; \
+    if [ ${INSTALL_SWOOLE} = true ]; then \
+      # Install Php Swoole Extension
+      elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
+        pecl install swoole-4.3.5; \
+      elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
+        pecl install swoole-4.5.11; \
+      elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
+        pecl install swoole-4.8.12; \
+      elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
+        pecl install swoole-5.1.2; \
+      else \
+        pecl install swoole; \
+      fi; \
+      docker-php-ext-enable swoole; \
+      php -m | grep -q 'swoole'; \
+    fi
+
+{% endif %}

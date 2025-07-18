@@ -1,13 +1,48 @@
-{% include "phpContainers/includes/dockerfile-head.twig" %}
+#
+#--------------------------------------------------------------------------
+# {{generated_by_builder}}
+#--------------------------------------------------------------------------
+
+FROM php:{{ phpVersion }}-{{ flavour }}
+
+LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
+
+{% set parts = phpVersion|split('.') %}
+{% set shortVersion = parts[0] ~ '.' ~ parts[1] %}
+ARG PHP_VERSION={{ shortVersion }}
+
+{% set flavourPackages = [] %}
+{% include "phpContainers/includes/base-system-deps.twig" %}
+{% include "phpContainers/includes/base-php-extensions.twig" %}
+{% include "phpContainers/includes/zip.twig" %}
+{% include "phpContainers/includes/xdebug.twig" %}
+{% include "phpContainers/includes/mail-service.twig" %}
+{% include "phpContainers/includes/version-specific-system-deps.twig" %}
+{% include "phpContainers/includes/version-specific-php-extensions.twig" %}
+{% include "phpContainers/includes/specific-packages-gd.twig" %}
+{% include "phpContainers/includes/specific-packages-imagick.twig" %}
+{% include "phpContainers/includes/specific-packages-ssh2.twig" %}
+{% include "phpContainers/includes/specific-packages-ioncube.twig" %}
+{% include "phpContainers/includes/specific-packages-cloud.twig" %}
 ###########################################################################
 # Final Configuring
 ###########################################################################
+
+ENV PHP_MEMORY_LIMIT=4G \
+    PHP_ENABLE_XDEBUG=false \
+    MAGENTO_ROOT=/var/www/magento \
+    DEBUG=false \
+    UPDATE_UID_GID=false
 
 ENV UPLOAD_MAX_FILESIZE=64M
 
 COPY etc/php-fpm.ini /usr/local/etc/php/conf.d/zz-magento.ini
 COPY etc/php-fpm.conf /usr/local/etc/
 
-COPY bin/version_compare.sh /usr/local/bin/version_compare.sh
+COPY bin/* /usr/local/bin/
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN ["chmod", "+x", "/docker-entrypoint.sh"]
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["php-fpm", "-F"]

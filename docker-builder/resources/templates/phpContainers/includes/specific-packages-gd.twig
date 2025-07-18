@@ -1,0 +1,24 @@
+{% if specificPackages.gd is defined and specificPackages.gd != false %}
+###########################################################################
+# Configure the gd library (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
+###########################################################################
+
+ARG INSTALL_GD={{ specificPackages.gd != false ? 'true' : 'false' }}
+RUN if [ ${INSTALL_GD} = true ]; then \
+# apt-get update && apt-get install -y \
+#   libfreetype6-dev \
+#   libjpeg62-turbo-dev \
+#   libpng-dev \
+#   libwebp-dev; \
+ if [ ${PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+   docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
+ else \
+   docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/  \
+    --with-png-dir=/usr/include/ --with-webp-dir=/usr/include/; \
+ fi; \
+ docker-php-ext-install gd \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+;fi
+    
+{% endif %}

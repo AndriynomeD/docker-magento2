@@ -1,0 +1,16 @@
+###########################################################################
+# Get composer installed to /usr/local/bin/composer
+###########################################################################
+
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_GITHUB_TOKEN="" \
+    COMPOSER_MAGENTO_USERNAME="" \
+    COMPOSER_MAGENTO_PASSWORD="" \
+    COMPOSER_BITBUCKET_KEY="" \
+    COMPOSER_BITBUCKET_SECRET=""
+
+VOLUME /root/.composer/cache
+
+{% set composerVersionFlag = (composerVersion == 'latest' or composerVersion == '') ? '' : '--version=' ~ composerVersion %}
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer {{ composerVersionFlag }}
+

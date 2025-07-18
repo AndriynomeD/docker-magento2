@@ -1,0 +1,23 @@
+{% if specificPackages.ioncube is defined and specificPackages.ioncube != false %}
+###########################################################################
+# IonCube Loader (copy from https://github.com/laradock/laradock/blob/master/php-fpm/Dockerfile):
+# P.S. PHP 8.0 no ioncube support, PHP 8.4 - ioncube support will be added later 
+###########################################################################
+
+ARG $PHP_INI_DIR=/usr/local/etc/php
+ARG INSTALL_IONCUBE={{ specificPackages.ioncube != false ? 'true' : 'false' }}
+
+RUN if [ ${INSTALL_IONCUBE} = true ]; then \
+    if [ ${PHP_VERSION} != "8.4" ] \
+      && [ ${PHP_VERSION} != "8.0" ]; then \
+      # Install the php ioncube loader
+      curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
+      && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
+      && mv /tmp/ioncube/ioncube_loader_lin_${PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
+      && printf "zend_extension=ioncube_loader.so\n" > $PHP_INI_DIR/conf.d/0ioncube.ini \
+      && rm -rf /tmp/ioncube* \
+      && php -m | grep -oiE '^ionCube Loader$' \
+    ;fi \
+;fi
+
+{% endif %}

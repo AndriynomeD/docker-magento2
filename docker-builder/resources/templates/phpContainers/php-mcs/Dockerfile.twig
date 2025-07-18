@@ -1,60 +1,72 @@
+#
+#--------------------------------------------------------------------------
+# {{generated_by_builder}}
+#--------------------------------------------------------------------------
+
+FROM php:{{ phpVersion }}-{{ flavour }}
+
+LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
+
+{% set parts = phpVersion|split('.') %}
+{% set shortVersion = parts[0] ~ '.' ~ parts[1] %}
+ARG PHP_VERSION={{ shortVersion }}
+
 {% set flavourPackages = [
     'cron',
     'rsyslog',
-    'iproute2'
+    'iproute2',
+    'procps',
+    'htop'
 ] %}
-
-{% if databaseType == 'mysql' or databaseType == 'percona' %}
-    {% set flavourPackages = flavourPackages|merge([
-        version_compare(databaseVersion, '7.0', '<=') ? 'mysql-client' : 'default-mysql-client'
-    ]) %}
-{% elseif databaseType == 'mariadb' or databaseType is not defined %}
-    {% set flavourPackages = flavourPackages|merge(['mariadb-client']) %}
-{% endif %}
-
-{% include "phpContainers/php-mcs/includes/dockerfile-head.twig" %}
-
-{% if specificPackages.grunt is defined and specificPackages.grunt != false %}
-###########################################################################
-# Install Grunt
-###########################################################################
-
-RUN apt-get update \
-    && apt-get install -y \
-    curl gnupg && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs && npm install -g grunt-cli \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-{% endif %}
-###########################################################################
-# Configuring...
-###########################################################################
-
-ENV COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_GITHUB_TOKEN="" \
-    COMPOSER_MAGENTO_USERNAME="" \
-    COMPOSER_MAGENTO_PASSWORD="" \
-    COMPOSER_BITBUCKET_KEY="" \
-    COMPOSER_BITBUCKET_SECRET=""
-
-VOLUME /root/.composer/cache
-
-COPY etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
-
-###########################################################################
-# Get composer installed to /usr/local/bin/composer
-###########################################################################
-{% set composerVersionFlag = (composerVersion == 'latest' or composerVersion == '') ? '' : '--version=' ~ composerVersion %}
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer {{ composerVersionFlag }}
-
+{%- if databaseType == 'mysql' or databaseType == 'percona' %}
+    {%- if version_compare(databaseVersion, '7.0', '<=') %}
+        {%- set flavourPackages = flavourPackages|merge(['mysql-client']) %}
+    {%- else %}
+        {%- set flavourPackages = flavourPackages|merge(['default-mysql-client']) %}
+    {%- endif %}
+{%- else %}
+    {%- set flavourPackages = flavourPackages|merge(['mariadb-client']) %}
+{%- endif %}
+{% include "phpContainers/includes/base-system-deps.twig" %}
+{% include "phpContainers/includes/base-php-extensions.twig" %}
+{% include "phpContainers/includes/zip.twig" %}
+{% set specificPackages = specificPackages|merge({'grunt': true}) %}
+{% include "phpContainers/php-cli/includes/specific-packages-grunt.twig" %}
+{% include "phpContainers/php-cli/includes/composer.twig" %}
+{#{% include "phpContainers/includes/xdebug.twig" %}#}
+{#{% include "phpContainers/includes/mail-service.twig" %}#}
+{% include "phpContainers/includes/version-specific-system-deps.twig" %}
+{% include "phpContainers/includes/version-specific-php-extensions.twig" %}
+{#{% include "phpContainers/includes/specific-packages-gd.twig" %}#}
+{#{% include "phpContainers/includes/specific-packages-imagick.twig" %}#}
+{#{% include "phpContainers/includes/specific-packages-ssh2.twig" %}#}
+{#{% include "phpContainers/includes/specific-packages-ioncube.twig" %}#}
+{#{% include "phpContainers/includes/specific-packages-cloud.twig" %}#}
 ###########################################################################
 # Final Configuring
 ###########################################################################
 
+ENV PHP_MEMORY_LIMIT=4G \
+    PHP_ENABLE_XDEBUG=false \
+    APP_ROOT=/var/www/html \
+    DEBUG=false \
+    UPDATE_UID_GID=false
+
+COPY etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
+
 COPY bin/* /usr/local/bin/
-RUN ["chmod", "+x", "/usr/local/bin/magento-coding-standard-installer"]
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN ["chmod", "+x", "/docker-entrypoint.sh"]
+
+#RUN find /usr/local/bin -type f -exec chmod +x {} +
+RUN for file in \
+        /usr/local/bin/magento-coding-standard-installer; \
+    do \
+        chmod +x "$file"; \
+    done
 
 WORKDIR $APP_ROOT
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["bash"]

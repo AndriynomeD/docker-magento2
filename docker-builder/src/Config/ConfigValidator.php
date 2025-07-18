@@ -233,19 +233,17 @@ class ConfigValidator implements ConfigValidatorInterface
      */
     private function validatePhpContainer(string $name, array $containerConfig, array $generalConfig): void
     {
-        if (($containerConfig['specificPackages']['ioncube'] ?? false) &&
-            version_compare($containerConfig['version'] ?? '', '8.0', '>=')) {
-            throw new Exception(sprintf('PHP-%s: IonCube not supported for PHP 8.0 or higher.', $name));
-        }
-
-        if ($generalConfig['M2_EDITION'] === 'cloud') {
-            if (!isset($containerConfig['specificPackages']) ||
-                ($containerConfig['specificPackages']['calendar'] ?? false) === false) {
-                throw new Exception(sprintf(
-                    'ext-calendar is required for \'Cloud\' edition. Please enable specificPackages/calendar for PHP %s.',
-                    $generalConfig['PHP_VERSION']
-                ));
+        if ($containerConfig['flavour'] !== 'cli') {
+            if ($containerConfig['specificPackages']['grunt'] ?? false) {
+                throw new Exception(sprintf('PHP-%s: Grunt available only for cli containers.', $name));
             }
+        }
+        if (($containerConfig['specificPackages']['ioncube'] ?? false)
+            && (version_compare($containerConfig['version'] ?? '', '8.0', '=')
+            || version_compare($containerConfig['version'] ?? '', '8.4', '>='))) {
+            throw new Exception(
+                sprintf('PHP-%s: Ioncube not support this php version or support will be added later.', $name)
+            );
         }
     }
 }
