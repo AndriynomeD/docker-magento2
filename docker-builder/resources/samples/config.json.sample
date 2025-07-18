@@ -4,14 +4,14 @@
     "M2_VIRTUAL_HOSTS": "magento2.docker",
     "M2_DB_NAME": "magento2_database",
     "PHP_VERSION": "8.3",
+    "__note_edition__": "Available edition: community|enterprise|cloud|mage-os",
+    "M2_EDITION": "community",
     "M2_VERSION": "2.4.*",
     "M2_SOURCE_VOLUME": "./magento",
     "M2_INSTALL": {
       "BASE_URL": "http://magento2.docker/",
       "SECURE_BASE_URL": "https://magento2.docker/",
       "INSTALL_DB": "true",
-      "__note_edition__": "Available edition: community|enterprise|cloud|mage-os",
-      "EDITION": "community",
       "__note_use_sample_data": "Available options: true, false, venia",
       "USE_SAMPLE_DATA": "true",
       "ADMIN_EMAIL": "dummy@gmail.com",
@@ -105,6 +105,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -181,6 +182,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -253,6 +255,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -321,6 +324,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -393,6 +397,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -466,6 +471,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -539,6 +545,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -617,6 +624,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
@@ -776,6 +784,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-fpm/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"_enable_variables": true, "executable": true},
+        "bin/version_compare.sh": {"executable": false},
         "etc/postfix/config-google.cf": {},
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
