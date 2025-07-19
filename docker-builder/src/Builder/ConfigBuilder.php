@@ -23,8 +23,8 @@ class ConfigBuilder
     private const APP_DIR = __DIR__ . '/../../'; /* docker-builder folder */
     private const ROOT_DIR = self::APP_DIR . '../';  /* 1 level up from the docker-builder folder */
 
-    const CONFIG_FILEPATH = self::ROOT_DIR . 'config.json';
-    const TEMPLATE_DIR = self::APP_DIR . 'resources' . DIRECTORY_SEPARATOR . 'templates';
+    private const CONFIG_FILEPATH = self::ROOT_DIR . 'config.json';
+    private const TEMPLATE_DIR = self::APP_DIR . 'resources' . DIRECTORY_SEPARATOR . 'templates';
 
     const DEFAULT_EXECUTABLE_PERMISSIONS = 0755;
 

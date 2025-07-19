@@ -2,6 +2,7 @@
 
 ; Xdebug settings will only kick in if the Xdebug module is loaded
 
+[xdebug]
 {% if xdebugVersion == 'latest' or version_compare(xdebugVersion, '3.0', '>=') %}
 xdebug.mode = off
 
@@ -9,7 +10,7 @@ xdebug.mode = off
 xdebug.discover_client_host = 1
 {#xdebug.client_host = host.docker.internal#}
 xdebug.client_port = 9000
-{#xdebug.start_with_request = trigger#}
+xdebug.start_with_request = trigger
 xdebug.idekey = PHPSTORM
 
 ; Development settings
@@ -18,6 +19,7 @@ xdebug.show_local_vars = 1
 xdebug.max_nesting_level = 2000
 
 ; Profiler settings
+xdebug.trigger_value = "XDEBUG_PROFILE"
 xdebug.output_dir = /var/www/magento/var/profile
 xdebug.profiler_output_name = cachegrind.out.%t.%p
 
@@ -38,11 +40,14 @@ xdebug.max_nesting_level = 2000
 xdebug.coverage_enable = 0
 
 ; Profiler settings (commented until tested)
-{#xdebug.profiler_enable = 0#}
-{#xdebug.profiler_enable_trigger = 0#}
-{#xdebug.profiler_output_dir = /tmp#}
-{#xdebug.output_dir = /var/www/magento/var/profile#}
-{#xdebug.profiler_output_name = cachegrind.out.%t.%p#}
+xdebug.profiler_enable = 0
+xdebug.profiler_enable_trigger = 0
+xdebug.profiler_enable_trigger_value = "XDEBUG_PROFILE"
+xdebug.profiler_output_dir = /var/www/magento/var/profile
+xdebug.profiler_output_name = cachegrind.out.%t.%p
+; by default 0/0 but for 'profile' mode will be set to 4/1 (collect function params/collect return values)
+xdebug.collect_params = 0
+xdebug.collect_return = 0
 
 ; Trace settings (commented until tested)
 {#xdebug.auto_trace = 0#}

@@ -32,8 +32,8 @@ ARG PHP_VERSION={{ shortVersion }}
 {% include "phpContainers/includes/zip.twig" %}
 {% include "phpContainers/php-cli/includes/specific-packages-grunt.twig" %}
 {% include "phpContainers/php-cli/includes/composer.twig" %}
-{% include "phpContainers/includes/xdebug.twig" %}
 {% include "phpContainers/includes/mail-service.twig" %}
+{% include "phpContainers/includes/xdebug.twig" %}
 {% include "phpContainers/includes/version-specific-system-deps.twig" %}
 {% include "phpContainers/includes/version-specific-php-extensions.twig" %}
 {% include "phpContainers/includes/specific-packages-gd.twig" %}

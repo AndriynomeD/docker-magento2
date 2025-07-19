@@ -114,10 +114,18 @@ fi
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
 
 
+create_profile_dir() {
+    if [ ! -d "/var/www/magento/var/profile" ]; then
+        mkdir -p /var/www/magento/var/profile
+        chown www-data:www-data /var/www/magento/var/profile
+        chmod 755 /var/www/magento/var/profile
+    fi
+}
 {% if xdebugVersion == 'latest' or version_compare(xdebugVersion, '3.0', '>=') %}
 # Xdebug 3.0+ logic
 if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
     sed -i "s/^xdebug\.mode = .*/xdebug.mode = $PHP_XDEBUG_MODE/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    create_profile_dir
     echo "Xdebug mode set to: $PHP_XDEBUG_MODE"
 else
     sed -i "s/^xdebug\.mode = .*/xdebug.mode = off/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
@@ -129,7 +137,8 @@ if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
     # Reset all to 0 first
     sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.profiler_enable_trigger = .*/xdebug.profiler_enable_trigger = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     # sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     # sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
 
@@ -142,9 +151,21 @@ if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
     if echo "$PHP_XDEBUG_MODE" | grep -q "coverage"; then
         sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     fi
-    # if echo "$PHP_XDEBUG_MODE" | grep -q "profile"; then
-    #     sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # fi
+    if echo "$PHP_XDEBUG_MODE" | grep -q "profile"; then
+        if [ "$PHP_XDEBUG_MODE" = "profile" ]; then
+            sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+            echo "Profiler: Always ON (pure profile mode)"
+        else
+            sed -i "s/^xdebug\.profiler_enable_trigger = .*/xdebug.profiler_enable_trigger = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+            echo "Profiler: Trigger-based (combined mode)"
+        fi
+        sed -i "s/^xdebug\.collect_params = .*/xdebug.collect_params = 4/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+        sed -i "s/^xdebug\.collect_return = .*/xdebug.collect_return = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+        create_profile_dir
+    else
+        sed -i "s/^xdebug\.collect_params = .*/xdebug.collect_params = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+        sed -i "s/^xdebug\.collect_return = .*/xdebug.collect_return = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    fi
     # if echo "$PHP_XDEBUG_MODE" | grep -q "trace"; then
     #     sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     # fi
@@ -157,9 +178,13 @@ else
     # Default: disable all features
     sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.profiler_enable_trigger = .*/xdebug.profiler_enable_trigger = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     # sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     # sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    
+    sed -i "s/^xdebug\.collect_params = .*/xdebug.collect_params = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+    sed -i "s/^xdebug\.collect_return = .*/xdebug.collect_return = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
     echo "Xdebug is disabled (mode=off)"
 fi
 {% endif %}
