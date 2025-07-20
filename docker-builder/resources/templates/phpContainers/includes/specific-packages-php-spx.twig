@@ -1,0 +1,24 @@
+{% if specificPackages.spx is defined and specificPackages.spx != false %}
+###########################################################################
+# SPX - A simple profiler for PHP
+###########################################################################
+
+ARG PHP_SPX_VERSION={{ (specificPackages.spx != true) ? specificPackages.spx : 'latest' }}
+ENV PHP_SPX_VERSION=${PHP_SPX_VERSION}
+
+RUN if [ "${PHP_SPX_VERSION}" = "latest" ]; then \
+        git clone --depth=1 https://github.com/NoiseByNorthwest/php-spx.git /usr/lib/php-spx \
+        && cd /usr/lib/php-spx \
+        && git checkout master; \
+    else \
+        git clone https://github.com/NoiseByNorthwest/php-spx.git /usr/lib/php-spx \
+        && cd /usr/lib/php-spx \
+        && git checkout tags/${PHP_SPX_VERSION}; \
+    fi \
+    && phpize \
+    && ./configure \
+    && make \
+    && make install;
+COPY etc/spx.ini /usr/local/etc/php/conf.d/zz-spx-settings.ini
+
+{% endif %}

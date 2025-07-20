@@ -4,5 +4,5 @@
 
 {% set xdebugVersionFlag = (xdebugVersion == 'latest' or xdebugVersion == '') ? '' : '-' ~ xdebugVersion %}
 RUN pecl install -o -f xdebug{{ xdebugVersionFlag }} && rm -rf /tmp/pear && docker-php-ext-enable xdebug
-ADD etc/php-xdebug.ini /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
+COPY etc/php-xdebug.ini /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
 

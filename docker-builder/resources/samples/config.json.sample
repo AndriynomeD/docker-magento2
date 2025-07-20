@@ -67,7 +67,8 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libmcrypt-dev"
@@ -76,11 +77,12 @@
         "mcrypt"
       ],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.8.1"
@@ -111,6 +113,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -123,7 +126,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "2.8.1"
     },
@@ -144,7 +148,8 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libmcrypt-dev"
@@ -153,11 +158,12 @@
         "mcrypt"
       ],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
@@ -188,6 +194,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -200,7 +207,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -221,16 +229,18 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [],
       "phpExtensions": [],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
@@ -261,6 +271,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [],
@@ -269,7 +280,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -290,16 +302,18 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [],
       "phpExtensions": [],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "2.9.8"
@@ -330,6 +344,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [],
@@ -338,7 +353,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "2.9.8"
     },
@@ -359,21 +375,23 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libonig-dev"
       ],
       "phpExtensions": [],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
-      "xdebugVersion": "2.9.8"
+      "xdebugVersion": "3.1.6"
     },
     "7.4-mcs": {
       "version": "7.4",
@@ -403,6 +421,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -413,9 +432,10 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
-      "xdebugVersion": "2.9.8"
+      "xdebugVersion": "3.1.6"
     },
     "8.0-cli": {
       "version": "8.0",
@@ -434,17 +454,19 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libonig-dev"
       ],
       "phpExtensions": [],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "3.1.2"
@@ -477,6 +499,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -486,7 +509,8 @@
       "specificPackages": {
         "gd": true,
         "imagick": true,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "3.1.2"
     },
@@ -507,18 +531,20 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libonig-dev"
       ],
       "phpExtensions": [],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "3.1.2"
@@ -551,6 +577,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -561,7 +588,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "3.1.2"
     },
@@ -582,7 +610,8 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libonig-dev"
@@ -591,11 +620,12 @@
         "ftp"
       ],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "3.3.1"
@@ -630,6 +660,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -642,7 +673,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "3.3.1"
     },
@@ -663,7 +695,8 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libonig-dev"
@@ -672,11 +705,12 @@
         "ftp"
       ],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "3.4.3"
@@ -709,6 +743,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -721,7 +756,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "3.4.3"
     },
@@ -742,7 +778,8 @@
         "etc/postfix/config-mailpit.cf": {},
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-cli.ini": {},
-        "etc/php-xdebug.ini": {"_enable_variables": true}
+        "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {}
       },
       "packages": [
         "libonig-dev"
@@ -751,11 +788,12 @@
         "ftp"
       ],
       "specificPackages": {
+        "grunt": true,
         "gd": true,
         "imagick": true,
         "ioncube": false,
         "ssh2": false,
-        "grunt": true
+        "spx": false
       },
       "composerVersion": "latest",
       "xdebugVersion": "3.4.3"
@@ -790,6 +828,7 @@
         "etc/postfix/config-mailtrap.cf": {},
         "etc/php-fpm.ini": {},
         "etc/php-xdebug.ini": {"_enable_variables": true},
+        "etc/spx.ini": {},
         "etc/php-fpm.conf": {}
       },
       "packages": [
@@ -802,7 +841,8 @@
         "gd": true,
         "imagick": true,
         "ioncube": false,
-        "ssh2": false
+        "ssh2": false,
+        "spx": false
       },
       "xdebugVersion": "3.4.3"
     }
