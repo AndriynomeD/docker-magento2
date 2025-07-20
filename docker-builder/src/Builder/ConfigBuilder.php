@@ -328,15 +328,15 @@ class ConfigBuilder
     protected function getContainersBaseDirPath(): string
     {
         return $this->isDryRun
-            ? $this->getRealPath(self::ROOT_DIR) . 'containers-dry-run'
-            : $this->getRealPath(self::ROOT_DIR) . 'containers';
+            ? $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'containers-dry-run'
+            : $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'containers';
     }
 
     protected function getEnvFilesDirPath(): string
     {
         return $this->isDryRun
-            ? $this->getRealPath(self::ROOT_DIR) . 'envs-dry-run'
-            : $this->getRealPath(self::ROOT_DIR) . 'envs';
+            ? $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'envs-dry-run'
+            : $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'envs';
     }
 
     protected function getComposeFileName(): string
