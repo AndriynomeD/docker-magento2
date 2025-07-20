@@ -3,16 +3,16 @@
 #
 #version: "3.9"
 services:
-{% include "compose/compose.varnish.twig" %}
-{% include "compose/compose.nginx.twig" %}
-{% include "compose/compose.fpm.twig" %}
-{% include "compose/compose.db.twig" %}
-{% include "compose/compose.cli.twig" %}
-{% include "compose/compose.cron.twig" %}
-{% include "compose/compose.mcs.twig" %}
-{% include "compose/compose.search_engine.internal.twig" %}
-{% include "compose/compose.redis.twig" %}
-{% include "compose/compose.rabbitmq.twig" %}
+{% include "compose/compose.varnish.yaml.twig" %}
+{% include "compose/compose.nginx.yaml.twig" %}
+{% include "compose/compose.fpm.yaml.twig" %}
+{% include "compose/compose.db.yaml.twig" %}
+{% include "compose/compose.cli.yaml.twig" %}
+{% include "compose/compose.cron.yaml.twig" %}
+{% include "compose/compose.mcs.yaml.twig" %}
+{% include "compose/compose.search_engine.internal.yaml.twig" %}
+{% include "compose/compose.redis.yaml.twig" %}
+{% include "compose/compose.rabbitmq.yaml.twig" %}
 networks:
   nginx-proxy:
     external: true
