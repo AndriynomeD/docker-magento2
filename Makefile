@@ -1,49 +1,19 @@
-.PHONY: copy-configs clean-dry-run build-dry-run
+.PHONY: copy-configs build build-dry-run clean-dry-run
+
+DOCKER_BUILDER_DIR := docker-builder
+DOCKER_BUILDER_CMD := $(DOCKER_BUILDER_DIR)/bin/console
 
 # Copy sample files with overwrite confirmation
 copy-configs:
-	@if [ -f "./envs/composer.env" ]; then \
-		read -p "File ./envs/composer.env already exists. Overwrite? (y/n) " yn; \
-		if [ "$$yn" = "y" ]; then \
-			cp -f ./docker-builder/resources/samples/envs/composer.env.sample ./envs/composer.env; \
-			echo "File ./envs/composer.env overwritten."; \
-		else \
-			echo "File ./envs/composer.env left unchanged."; \
-		fi; \
-	else \
-		mkdir -p ./envs && cp ./docker-builder/resources/samples/envs/composer.env.sample ./envs/composer.env; \
-		echo "File ./envs/composer.env created."; \
-	fi
+	_interactive_copy_configs
 
-	@if [ -f "./envs/global.env" ]; then \
-		read -p "File ./envs/global.env already exists. Overwrite? (y/n) " yn; \
-		if [ "$$yn" = "y" ]; then \
-			cp -f ./docker-builder/resources/samples/envs/global.env.sample ./envs/global.env; \
-			echo "File ./envs/global.env overwritten."; \
-		else \
-			echo "File ./envs/global.env left unchanged."; \
-		fi; \
-	else \
-		mkdir -p ./envs && cp ./docker-builder/resources/samples/envs/global.env.sample ./envs/global.env; \
-		echo "File ./envs/global.env created."; \
-	fi
+# Build docker environtment based on configuration
+build: _check_dependencies _auto_copy_configs _check_configs
+	@$(DOCKER_BUILDER_CMD) build $(filter-out $@,$(MAKECMDGOALS))
 
-	@if [ -f "./config.json" ]; then \
-		read -p "File ./config.json already exists. Overwrite? (y/n) " yn; \
-		if [ "$$yn" = "y" ]; then \
-			cp -f ./docker-builder/resources/samples/config.json.sample ./config.json; \
-			echo "File ./config.json overwritten."; \
-		else \
-			echo "File ./config.json left unchanged."; \
-		fi; \
-	else \
-		cp ./docker-builder/resources/samples/config.json.sample ./config.json; \
-		echo "File ./config.json created."; \
-	fi
-
-# Run dry build process
-build-dry-run:
-	php docker-builder-run --dry-run
+# Dry-run build docker environtment based on configuration
+build-dry-run: _check_dependencies _auto_copy_configs _check_configs
+	@$(DOCKER_BUILDER_CMD) build --dry-run
 
 # Remove dry-run files and directories (with confirmation)
 clean-dry-run:
@@ -59,5 +29,92 @@ clean-dry-run:
 	else \
 		echo "No dry-run files/directories to delete."; \
 	fi
+
+_auto_copy_configs:
+	@if [ ! -f "./envs/composer.env" ]; then \
+		mkdir -p ./envs && cp $(DOCKER_BUILDER_DIR)/resources/samples/envs/composer.env.sample ./envs/composer.env; \
+		echo "File ./envs/composer.env created."; \
+	fi; \
+	if [ ! -f "./envs/global.env" ]; then \
+		mkdir -p ./envs && cp $(DOCKER_BUILDER_DIR)/resources/samples/envs/global.env.sample ./envs/global.env; \
+		echo "File ./envs/global.env created."; \
+	fi; \
+	if [ ! -f "./config.json" ]; then \
+		cp $(DOCKER_BUILDER_DIR)/resources/samples/config.json.sample ./config.json; \
+		echo "File ./config.json created."; \
+	fi
+
+_interactive_copy_configs:
+	@if [ -f "./envs/composer.env" ]; then \
+		read -p "File ./envs/composer.env already exists. Overwrite? (y/n) " yn; \
+		if [ "$$yn" = "y" ]; then \
+			cp -f $(DOCKER_BUILDER_DIR)/resources/samples/envs/composer.env.sample ./envs/composer.env; \
+			echo "File ./envs/composer.env overwritten."; \
+		else \
+			echo "File ./envs/composer.env left unchanged."; \
+		fi; \
+	else \
+		mkdir -p ./envs && cp $(DOCKER_BUILDER_DIR)/resources/samples/envs/composer.env.sample ./envs/composer.env; \
+		echo "File ./envs/composer.env created."; \
+	fi
+
+	@if [ -f "./envs/global.env" ]; then \
+		read -p "File ./envs/global.env already exists. Overwrite? (y/n) " yn; \
+		if [ "$$yn" = "y" ]; then \
+			cp -f $(DOCKER_BUILDER_DIR)/resources/samples/envs/global.env.sample ./envs/global.env; \
+			echo "File ./envs/global.env overwritten."; \
+		else \
+			echo "File ./envs/global.env left unchanged."; \
+		fi; \
+	else \
+		mkdir -p ./envs && cp $(DOCKER_BUILDER_DIR)/resources/samples/envs/global.env.sample ./envs/global.env; \
+		echo "File ./envs/global.env created."; \
+	fi
+
+	@if [ -f "./config.json" ]; then \
+		read -p "File ./config.json already exists. Overwrite? (y/n) " yn; \
+		if [ "$$yn" = "y" ]; then \
+			cp -f $(DOCKER_BUILDER_DIR)/resources/samples/config.json.sample ./config.json; \
+			echo "File ./config.json overwritten."; \
+		else \
+			echo "File ./config.json left unchanged."; \
+		fi; \
+	else \
+		cp $(DOCKER_BUILDER_DIR)/resources/samples/config.json.sample ./config.json; \
+		echo "File ./config.json created."; \
+	fi
+
+_check_dependencies:
+	@if [ ! -f "$(DOCKER_BUILDER_DIR)/composer.json" ]; then \
+		echo "Error: composer.json not found in $(DOCKER_BUILDER_DIR)"; \
+		exit 1; \
+	fi; \
+	if [ ! -f "$(DOCKER_BUILDER_DIR)/vendor/autoload.php" ]; then \
+		echo "Installing composer dependencies in $(DOCKER_BUILDER_DIR)..."; \
+		cd $(DOCKER_BUILDER_DIR) && composer install 2>&1; \
+		if [ $$? -ne 0 ]; then \
+			echo "Error: Composer install failed"; \
+			exit $$?; \
+		fi; \
+		echo "Composer install completed successfully."; \
+	fi
+
+_check_configs:
+	@if [ ! -f "./envs/global.env" ]; then \
+		echo "Error: ./envs/global.env not found. Please run 'make copy-configs'"; \
+		exit 1; \
+	fi; \
+	if [ ! -f "./envs/composer.env" ]; then \
+		echo "Error: ./envs/composer.env not found. Please run 'make copy-configs'"; \
+		exit 1; \
+	fi; \
+	if [ ! -f "./config.json" ]; then \
+		echo "Error: ./config.json not found. Please run 'make copy-configs'"; \
+		exit 1; \
+	fi
+
+# rule patter for cmd args
+%:
+	@:
 
 

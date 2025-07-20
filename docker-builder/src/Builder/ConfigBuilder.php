@@ -80,7 +80,7 @@ class ConfigBuilder
     private function loadAndProcessConfig(): void
     {
         try {
-            $rawConfig = $this->configLoader->loadConfig(self::CONFIG_FILEPATH);
+            $rawConfig = $this->configLoader->loadConfig($this->getRealPath(self::CONFIG_FILEPATH));
             $this->configValidator->validate($rawConfig);
             $this->config = $this->configGenerator->generate($rawConfig);
             $this->logger->success('Configuration loaded and processed successfully', OutputInterface::VERBOSITY_VERBOSE);
@@ -219,7 +219,7 @@ class ConfigBuilder
         $commonVariables = $generalConfig;
         foreach ($configFiles as $filename => $fileConfig) {
             $fileConfig['templateSubDir'] = '';
-            $fileConfig['destinationDir'] = self::ROOT_DIR;
+            $fileConfig['destinationDir'] = $this->getRealPath(self::ROOT_DIR);
             $this->buildFile($filename, $fileConfig, $commonVariables);
         }
 
@@ -315,6 +315,11 @@ class ConfigBuilder
         }
     }
 
+    protected function getRealPath(string $path): string
+    {
+        return realpath($path);
+    }
+
     protected function getContainersDirPath($containersDir): string
     {
         return $this->getContainersBaseDirPath() . DIRECTORY_SEPARATOR . $containersDir;
@@ -323,15 +328,15 @@ class ConfigBuilder
     protected function getContainersBaseDirPath(): string
     {
         return $this->isDryRun
-            ? self::ROOT_DIR . 'containers-dry-run'
-            : self::ROOT_DIR . 'containers';
+            ? $this->getRealPath(self::ROOT_DIR) . 'containers-dry-run'
+            : $this->getRealPath(self::ROOT_DIR) . 'containers';
     }
 
     protected function getEnvFilesDirPath(): string
     {
         return $this->isDryRun
-            ? self::ROOT_DIR . 'envs-dry-run'
-            : self::ROOT_DIR . 'envs';
+            ? $this->getRealPath(self::ROOT_DIR) . 'envs-dry-run'
+            : $this->getRealPath(self::ROOT_DIR) . 'envs';
     }
 
     protected function getComposeFileName(): string
