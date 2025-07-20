@@ -1,0 +1,23 @@
+{# ###########################################################################
+   # PHP-FPM
+   ########################################################################### #}
+  fpm:
+    hostname: fpm.{{ M2_PROJECT }}
+    build:
+      context: containers/php/{{ PHP_VERSION }}-fpm/
+    ports:
+      - 9000
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - {{ M2_SOURCE_VOLUME }}:/var/www/magento
+    env_file:
+      - ./envs/global.env
+    networks:
+      default:
+      mail-services:
+{% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'external' %}
+      search-engine-net:
+{% endif %}
+

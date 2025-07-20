@@ -1,0 +1,27 @@
+{# ###########################################################################
+   # Nginx
+   ########################################################################### #}
+  web:
+    hostname: web.{{ M2_PROJECT }}
+    build:
+      context: containers/nginx/
+    ports:
+      - 80
+    depends_on:
+      fpm:
+       condition: service_started #service_healthy
+    volumes:
+      - {{ M2_SOURCE_VOLUME }}:/var/www/magento
+    env_file:
+      - ./envs/global.env
+{% if not DOCKER_SERVICES.varnish %}
+    environment:
+      - VIRTUAL_HOST={{ M2_VIRTUAL_HOSTS }}
+      - VIRTUAL_PORT=80
+      - HTTPS_METHOD=noredirect
+      - CERT_NAME={{ M2_VIRTUAL_HOSTS|split(',')|first|trim }}
+{% endif %}
+    networks:
+      default:
+      nginx-proxy:
+

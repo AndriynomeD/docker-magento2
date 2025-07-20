@@ -1,0 +1,68 @@
+{# ###########################################################################
+   # Internal Elasticsearch/Opensearch
+   ########################################################################### #}
+{% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'internal' %}
+{% if DOCKER_SERVICES.search_engine.TYPE == 'elasticsearch' %}
+  elasticsearch:
+    hostname: elasticsearch.{{ M2_PROJECT }}
+    build:
+      context: containers/search_engine/elasticsearch/
+    logging:
+      driver: none
+    ports:
+      - 9200
+    volumes:
+      - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1012m -Xmx1012m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -s -u 'admin:admin' -k http://localhost:9200/_cluster/health | grep -E -q '\"status\":\"(green|yellow)\"' || exit 1"
+      ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+{% elseif DOCKER_SERVICES.search_engine.TYPE == 'opensearch' %}
+  opensearch:
+    hostname: opensearch.{{ M2_PROJECT }}
+    build:
+      context: containers/search_engine/opensearch/
+#    logging:
+#      driver: none # json-file|none|...
+    ports:
+      - 9200
+    volumes:
+      - ./volumes/opensearch2:/usr/share/opensearch/data
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+      - "ES_JAVA_OPTS=-Xms1012m -Xmx1012m -Dlog4j2.formatMsgNoLookups=true"
+      - "OPENSEARCH_JAVA_OPTS=-Xms1012m -Xmx1012m -Dlog4j2.formatMsgNoLookups=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -s -u 'admin:admin' -k http://localhost:9200/_cluster/health | grep -E -q '\"status\":\"(green|yellow)\"' || exit 1"
+      ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+{% endif %}
+{% endif %}

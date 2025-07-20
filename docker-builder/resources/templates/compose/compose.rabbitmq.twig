@@ -1,0 +1,24 @@
+{# ###########################################################################
+   # RabbitMQ
+   ########################################################################### #}
+{% if DOCKER_SERVICES.rabbitmq %}
+  rabbitmq:
+    hostname: rabbitmq.{{ M2_PROJECT }}
+    image: rabbitmq:3.8.9-management
+    ports:
+      - 4369
+      - 5671
+      - 5672
+      - 15672
+      - 25672
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq_user
+      - RABBITMQ_DEFAULT_PASS=rabbitmq_pass
+      - RABBITMQ_DEFAULT_VHOST=rabbitmq
+#    healthcheck:
+#      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+
+{% endif %}

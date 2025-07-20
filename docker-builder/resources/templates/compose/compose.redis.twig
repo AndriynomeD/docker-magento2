@@ -1,0 +1,16 @@
+{# ###########################################################################
+   # Redis
+   ########################################################################### #}
+{% if DOCKER_SERVICES.redis %}
+  redis:
+    hostname: redis.{{ M2_PROJECT }}
+    image: redis:7.2
+    ports:
+      - 6379
+#    healthcheck:
+#      test: 'redis-cli ping || exit 1'
+#      interval: 30s
+#      timeout: 30s
+#      retries: 3
+
+{% endif %}

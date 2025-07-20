@@ -1,0 +1,32 @@
+{# ###########################################################################
+   # DATABASE
+   ########################################################################### #}
+  db:
+    hostname: db.{{ M2_PROJECT }}
+    image: {{ DOCKER_SERVICES.database.IMAGE }}
+    ports:
+      - 3306
+    volumes:
+      - ./mysql_volumes/{{ DOCKER_SERVICES.database.VOLUME }}:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE={{ M2_DB_NAME }}
+      - MYSQL_USER=magento2
+      - MYSQL_PASSWORD=magento2
+      - TERM=meh
+    healthcheck:
+{% if DOCKER_SERVICES.database.TYPE == 'mariadb' and version_compare(DOCKER_SERVICES.database.VERSION, '11.0', '>=') %}
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+{% elseif DOCKER_SERVICES.database.TYPE == 'mariadb' %}
+      test: 'mysqladmin ping -h localhost -umagento2 -pmagento2'
+{% elseif DOCKER_SERVICES.database.TYPE == 'mysql' or DOCKER_SERVICES.database.TYPE == 'percona' %}
+      test: 'mysqladmin ping -h localhost -umagento2 -pmagento2'
+{% endif %}
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10s
+    networks:
+      default:
+      databases:
+

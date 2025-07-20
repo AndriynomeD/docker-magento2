@@ -1,0 +1,18 @@
+{# ###########################################################################
+   # Magento Coding Standard
+   ########################################################################### #}
+{% if DOCKER_SERVICES['magento-coding-standard'] %}
+  mcs:
+    hostname: mcs.{{ M2_PROJECT }}
+    build:
+      context: containers/php/{{ PHP_VERSION }}-mcs/
+    volumes:
+      - ~/.composer/cache:/root/.composer/cache
+      - ./magento-coding-standard:/var/www/html
+    env_file:
+      - ./envs/global.env
+      - ./envs/composer.env
+    networks:
+      default:
+
+{% endif %}

@@ -1,0 +1,46 @@
+{# ###########################################################################
+   # CRON
+   ########################################################################### #}
+{% if DOCKER_SERVICES.cron %}
+  cron:
+    hostname: cron.{{ M2_PROJECT }}
+    build:
+      context: containers/php/{{ PHP_VERSION }}-cli/
+    depends_on:
+      db:
+        condition: service_healthy
+{% if DOCKER_SERVICES.redis %}
+      redis:
+        condition: service_started #service_healthy
+{% endif %}
+{% if DOCKER_SERVICES.rabbitmq %}
+      rabbitmq:
+        condition: service_started #service_healthy
+{% endif %}
+{% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'internal' %}
+{% if DOCKER_SERVICES.search_engine.TYPE == 'elasticsearch' %}
+      elasticsearch:
+        condition: service_started #service_healthy
+{% endif %}
+{% if DOCKER_SERVICES.search_engine.TYPE == 'opensearch' %}
+      opensearch:
+        condition: service_started #service_healthy
+{% endif %}
+{% endif %}
+    command: run-cron
+    volumes:
+      - {{ M2_SOURCE_VOLUME }}:/var/www/magento
+    env_file:
+      - ./envs/global.env
+    environment:
+{# for correct cron setup according to M2_VERSION #}
+      M2SETUP_EDITION: {{ M2_EDITION }}
+      M2SETUP_VERSION: {{ M2_VERSION }}
+    networks:
+      default:
+      mail-services:
+{% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'external' %}
+      search-engine-net:
+{% endif %}
+
+{% endif %}
