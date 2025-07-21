@@ -7,30 +7,7 @@ source /usr/local/bin/version_compare.sh
 #==============================================================================
 # BLOCK: UID/GID SYNCHRONIZATION
 #==============================================================================
-# If asked, we'll ensure that the www-data is set to the same uid/gid as the
-# mounted volume. This works around permission issues with virtualbox shared
-# folders.
-if [[ "$UPDATE_UID_GID" = "true" ]]; then
-    echo "Updating www-data uid and gid"
-
-    DOCKER_UID=`stat -c "%u" $MAGENTO_ROOT`
-    DOCKER_GID=`stat -c "%g" $MAGENTO_ROOT`
-
-    INCUMBENT_USER=`getent passwd $DOCKER_UID | cut -d: -f1`
-    INCUMBENT_GROUP=`getent group $DOCKER_GID | cut -d: -f1`
-
-    echo "Docker: uid = $DOCKER_UID, gid = $DOCKER_GID"
-    echo "Incumbent: user = $INCUMBENT_USER, group = $INCUMBENT_GROUP"
-
-    # Once we've established the ids and incumbent ids then we need to free them
-    # up (if necessary) and then make the change to www-data.
-    [ ! -z "${INCUMBENT_USER}" ] && usermod -u 99$DOCKER_UID $INCUMBENT_USER
-    usermod -u $DOCKER_UID www-data
-
-    [ ! -z "${INCUMBENT_GROUP}" ] && groupmod -g 99$DOCKER_GID $INCUMBENT_GROUP
-    groupmod -g $DOCKER_GID www-data
-fi
-
+{% include "phpContainers/docker-entrypoint/entrypoint.update-uid-gid.sh.twig" %}
 #==============================================================================
 # BLOCK: MAGENTO DIRECTORY SETUP
 #==============================================================================
@@ -40,71 +17,7 @@ chown www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 #==============================================================================
 # BLOCK: SENDMAIL CONFIGURATION
 #==============================================================================
-MAIL_SEND_ENABLED=${MAIL_SEND_ENABLED:-false}
-MAIL_SEND_PROVIDER=${MAIL_SEND_PROVIDER:-mailpit-shared}
-
-restore_original_config() {
-    if [ ! -f /etc/postfix/main.cf.original ]; then
-        cp /etc/postfix/main.cf /etc/postfix/main.cf.original
-    fi
-    cp /etc/postfix/main.cf.original /etc/postfix/main.cf
-}
-
-apply_config_without_duplicates() {
-    # SMART CAT FUNCTION - delete duplicates rows from destination file (main.cf)
-    # cat /etc/postfix/config.cf >> /etc/postfix/main.cf
-    local config_file="$1"
-    local main_cf="/etc/postfix/main.cf"
-
-    # Read configuration from config_file & apply it
-    while IFS= read -r line; do
-        if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
-            continue
-        fi
-
-        param_name=$(echo "$line" | cut -d'=' -f1 | xargs)
-        if [[ -n "$param_name" ]]; then
-            # Delete param from main.cf if exists in config_file
-            sed -i "/^${param_name}[[:space:]]*=/d" "$main_cf"
-            # Add param from config_file
-            echo "$line" >> "$main_cf"
-        fi
-    done < "$config_file"
-}
-
-if [ "$MAIL_SEND_ENABLED" == "true" ]; then
-    echo "Configuring send mail with provider: $MAIL_SEND_PROVIDER"
-
-    case "$MAIL_SEND_PROVIDER" in
-        "postfix-mailtrap")
-            MAIL_SEND_SMTP_CREDENTIALS=${MAIL_SEND_SMTP_CREDENTIALS:?MAIL_SEND_SMTP_CREDENTIALS is required for choosen MAIL_SEND_PROVIDER}
-            cp /etc/postfix/config-mailtrap.cf /etc/postfix/config.cf
-            echo "${MAIL_SEND_SMTP_CREDENTIALS}" > /etc/postfix/sasl_passwd
-            postmap /etc/postfix/sasl_passwd
-            ;;
-        "postfix-google")
-            MAIL_SEND_SMTP_CREDENTIALS=${MAIL_SEND_SMTP_CREDENTIALS:?MAIL_SEND_SMTP_CREDENTIALS is required for choosen MAIL_SEND_PROVIDER}
-            cp /etc/postfix/config-google.cf /etc/postfix/config.cf
-            echo "${MAIL_SEND_SMTP_CREDENTIALS}" > /etc/postfix/sasl_passwd
-            postmap /etc/postfix/sasl_passwd
-            ;;
-        "mailpit-shared")
-            cp /etc/postfix/config-mailpit.cf /etc/postfix/config.cf
-            echo "" > /etc/postfix/sasl_passwd
-            ;;
-    esac
-
-    restore_original_config
-    apply_config_without_duplicates /etc/postfix/config.cf
-    /etc/init.d/postfix restart 2>&1 | grep -v "^\.$" || true
-
-    echo "Send mail configuration applied successfully"
-else
-    echo "Mail sending is disabled (MAIL_SEND_ENABLED=false)"
-
-    restore_original_config
-    /etc/init.d/postfix stop 2>&1 | grep -v "^\.$" || true
-fi
+{% include "phpContainers/docker-entrypoint/entrypoint.mail-service.sh.twig" %}
 
 #==============================================================================
 # BLOCK: PHP CONFIGURATION
@@ -113,135 +26,12 @@ fi
 [ ! -z "${PHP_MEMORY_LIMIT}" ] && sed -i "s/!PHP_MEMORY_LIMIT!/${PHP_MEMORY_LIMIT}/" /usr/local/etc/php/conf.d/zz-magento.ini
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
 
+{% include "phpContainers/docker-entrypoint/entrypoint.xdebug.sh.twig" %}
+{% include "phpContainers/docker-entrypoint/entrypoint.newrelic.sh.twig" %}
 
-create_profile_dir() {
-    if [ ! -d "/var/www/magento/var/profile" ]; then
-        mkdir -p /var/www/magento/var/profile
-        chown www-data:www-data /var/www/magento/var/profile
-        chmod 755 /var/www/magento/var/profile
-    fi
-}
-{% if xdebugVersion == 'latest' or version_compare(xdebugVersion, '3.0', '>=') %}
-# Xdebug 3.0+ logic
-if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
-    sed -i "s/^xdebug\.mode = .*/xdebug.mode = $PHP_XDEBUG_MODE/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    create_profile_dir
-    echo "Xdebug mode set to: $PHP_XDEBUG_MODE"
-else
-    sed -i "s/^xdebug\.mode = .*/xdebug.mode = off/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    echo "Xdebug is disabled (mode=off)"
-fi
-{% else %}
-# Xdebug 2.x logic (part of logic commented until tested)
-if [ -n "$PHP_XDEBUG_MODE" ] && [ "$PHP_XDEBUG_MODE" != "off" ]; then
-    # Reset all to 0 first
-    sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.profiler_enable_trigger = .*/xdebug.profiler_enable_trigger = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-
-    if echo "$PHP_XDEBUG_MODE" | grep -q "debug"; then
-        sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    fi
-    if echo "$PHP_XDEBUG_MODE" | grep -q "develop"; then
-        sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    fi
-    if echo "$PHP_XDEBUG_MODE" | grep -q "coverage"; then
-        sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    fi
-    if echo "$PHP_XDEBUG_MODE" | grep -q "profile"; then
-        if [ "$PHP_XDEBUG_MODE" = "profile" ]; then
-            sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-            echo "Profiler: Always ON (pure profile mode)"
-        else
-            sed -i "s/^xdebug\.profiler_enable_trigger = .*/xdebug.profiler_enable_trigger = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-            echo "Profiler: Trigger-based (combined mode)"
-        fi
-        sed -i "s/^xdebug\.collect_params = .*/xdebug.collect_params = 4/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-        sed -i "s/^xdebug\.collect_return = .*/xdebug.collect_return = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-        create_profile_dir
-    else
-        sed -i "s/^xdebug\.collect_params = .*/xdebug.collect_params = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-        sed -i "s/^xdebug\.collect_return = .*/xdebug.collect_return = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    fi
-    # if echo "$PHP_XDEBUG_MODE" | grep -q "trace"; then
-    #     sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # fi
-    # if echo "$PHP_XDEBUG_MODE" | grep -q "gcstats"; then
-    #     sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 1/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # fi
-
-    echo "Xdebug mode set to: $PHP_XDEBUG_MODE"
-else
-    # Default: disable all features
-    sed -i "s/^xdebug\.remote_enable = .*/xdebug.remote_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.coverage_enable = .*/xdebug.coverage_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.profiler_enable = .*/xdebug.profiler_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.profiler_enable_trigger = .*/xdebug.profiler_enable_trigger = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # sed -i "s/^xdebug\.auto_trace = .*/xdebug.auto_trace = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    # sed -i "s/^xdebug\.gc_stats_enable = .*/xdebug.gc_stats_enable = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    
-    sed -i "s/^xdebug\.collect_params = .*/xdebug.collect_params = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    sed -i "s/^xdebug\.collect_return = .*/xdebug.collect_return = 0/" /usr/local/etc/php/conf.d/zz-xdebug-settings.ini
-    echo "Xdebug is disabled (mode=off)"
-fi
-{% endif %}
-
-{% if flavour == 'cli' %}
-#==============================================================================
-# BLOCK: MAGENTO CRON SETUP (CLI only)
-#==============================================================================
-CRON_LOG=/var/log/cron.log
-
-# Setup Magento cron
-echo "#~ MAGENTO START c5f9e5ed71cceaabc4d4fd9b3e827a2b" > /etc/cron.d/magento
-if { [ "$M2_EDITION" != "mage-os" ] && version_compare "$M2_VERSION" ">=" "2.3.7"; } \
-    || [ "$M2_EDITION" = "mage-os" ]; then
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
-else
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento cron:run 2>&1 | grep -v \"Ran jobs by schedule\" >> ${MAGENTO_ROOT}/var/log/magento.cron.log" >> /etc/cron.d/magento
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/update/cron.php >> ${MAGENTO_ROOT}/var/log/update.cron.log" >> /etc/cron.d/magento
-  echo "* * * * * www-data /usr/local/bin/php ${MAGENTO_ROOT}/bin/magento setup:cron:run >> ${MAGENTO_ROOT}/var/log/setup.cron.log" >> /etc/cron.d/magento
-fi
-echo "#~ MAGENTO END c5f9e5ed71cceaabc4d4fd9b3e827a2b" >> /etc/cron.d/magento
-
-# Get rsyslog running for cron output
-touch $CRON_LOG
-#echo "cron.* $CRON_LOG" > /etc/rsyslog.d/cron.conf
-#service rsyslog start
-
-{% endif %}
-{% if flavour == 'cli' %}
-#==============================================================================
-# BLOCK: DOCKER HOST REGISTRATION FOR DEBUGGER (CLI only)
-#==============================================================================
-# host registration for use in the debugger configuration (remote_host for cli)
-HOST_DOMAIN="host.docker.internal"
-ping -q -c1 HOST_DOMAIN > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-  HOST_IP=$(ip route | awk 'NR==1 {print $3}')
-  echo -e "$HOST_IP\t$HOST_DOMAIN" >> /etc/hosts
-fi
-
-{% endif %}
-{% if flavour == 'cli' %}
-#==============================================================================
-# BLOCK: COMPOSER CONFIGURATION (CLI only)
-#==============================================================================
-[ ! -z "${COMPOSER_GITHUB_TOKEN}" ] && \
-    composer config --global github-oauth.github.com $COMPOSER_GITHUB_TOKEN
-
-[ ! -z "${COMPOSER_MAGENTO_USERNAME}" ] && \
-    composer config --global http-basic.repo.magento.com \
-        $COMPOSER_MAGENTO_USERNAME $COMPOSER_MAGENTO_PASSWORD
-
-[ ! -z "${COMPOSER_BITBUCKET_KEY}" ] && [ ! -z "${COMPOSER_BITBUCKET_SECRET}" ] && \
-    composer config --global bitbucket-oauth.bitbucket.org $COMPOSER_BITBUCKET_KEY $COMPOSER_BITBUCKET_SECRET
-
-{% endif %}
-
+{% include "phpContainers/docker-entrypoint/entrypoint.cron.sh.twig" %}
+{% include "phpContainers/docker-entrypoint/entrypoint.xdebug-cli.sh.twig" %}
+{% include "phpContainers/docker-entrypoint/entrypoint.composer.sh.twig" %}
 #==============================================================================
 # BLOCK: EXECUTE MAIN COMMAND
 #==============================================================================

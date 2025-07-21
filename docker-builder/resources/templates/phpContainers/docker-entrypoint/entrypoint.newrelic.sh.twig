@@ -1,0 +1,15 @@
+# New Relic configuration
+if [ "$NEWRELIC_ENABLED" = "true" ]; then
+    echo "Enabling New Relic for ${NEWRELIC_APPNAME}..."
+    
+    sed -i \
+        -e "s/newrelic.license[[:space:]]*=[[:space:]]*.*/newrelic.license = ${NEWRELIC_LICENSE}/" \
+        -e "s/newrelic.appname[[:space:]]*=[[:space:]]*.*/newrelic.appname = ${NEWRELIC_APPNAME}/" \
+        -e "s/newrelic.enabled[[:space:]]*=[[:space:]]*.*/newrelic.enabled = true/" \
+        /usr/local/etc/php/conf.d/zz-newrelic.ini
+        
+    echo "New Relic configured successfully"
+else
+    echo "New Relic disabled"
+    sed -i 's/newrelic.enabled[[:space:]]*=[[:space:]]*.*/newrelic.enabled = false/' /usr/local/etc/php/conf.d/zz-newrelic.ini
+fi

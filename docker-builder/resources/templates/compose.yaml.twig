@@ -13,6 +13,7 @@ services:
 {% include "compose/compose.search_engine.internal.yaml.twig" %}
 {% include "compose/compose.redis.yaml.twig" %}
 {% include "compose/compose.rabbitmq.yaml.twig" %}
+{% include "compose/compose.newrelic-infra.yaml.twig" %}
 networks:
   nginx-proxy:
     external: true
@@ -24,3 +25,7 @@ networks:
 {% endif %}
   mail-services:
     external: true
+{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+  newrelic-net:
+      external: true
+{% endif %}

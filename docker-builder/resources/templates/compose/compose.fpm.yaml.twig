@@ -14,10 +14,17 @@
       - {{ M2_SOURCE_VOLUME }}:/var/www/magento
     env_file:
       - ./envs/global.env
+    environment:
+{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+      NEWRELIC_APPNAME: {{ M2_PROJECT }}
+{% endif %}
     networks:
       default:
       mail-services:
 {% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'external' %}
       search-engine-net:
+{% endif %}
+{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+      newrelic-net:
 {% endif %}
 

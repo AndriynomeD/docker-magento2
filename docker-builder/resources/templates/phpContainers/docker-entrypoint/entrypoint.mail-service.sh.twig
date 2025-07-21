@@ -1,0 +1,68 @@
+{##==============================================================================#}
+{## BLOCK: SENDMAIL CONFIGURATION#}
+{##==============================================================================#}
+MAIL_SEND_ENABLED=${MAIL_SEND_ENABLED:-false}
+MAIL_SEND_PROVIDER=${MAIL_SEND_PROVIDER:-mailpit-shared}
+
+restore_original_config() {
+    if [ ! -f /etc/postfix/main.cf.original ]; then
+        cp /etc/postfix/main.cf /etc/postfix/main.cf.original
+    fi
+    cp /etc/postfix/main.cf.original /etc/postfix/main.cf
+}
+
+apply_config_without_duplicates() {
+    # SMART CAT FUNCTION - delete duplicates rows from destination file (main.cf)
+    # cat /etc/postfix/config.cf >> /etc/postfix/main.cf
+    local config_file="$1"
+    local main_cf="/etc/postfix/main.cf"
+
+    # Read configuration from config_file & apply it
+    while IFS= read -r line; do
+        if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+
+        param_name=$(echo "$line" | cut -d'=' -f1 | xargs)
+        if [[ -n "$param_name" ]]; then
+            # Delete param from main.cf if exists in config_file
+            sed -i "/^${param_name}[[:space:]]*=/d" "$main_cf"
+            # Add param from config_file
+            echo "$line" >> "$main_cf"
+        fi
+    done < "$config_file"
+}
+
+if [ "$MAIL_SEND_ENABLED" == "true" ]; then
+    echo "Configuring send mail with provider: $MAIL_SEND_PROVIDER"
+
+    case "$MAIL_SEND_PROVIDER" in
+        "postfix-mailtrap")
+            MAIL_SEND_SMTP_CREDENTIALS=${MAIL_SEND_SMTP_CREDENTIALS:?MAIL_SEND_SMTP_CREDENTIALS is required for choosen MAIL_SEND_PROVIDER}
+            cp /etc/postfix/config-mailtrap.cf /etc/postfix/config.cf
+            echo "${MAIL_SEND_SMTP_CREDENTIALS}" > /etc/postfix/sasl_passwd
+            postmap /etc/postfix/sasl_passwd
+            ;;
+        "postfix-google")
+            MAIL_SEND_SMTP_CREDENTIALS=${MAIL_SEND_SMTP_CREDENTIALS:?MAIL_SEND_SMTP_CREDENTIALS is required for choosen MAIL_SEND_PROVIDER}
+            cp /etc/postfix/config-google.cf /etc/postfix/config.cf
+            echo "${MAIL_SEND_SMTP_CREDENTIALS}" > /etc/postfix/sasl_passwd
+            postmap /etc/postfix/sasl_passwd
+            ;;
+        "mailpit-shared")
+            cp /etc/postfix/config-mailpit.cf /etc/postfix/config.cf
+            echo "" > /etc/postfix/sasl_passwd
+            ;;
+    esac
+
+    restore_original_config
+    apply_config_without_duplicates /etc/postfix/config.cf
+    /etc/init.d/postfix restart 2>&1 | grep -v "^\.$" || true
+
+    echo "Send mail configuration applied successfully"
+else
+    echo "Mail sending is disabled (MAIL_SEND_ENABLED=false)"
+
+    restore_original_config
+    /etc/init.d/postfix stop 2>&1 | grep -v "^\.$" || true
+fi

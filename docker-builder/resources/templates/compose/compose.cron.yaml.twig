@@ -37,11 +37,17 @@
 {# for correct cron setup according to M2_VERSION #}
       M2SETUP_EDITION: {{ M2_EDITION }}
       M2SETUP_VERSION: {{ M2_VERSION }}
+{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+      NEWRELIC_APPNAME: {{ M2_PROJECT }}
+{% endif %}
     networks:
       default:
       mail-services:
 {% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'external' %}
       search-engine-net:
+{% endif %}
+{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+      newrelic-net:
 {% endif %}
 
 {% endif %}

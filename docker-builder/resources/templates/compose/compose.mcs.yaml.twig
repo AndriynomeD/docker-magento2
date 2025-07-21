@@ -3,6 +3,7 @@
    ########################################################################### #}
 {% if DOCKER_SERVICES['magento-coding-standard'] %}
   mcs:
+#    profiles: ["disabled"]
     hostname: mcs.{{ M2_PROJECT }}
     build:
       context: containers/php/{{ PHP_VERSION }}-mcs/
