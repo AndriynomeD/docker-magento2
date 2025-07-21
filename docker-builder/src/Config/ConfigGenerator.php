@@ -95,7 +95,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
     private function transformPhpContainersConfig(array $phpContainersConfig, array $generalConfig): array
     {
         foreach ($phpContainersConfig as $name => &$containerConfig) {
-            $containerConfig = $this->transformPhpContainer($containerConfig, $generalConfig);
+            $containerConfig = $this->transformPhpContainer($name, $containerConfig, $generalConfig);
         }
 
         return $phpContainersConfig;
@@ -103,17 +103,31 @@ class ConfigGenerator implements ConfigGeneratorInterface
 
     /**
      * Transform single PHP container configuration
+     * @param string $name
      * @param array $containerConfig
      * @param array $generalConfig
      * @return array
      */
-    private function transformPhpContainer(array $containerConfig, array $generalConfig): array
+    private function transformPhpContainer(string $name, array $containerConfig, array $generalConfig): array
     {
         /** set used in php container variables */
         $containerConfig['M2_EDITION'] = $generalConfig['M2_EDITION'];
         $containerConfig['phpVersion'] = $containerConfig['version'];
         $containerConfig['databaseType'] = $generalConfig['DOCKER_SERVICES']['database']['TYPE'];
         $containerConfig['databaseVersion'] = $generalConfig['DOCKER_SERVICES']['database']['VERSION'];
+        if (str_contains($name, 'mcs')) {
+            $containerConfig['specificPackages']['newrelic'] = false;
+        } else {
+            $newrelicEnabled = (
+                is_array($generalConfig['DOCKER_SERVICES']['newrelic'])
+                && array_key_exists('enabled', $generalConfig['DOCKER_SERVICES']['newrelic'])
+            )
+                ? $generalConfig['DOCKER_SERVICES']['newrelic']['enabled']
+                : false;
+            $containerConfig['specificPackages']['newrelic'] = $newrelicEnabled
+                ? ($containerConfig['specificPackages']['newrelic'] ?? true)
+                : false;
+        }
 
         if (isset($containerConfig['composerVersion']) && $containerConfig['composerVersion'] === 'latest') {
             $containerConfig['composerVersion'] = $this->resolveComposerVersion($generalConfig);
@@ -184,7 +198,8 @@ class ConfigGenerator implements ConfigGeneratorInterface
                 'redis' => false,
                 'rabbitmq' => false,
                 'magento-coding-standard' => false,
-                'venia' => false
+                'venia' => false,
+                'newrelic' => false,
             ],
         ];
     }

@@ -3,6 +3,7 @@
    ########################################################################### #}
 {% if DOCKER_SERVICES.cron %}
   cron:
+#    profiles: ["disabled"]
     hostname: cron.{{ M2_PROJECT }}
     build:
       context: containers/php/{{ PHP_VERSION }}-cli/

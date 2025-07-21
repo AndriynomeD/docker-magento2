@@ -74,6 +74,10 @@ class ConfigValidator implements ConfigValidatorInterface
             throw new Exception(sprintf('Incorrect Edition: %s. Available: %s',
                 $generalConfig['M2_EDITION'], implode(', ', $availableEditions)));
         }
+
+        if ($generalConfig['DOCKER_SERVICES']['newrelic'] ?? false) {
+            throw new Exception('New Relic is not supported yet.');
+        }
     }
 
     /**
@@ -245,5 +249,13 @@ class ConfigValidator implements ConfigValidatorInterface
                 sprintf('PHP-%s: Ioncube not support this php version or support will be added later.', $name)
             );
         }
+        if (isset($containerConfig['specificPackages']['newrelic'])
+            && !is_string($containerConfig['specificPackages']['newrelic'])) {
+            throw new Exception(
+                sprintf('PHP-%s: if specificPackages.newrelic set it must be string with specific version.' . PHP_EOL
+                    . 'On/Off of newrelic saved in DOCKER_SERVICES.newrelic config', $name)
+            );
+        }
+
     }
 }
