@@ -15,7 +15,7 @@
     env_file:
       - ./envs/global.env
     environment:
-{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+{% if DOCKER_SERVICES.newrelic %}
       NEWRELIC_APPNAME: {{ M2_PROJECT }}
 {% endif %}
     networks:
@@ -24,7 +24,7 @@
 {% if DOCKER_SERVICES.search_engine and DOCKER_SERVICES.search_engine.CONNECT_TYPE == 'external' %}
       search-engine-net:
 {% endif %}
-{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+{% if DOCKER_SERVICES.newrelic %}
       newrelic-net:
 {% endif %}
 

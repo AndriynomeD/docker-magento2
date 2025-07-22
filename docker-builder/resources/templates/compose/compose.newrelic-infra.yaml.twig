@@ -1,7 +1,7 @@
 {# ###########################################################################
    # New Relic
    ########################################################################### #}
-{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled and DOCKER_SERVICES.newrelic.infrastructure %}
+{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.infrastructure %}
   newrelic-infra:
 #    profiles: ["disabled"]
     hostname: newrelic-infra.{{ M2_PROJECT }}

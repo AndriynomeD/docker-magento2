@@ -25,7 +25,7 @@ networks:
 {% endif %}
   mail-services:
     external: true
-{% if DOCKER_SERVICES.newrelic and DOCKER_SERVICES.newrelic.enabled %}
+{% if DOCKER_SERVICES.newrelic %}
   newrelic-net:
       external: true
 {% endif %}

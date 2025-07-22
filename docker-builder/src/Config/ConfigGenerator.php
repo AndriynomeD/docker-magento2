@@ -66,13 +66,18 @@ class ConfigGenerator implements ConfigGeneratorInterface
      */
     private function transformGeneralConfig(array $generalConfig): array
     {
-        // Handle search engine configuration
+        /** false/{} configuration processing */
         if (is_array($generalConfig['DOCKER_SERVICES']['search_engine'])
             && $generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'none') {
             $generalConfig['DOCKER_SERVICES']['search_engine'] = false;
         }
 
-        // Set search engine availability
+        if (is_array($generalConfig['DOCKER_SERVICES']['newrelic'])
+            && $generalConfig['DOCKER_SERVICES']['newrelic']['enabled'] == false) {
+            $generalConfig['DOCKER_SERVICES']['newrelic'] = false;
+        }
+
+        /** Set search engine availability */
         $generalConfig['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE'] =
             $generalConfig['DOCKER_SERVICES']['search_engine'] !== false
             && in_array($generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'], ['internal', 'external']);
@@ -118,15 +123,13 @@ class ConfigGenerator implements ConfigGeneratorInterface
         if (str_contains($name, 'mcs')) {
             $containerConfig['specificPackages']['newrelic'] = false;
         } else {
-            $newrelicEnabled = (
-                is_array($generalConfig['DOCKER_SERVICES']['newrelic'])
-                && array_key_exists('enabled', $generalConfig['DOCKER_SERVICES']['newrelic'])
-            )
-                ? $generalConfig['DOCKER_SERVICES']['newrelic']['enabled']
-                : false;
-            $containerConfig['specificPackages']['newrelic'] = $newrelicEnabled
-                ? ($containerConfig['specificPackages']['newrelic'] ?? true)
-                : false;
+            $newrelicConfig = $generalConfig['DOCKER_SERVICES']['newrelic'] ?? false;
+
+            if ($newrelicConfig !== false) {
+                $containerConfig['specificPackages']['newrelic'] = $containerConfig['specificPackages']['newrelic'] ?? true;
+            } else {
+                $containerConfig['specificPackages']['newrelic'] = false;
+            }
         }
 
         if (isset($containerConfig['composerVersion']) && $containerConfig['composerVersion'] === 'latest') {
