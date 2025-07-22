@@ -22,6 +22,9 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
 1) Install & Configure [nginx-proxy][nginx-proxy]
 2) Prepare all config files:
    1) Run `make copy-configs` - it will create config files from samples (will create `./envs/composer.env`, `./envs/global.env`, `config.json`).
+   ```shell
+   make copy-configs
+   ```
    2) Fill COMPOSER_MAGENTO_USERNAME, COMPOSER_MAGENTO_PASSWORD, POSTFIX_SASL_PASSWD with you're data in `./envs/composer.env`, `./envs/global.env`.
        Example of required field for `./envs/composer.env` file:
        ```env
@@ -37,7 +40,7 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
       | M2_VIRTUAL_HOSTS            | Comma separated list of all site domains (`{{all_site_domain}}`). See `Single-store` or `Multi-store` section. `mkcert` will automatically create ssl certs. |
       | M2_DB_NAME                  | Database name (`{{database_name}}`) with pattern: `{{client}}_{{project-name}}_{{dump-date}}`. Example: someclient_someproject_20190710                      |
       | PHP_VERSION                 | PHP version, available: 7.0, 7.1, 7.2, 7.3, 7.4, 8.0, 8.1, 8.2, 8.3, 8.4                                                                                     |
-      | M2_EDITION                  | Magento edition. Available edition: community, enterprise, cloud, mage-os                                                                                    |
+      | M2_EDITION                  | Magento edition. Options: community, enterprise, cloud, mage-os                                                                                              |
       | M2_VERSION                  | Magento 2 version                                                                                                                                            |
       | M2_SOURCE_VOLUME            | Magento root folder `{{magento_root}}`. Default: "./magento", example: "./source/src"                                                                        |
       | M2_INSTALL:                 | `magento-installer` config section                                                                                                                           |
@@ -48,24 +51,33 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
       | ├── ADMIN_EMAIL             | Recommended use real email because starting from 2.4.0+ magento used 2FA by default                                                                          |
       | └── CRYPT_KEY               | if not empty `magento-installer` will us this key else will generate random                                                                                  |
       | M2_SETTINGS:                | Magento additional services settings                                                                                                                         |
-      | ├── SEARCH_ENGINE_SETTINGS  | Search engine settings (Required unique index-prefix). If `search_engine`==false or `search_engine/CONNECT_TYPE`==none will be ignore                        |
+      | ├── SEARCH_ENGINE_SETTINGS  | Search engine settings (Required unique index-prefix). If `search_engine`==false or `search_engine/enabled`==false will be ignore.                           |
       | ├── AMQ_SETTINGS            | AMQ settings. If `rabbitmq`==false will be ignore                                                                                                            |
-      | ├── REDIS_SETTINGS          | Redis settings. If `redis`==false will be ignore                                                                                                             |
+      | ├── REDIS_SETTINGS          | Redis settings. If `redis`==false or `redis/enabled`==false will be ignore.                                                                                  |
       | └── VARNISH_SETTINGS        | Varnish setting. If `varnish`==false will be ignore                                                                                                          |
       | DOCKER_SERVICES:            |                                                                                                                                                              |
       | ├── database:               |                                                                                                                                                              |
-      | │   ├── IMAGE:              | Database image with tag. Example: mariadb:11.4, percona:8.0                                                                                                  |
-      | │   ├── TYPE:               | Image type. Available option: mariadb, mysql, percona                                                                                                        |
-      | │   ├── VERSION:            | Image version                                                                                                                                                |
+      | │   ├── TYPE:               | Service type. Options: mariadb, mysql, percona                                                                                                               |
+      | │   ├── VERSION:            | Service version.                                                                                                                                             |
+      | │   ├── IMAGE:              | Optional. Service docker image. If not set, image will be defined based on TYPE.                                                                             |
+      | │   ├── TAG:                | Optional. Service docker image tag. If not set, tag will be defined based on VERSION.                                                                        |
       | │   └── VOLUME:             | Folder under mysql_volumes` that will be mounted to db container                                                                                             |
-      | ├── search_engine:          | Use search engine service? Available options: false, {}                                                                                                      |
-      | │   ├── CONNECT_TYPE:       | Available options: external (use shared search engine), internal (create separate container for project), none (skip search_engine config)                   |
-      | │   ├── TYPE:               | Search engine type: elasticsearch, opensearch                                                                                                                |
-      | │   └── VERSION:            | Search engine version - will be used as image tag. If `CONNECT_TYPE`!=internal will be ignore                                                                |
-      | ├── varnish                 | Use varnish service? Available options: false, true                                                                                                          |
-      | ├── cron                    | Use cron service? Available options: false, true                                                                                                             |
-      | ├── redis                   | Use redis service? Available options: false, true                                                                                                            |
-      | ├── rabbitmq                | Use rabbitmq service? Available options: false, true                                                                                                         |
+      | ├── search_engine:          | Use search engine service? Options: false, {}                                                                                                                |
+      | │   ├── enabled:            | Is Service enabled? Options: true, false                                                                                                                     |
+      | │   ├── CONNECT_TYPE:       | Options: external (use shared search engine), internal (create separate container for project)                                                               |
+      | │   ├── TYPE:               | Service type. Options: elasticsearch, opensearch                                                                                                             |
+      | │   ├── VERSION:            | Service version. If `CONNECT_TYPE`!=internal will be ignore                                                                                                  |
+      | │   ├── IMAGE:              | Optional. Service docker image. If not set, image will be defined based on TYPE.                                                                             |
+      | │   └── TAG:                | Optional. Service docker image tag. If not set, tag will be defined based on VERSION.                                                                        |
+      | ├── varnish                 | Use varnish service? Options: false, true                                                                                                                    |
+      | ├── cron                    | Use cron service? Options: false, true                                                                                                                       |
+      | ├── redis                   | Use redis service? Options: false, {}                                                                                                                      |
+      | │   ├── enabled:            | Is Service enabled? Options: true, false                                                                                                                     |
+      | │   ├── TYPE:               | Service type. Options: redis, valkey                                                                                                                         |
+      | │   ├── VERSION:            | Service version.                                                                                                                                             |
+      | │   ├── IMAGE:              | Optional. Service docker image. If not set, image will be defined based on TYPE.                                                                             |
+      | │   └── TAG:                | Optional. Service docker image tag. If not set, tag will be defined based on VERSION.                                                                        |
+      | ├── rabbitmq                | Use rabbitmq service? Options: false, true                                                                                                                   |
       | ├── magento-coding-standard | Create separate MCS container (need if project not contain latest MCS version: typical cloud and CE/EE before ver.2.4.4). Available options: false, true     |
       | └── venia                   | Install `venia` PWA and use magento as backend? Available options: false, true [Currently just install venia sample data]                                    |
 
@@ -75,7 +87,7 @@ For Max OS X useful: https://www.meanbee.com/developers/magento2-development-pro
 
 3) Build magento 2 docker infrastructure:
     ```shell
-    php docker-builder-run
+    make build
     ```
 4) Make directory `{{magento_root}}` inside project root directory `{{root_directory}}`. 
 
@@ -227,7 +239,7 @@ Also `Warning: Error compiling lib/web/css/docs/source/docs.less Use --force to 
    
 2) #### Xdebug config:
     
-    1. Enabled Xdebug in `./envs/global.env` file (`PHP_ENABLE_XDEBUG=true`).
+    1. Enabled Xdebug in `./envs/global.env` file (`PHP_XDEBUG_MODE=develop,debug,coverage` - can be single mode or multimode).
     2. `Add Configuration` or `Edit Configuration`
     3. Add `PHP remote debug`
         ```plaintext
@@ -485,9 +497,10 @@ networks:
 - [ ] Implement LiveReload
 - [ ] Implement dynamic varnish configs during build docker infrastructure (like it was done for php containers)
 - [x] Implement dynamic internal elasticsearch/opensearch configs during build docker infrastructure (like it was done for php containers)
-- [ ] Implement dynamic redis configs during build docker infrastructure (like it was done for php containers)
+- [x] Implement dynamic redis configs during build docker infrastructure (like it was done for php containers)
 - [x] Implement ngrok support via [magento ngrok extension][magento-ngrok]
-- [ ] Replace the custom template engine via [Twig templae engine][twig]
+- [x] Replace the custom template engine via [Twig templae engine][twig]
+- [x] Implement [SPX][spx] - A simple profiler for PHP
 
 [ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
 [ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
@@ -502,3 +515,4 @@ networks:
 [magento-system-requirements]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html
 [magento-ngrok]: https://github.com/AndriynomeD/magento-ngrok
 [twig]: https://twig.symfony.com/
+[spx]: https://github.com/NoiseByNorthwest/php-spx

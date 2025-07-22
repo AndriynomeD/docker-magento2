@@ -7,12 +7,12 @@ DOCKER_BUILDER_CMD := $(DOCKER_BUILDER_DIR)/bin/console
 copy-configs:
 	_interactive_copy_configs
 
-# Build docker environtment based on configuration
-build: _check_dependencies _auto_copy_configs _check_configs
+# Build docker environment based on configuration
+build: _check_dependencies _check_configs
 	@$(DOCKER_BUILDER_CMD) build $(filter-out $@,$(MAKECMDGOALS))
 
-# Dry-run build docker environtment based on configuration
-build-dry-run: _check_dependencies _auto_copy_configs _check_configs
+# Dry-run build docker environment based on configuration
+build-dry-run: _check_dependencies _check_configs
 	@$(DOCKER_BUILDER_CMD) build --dry-run
 
 # Remove dry-run files and directories (with confirmation)
