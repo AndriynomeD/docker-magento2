@@ -30,6 +30,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
         $config['general-config'] = $this->transformMagentoInstallConfig($config['general-config']);
         $config['general-config'] = $this->transformDatabaseService($config['general-config']);
         $config['general-config'] = $this->transformSearchEngineService($config['general-config']);
+        $config['general-config'] = $this->transformRedisService($config['general-config']);
         $config['general-config'] = $this->transformVeniaService($config['general-config']);
         $config['general-config'] = $this->transformNewRelicService($config['general-config']);
         $config['php-containers'] = $this->transformPhpContainersConfig($config);
@@ -155,6 +156,37 @@ class ConfigGenerator implements ConfigGeneratorInterface
                     break;
                 case 'opensearch':
                     $image = 'opensearchproject/opensearch';
+                    break;
+            }
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
+        }
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
+            $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
+        }
+
+        return $generalConfig;
+    }
+
+    /**
+     * Transform redis service
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformRedisService(array $generalConfig): array
+    {
+        $serviceKey = 'redis';
+        $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] ?? false)) {
+            $image = '';
+            switch($generalConfig['DOCKER_SERVICES'][$serviceKey]['TYPE']) {
+                case 'redis':
+                    $image = 'redis';
+                    break;
+                case 'valkey':
+                    $image = 'valkey/valkey';
                     break;
             }
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;

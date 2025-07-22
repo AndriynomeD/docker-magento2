@@ -31,6 +31,7 @@ class ConfigValidator implements ConfigValidatorInterface
         $this->validateMagentoInstallConfig($generalConfig);
         $this->validateDatabaseService($generalConfig);
         $this->validateSearchEngineService($generalConfig);
+        $this->validateRedisService($generalConfig);
         $this->validateVeniaService($generalConfig);
         $this->validateNewRelicService($generalConfig);
         $this->validatePhpContainers($config[self::PHP_CONTAINERS_CONFIG_KEY], $generalConfig);
@@ -171,6 +172,32 @@ class ConfigValidator implements ConfigValidatorInterface
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['elasticsearch', 'opensearch'];
+        if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
+            throw new Exception(sprintf('Service %s: Available types: %s',
+                $serviceName, implode(', ', $availableTypes)));
+        }
+    }
+
+    /**
+     * Validate redis service
+     *
+     * @param array $generalConfig
+     * @throws Exception
+     */
+    private function validateRedisService(array $generalConfig): void
+    {
+        $serviceName = 'In-memory datastore';
+        $serviceKey = 'redis';
+        $this->validateDockerService(
+            $generalConfig,
+            $serviceName,
+            $serviceKey,
+            false,
+            ['enabled', 'TYPE', 'VERSION']
+        );
+
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        $availableTypes = ['redis', 'valkey'];
         if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
             throw new Exception(sprintf('Service %s: Available types: %s',
                 $serviceName, implode(', ', $availableTypes)));
