@@ -65,7 +65,7 @@ class TemplateRenderer implements TemplateRendererInterface
      * @param array $variables
      * @return string
      */
-    protected function renderTemplate(string $templateFile, array $variables): string
+    private function renderTemplate(string $templateFile, array $variables): string
     {
         if ($this->twig === null) {
             throw new \RuntimeException('Templates path not set. Call setTemplatesPath() first.');
@@ -80,7 +80,7 @@ class TemplateRenderer implements TemplateRendererInterface
      * @return string
      * @throws Exception
      */
-    protected function renderWithoutTemplate(string $templateFilePath): string
+    private function renderWithoutTemplate(string $templateFilePath): string
     {
         $output = file_get_contents($this->templatesPath . $templateFilePath);
         if ($output === false) {

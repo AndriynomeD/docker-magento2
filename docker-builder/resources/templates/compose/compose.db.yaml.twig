@@ -3,7 +3,7 @@
    ########################################################################### #}
   db:
     hostname: db.{{ M2_PROJECT }}
-    image: {{ DOCKER_SERVICES.database.IMAGE }}
+    image: {{ DOCKER_SERVICES.database.IMAGE }}:{{ DOCKER_SERVICES.database.TAG }}
     ports:
       - 3306
     volumes:

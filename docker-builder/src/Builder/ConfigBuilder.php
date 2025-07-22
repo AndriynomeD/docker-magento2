@@ -113,7 +113,7 @@ class ConfigBuilder
     /**
      * Build infrastructure
      */
-    protected function build(): void
+    private function build(): void
     {
         try {
             $this->buildEnvFiles();
@@ -127,7 +127,7 @@ class ConfigBuilder
         }
     }
 
-    protected function buildEnvFiles(): void
+    private function buildEnvFiles(): void
     {
         $this->logger->info("Building env files...", OutputInterface::VERBOSITY_NORMAL);
 
@@ -141,6 +141,8 @@ class ConfigBuilder
         /** Prepare data for buildFile */
         $configFiles = $envFilesConfig['files'] ?? [];
         $commonVariables = $generalConfig;
+        $keysToRemove = ['files', 'templateSubDir', 'destinationDir', 'enabled', 'template_name', '_enable_variables', 'executable'];
+        $commonVariables = array_diff_key($commonVariables, array_flip($keysToRemove));
         foreach ($configFiles as $filename => $fileConfig) {
             $fileConfig['templateSubDir'] = 'envs' . DIRECTORY_SEPARATOR;
             $fileConfig['destinationDir'] = $this->getEnvFilesDirPath();
@@ -151,7 +153,7 @@ class ConfigBuilder
     /**
      * Build PHP containers
      */
-    protected function buildPhpContainers(): void
+    private function buildPhpContainers(): void
     {
         $phpContainersConfig = $this->config['php-containers'];
         foreach ($phpContainersConfig as $name => $containerConfig) {
@@ -165,7 +167,7 @@ class ConfigBuilder
     /**
      * Build nginx container (одиничний)
      */
-    protected function buildNginxContainer(): void
+    private function buildNginxContainer(): void
     {
         /** Now it just placeholder */
     }
@@ -173,25 +175,22 @@ class ConfigBuilder
     /**
      * Build search engine container
      */
-    protected function buildSearchEngineContainer(): void
+    private function buildSearchEngineContainer(): void
     {
         $generalConfig = $this->config['general-config'];
         $searchEngineConfig = $generalConfig['DOCKER_SERVICES']['search_engine'] ?? false;
 
         if ($searchEngineConfig !== false && $searchEngineConfig['CONNECT_TYPE'] === 'internal') {
             $searchEngineType = $searchEngineConfig['TYPE'];
-            $searchEngineVersion = $searchEngineConfig['VERSION'];
 
             $containerConfig = [
-                'version' => $searchEngineVersion,
                 'templateSubDir' => 'search_engine' . DIRECTORY_SEPARATOR . $searchEngineType . DIRECTORY_SEPARATOR,
                 'destinationDir' => $this->getContainersDirPath('search_engine') . DIRECTORY_SEPARATOR . $searchEngineType,
                 'files' => [
                     'Dockerfile' => ['_enable_variables' => true]
                 ],
-                'ELASTICSEARCH_VERSION' => $searchEngineType === 'elasticsearch' ? $searchEngineVersion : '',
-                'OPENSEARCH_VERSION' => $searchEngineType === 'opensearch' ? $searchEngineVersion : ''
             ];
+            $containerConfig = array_merge($searchEngineConfig, $containerConfig);
 
             $this->buildContainer($searchEngineType, $containerConfig);
         }
@@ -200,7 +199,7 @@ class ConfigBuilder
     /**
      * Build Docker compose.yaml file
      */
-    protected function buildDockerCompose(): void
+    private function buildDockerCompose(): void
     {
         $this->logger->info(sprintf("Building '%s'...", $this->getComposeFileName()), OutputInterface::VERBOSITY_NORMAL);
 
@@ -217,6 +216,8 @@ class ConfigBuilder
         /** Prepare data for buildFile */
         $configFiles = $composeFileConfig['files'] ?? [];
         $commonVariables = $generalConfig;
+        $keysToRemove = ['files', 'templateSubDir', 'destinationDir', 'enabled', 'template_name', '_enable_variables', 'executable'];
+        $commonVariables = array_diff_key($commonVariables, array_flip($keysToRemove));
         foreach ($configFiles as $filename => $fileConfig) {
             $fileConfig['templateSubDir'] = '';
             $fileConfig['destinationDir'] = $this->getRealPath(self::ROOT_DIR);
@@ -235,7 +236,7 @@ class ConfigBuilder
      * @param string $containerName
      * @param array $containerConfig
      */
-    protected function buildContainer(string $containerName, array $containerConfig): void
+    private function buildContainer(string $containerName, array $containerConfig): void
     {
         $requiredKeys = ['templateSubDir', 'destinationDir'];
         $isValid = is_array($containerConfig) &&
@@ -250,7 +251,8 @@ class ConfigBuilder
         /** Prepare data for buildContainerFile */
         $configFiles = $containerConfig['files'] ?? [];
         $commonVariables = $containerConfig;
-        unset($commonVariables['files'], $commonVariables['templateSubDir'], $commonVariables['destinationDir']);
+        $keysToRemove = ['files', 'templateSubDir', 'destinationDir', 'enabled', 'template_name', '_enable_variables', 'executable'];
+        $commonVariables = array_diff_key($commonVariables, array_flip($keysToRemove));
         foreach ($configFiles as $filename => $fileConfig) {
             $fileConfig['templateSubDir'] = $containerConfig['templateSubDir'];
             $fileConfig['destinationDir'] = $containerConfig['destinationDir'];
@@ -263,7 +265,7 @@ class ConfigBuilder
      * @param array $fileConfig
      * @param array $commonVariables
      */
-    protected function buildContainerFile(
+    private function buildContainerFile(
         string $filename,
         array  $fileConfig,
         array  $commonVariables
@@ -282,7 +284,7 @@ class ConfigBuilder
      *  } $fileConfig
      * @param array $commonVariables
      */
-    protected function buildFile(
+    private function buildFile(
         string $filename,
         array  $fileConfig,
         array  $commonVariables
@@ -315,31 +317,31 @@ class ConfigBuilder
         }
     }
 
-    protected function getRealPath(string $path): string
+    private function getRealPath(string $path): string
     {
         return realpath($path);
     }
 
-    protected function getContainersDirPath($containersDir): string
+    private function getContainersDirPath($containersDir): string
     {
         return $this->getContainersBaseDirPath() . DIRECTORY_SEPARATOR . $containersDir;
     }
 
-    protected function getContainersBaseDirPath(): string
+    private function getContainersBaseDirPath(): string
     {
         return $this->isDryRun
             ? $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'containers-dry-run'
             : $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'containers';
     }
 
-    protected function getEnvFilesDirPath(): string
+    private function getEnvFilesDirPath(): string
     {
         return $this->isDryRun
             ? $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'envs-dry-run'
             : $this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR . 'envs';
     }
 
-    protected function getComposeFileName(): string
+    private function getComposeFileName(): string
     {
         return $this->isDryRun
             ? 'compose-dry-run.yaml'

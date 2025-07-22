@@ -11,8 +11,8 @@ use Exception;
  */
 class ConfigValidator implements ConfigValidatorInterface
 {
-    const GENERAL_CONFIG_KEY = 'general-config';
-    const PHP_CONTAINERS_CONFIG_KEY = 'php-containers';
+    private const GENERAL_CONFIG_KEY = 'general-config';
+    private const PHP_CONTAINERS_CONFIG_KEY = 'php-containers';
 
     /**
      * Validate entire configuration
@@ -76,7 +76,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateGeneralConfig(array $generalConfig): void
+    private function validateGeneralConfig(array $generalConfig): void
     {
         $availableEditions = ['community', 'enterprise', 'cloud', 'mage-os'];
         if (!in_array($generalConfig['M2_EDITION'], $availableEditions)) {
@@ -91,7 +91,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateMagentoSettingsConfig(array $generalConfig): void
+    private function validateMagentoSettingsConfig(array $generalConfig): void
     {
         // Additional validation for M2_SETTINGS if needed
         // This method can be extended based on specific requirements
@@ -103,7 +103,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateMagentoInstallConfig(array $generalConfig): void
+    private function validateMagentoInstallConfig(array $generalConfig): void
     {
         /** @TODO make installer optional  */
 //        if (!isset($generalConfig['M2_INSTALL'])) {
@@ -128,7 +128,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateDatabaseService(array $generalConfig): void
+    private function validateDatabaseService(array $generalConfig): void
     {
         $serviceName = 'Database';
         $serviceKey = 'database';
@@ -137,13 +137,14 @@ class ConfigValidator implements ConfigValidatorInterface
             $serviceName,
             $serviceKey,
             true,
-            ['IMAGE', 'TYPE', 'VERSION', 'VOLUME']
+            ['TYPE', 'VERSION', 'VOLUME']
         );
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['mariadb', 'mysql', 'percona'];
         if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
-            throw new Exception(sprintf('Available database types: %s', implode(', ', $availableTypes)));
+            throw new Exception(sprintf('Service %s: Available types: %s',
+                $serviceName, implode(', ', $availableTypes)));
         }
     }
 
@@ -153,7 +154,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateSearchEngineService(array $generalConfig): void
+    private function validateSearchEngineService(array $generalConfig): void
     {
         $serviceName = 'Search Engine';
         $serviceKey = 'search_engine';
@@ -169,9 +170,10 @@ class ConfigValidator implements ConfigValidatorInterface
         );
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
-        if (!in_array($serviceConfig['TYPE'] ?? '', ['elasticsearch', 'opensearch'])) {
+        $availableTypes = ['elasticsearch', 'opensearch'];
+        if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
             throw new Exception(sprintf('Service %s: Available types: %s',
-                $serviceName, implode(', ', ['elasticsearch', 'opensearch'])));
+                $serviceName, implode(', ', $availableTypes)));
         }
     }
 
@@ -181,7 +183,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateVeniaService(array $generalConfig): void
+    private function validateVeniaService(array $generalConfig): void
     {
         $serviceName = 'Venia';
         $serviceKey = 'venia';
@@ -203,7 +205,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validateNewRelicService(array $generalConfig): void
+    private function validateNewRelicService(array $generalConfig): void
     {
         $serviceName = 'New Relic';
         $serviceKey = 'newrelic';
@@ -229,7 +231,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    public function validatePhpContainers(array $phpContainersConfig, array $generalConfig): void
+    private function validatePhpContainers(array $phpContainersConfig, array $generalConfig): void
     {
         $phpContainersConfig = $this->getActivePhpContainersConfig($phpContainersConfig, $generalConfig);
         foreach ($phpContainersConfig as $name => $containerConfig) {
@@ -251,7 +253,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @return void
      * @throws Exception
      */
-    protected function validateDockerService(
+    private function validateDockerService(
         array  $generalConfig,
         string $serviceName,
         string $serviceKey,
@@ -291,7 +293,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @return void
      * @throws Exception
      */
-    protected function validateDockerServiceSimple(
+    private function validateDockerServiceSimple(
         array  $generalConfig,
         string $serviceName,
         string $serviceKey,
@@ -318,7 +320,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @return array
      */
-    protected function getActivePhpContainersConfig(array $allPhpContainersConfig, array $generalConfig): array
+    private function getActivePhpContainersConfig(array $allPhpContainersConfig, array $generalConfig): array
     {
         $buildPhpVersion = $generalConfig['PHP_VERSION'];
         $needMcsPhpContainer = $generalConfig['DOCKER_SERVICES']['magento-coding-standard'] ?? false;
@@ -340,7 +342,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    protected function validatePhpContainer(string $name, array $containerConfig, array $generalConfig): void
+    private function validatePhpContainer(string $name, array $containerConfig, array $generalConfig): void
     {
         if ($containerConfig['flavour'] !== 'cli') {
             if ($containerConfig['specificPackages']['grunt'] ?? false) {

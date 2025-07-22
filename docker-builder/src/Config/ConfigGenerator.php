@@ -11,8 +11,8 @@ use DockerBuilder\Core\Util\ArrayUtil;
  */
 class ConfigGenerator implements ConfigGeneratorInterface
 {
-    const DEFAULT_COMPOSER1VERSION = '1.10.17';
-    const DEFAULT_XDEBUG2VERSION = '2.9.8';
+    private const DEFAULT_COMPOSER1VERSION = '1.10.17';
+    private const DEFAULT_XDEBUG2VERSION = '2.9.8';
 
     /**
      * Generate configuration from loaded config
@@ -111,7 +111,27 @@ class ConfigGenerator implements ConfigGeneratorInterface
      */
     private function transformDatabaseService(array $generalConfig): array
     {
-        // This method can be extended based on specific requirements
+        $serviceKey = 'database';
+
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] ?? false)) {
+            $image = '';
+            switch($generalConfig['DOCKER_SERVICES'][$serviceKey]['TYPE']) {
+                case 'mariadb':
+                    $image = 'mariadb';
+                    break;
+                case 'mysql':
+                    $image = 'mysql';
+                    break;
+                case 'percona':
+                    $image = 'percona';
+                    break;
+            }
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
+        }
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
+            $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
+        }
 
         return $generalConfig;
     }
@@ -126,6 +146,23 @@ class ConfigGenerator implements ConfigGeneratorInterface
     {
         $serviceKey = 'search_engine';
         $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] ?? false)) {
+            $image = '';
+            switch($generalConfig['DOCKER_SERVICES'][$serviceKey]['TYPE']) {
+                case 'elasticsearch':
+                    $image = 'docker.elastic.co/elasticsearch/elasticsearch';
+                    break;
+                case 'opensearch':
+                    $image = 'opensearchproject/opensearch';
+                    break;
+            }
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
+        }
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
+            $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
+        }
 
         return $generalConfig;
     }
@@ -218,7 +255,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
      * @param string $serviceKey
      * @return array
      */
-    protected function transformDockerServiceOnOff(array $generalConfig, string $serviceKey): array
+    private function transformDockerServiceOnOff(array $generalConfig, string $serviceKey): array
     {
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $isServiceEnabled = $serviceConfig !== false && ($serviceConfig['enabled'] ?? true);
