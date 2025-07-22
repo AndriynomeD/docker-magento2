@@ -14,8 +14,8 @@
       - {{ M2_SOURCE_VOLUME }}:/var/www/magento
     env_file:
       - ./envs/global.env
-    environment:
 {% if DOCKER_SERVICES.newrelic %}
+    environment:
       NEWRELIC_APPNAME: {{ M2_PROJECT }}
 {% endif %}
     networks:

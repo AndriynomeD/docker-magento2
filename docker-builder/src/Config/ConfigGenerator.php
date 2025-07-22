@@ -16,6 +16,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
 
     /**
      * Generate configuration from loaded config
+     *
      * @param array $config
      * @return array
      */
@@ -23,23 +24,22 @@ class ConfigGenerator implements ConfigGeneratorInterface
     {
         $config['general-config'] = $config['general-config'] ?? [];
         $config['php-containers'] = $config['php-containers'] ?? [];
-        $defaultConfig = $this->getDefaultGeneralConfig();
-        $config['general-config'] = ArrayUtil::arrayMergeRecursiveDistinct($defaultConfig, $config['general-config']);
+
         $config['general-config'] = $this->transformGeneralConfig($config['general-config']);
-        $phpContainersConfig = $this->getActivePhpContainersConfig(
-            $config['php-containers'],
-            $config['general-config']
-        );
-        $config['php-containers'] = $this->transformPhpContainersConfig(
-            $phpContainersConfig,
-            $config['general-config']
-        );
+        $config['general-config'] = $this->transformMagentoSettingsConfig($config['general-config']);
+        $config['general-config'] = $this->transformMagentoInstallConfig($config['general-config']);
+        $config['general-config'] = $this->transformDatabaseService($config['general-config']);
+        $config['general-config'] = $this->transformSearchEngineService($config['general-config']);
+        $config['general-config'] = $this->transformVeniaService($config['general-config']);
+        $config['general-config'] = $this->transformNewRelicService($config['general-config']);
+        $config['php-containers'] = $this->transformPhpContainersConfig($config);
 
         return $config;
     }
 
     /**
-     * Get active PHP containers configuration (фільтрація)
+     * Get active PHP containers configuration
+     *
      * @param array $allPhpContainersConfig
      * @param array $generalConfig
      * @return array
@@ -61,28 +61,87 @@ class ConfigGenerator implements ConfigGeneratorInterface
 
     /**
      * Transform general configuration
+     *
      * @param array $generalConfig
      * @return array
      */
     private function transformGeneralConfig(array $generalConfig): array
     {
-        /** false/{} configuration processing */
-        if (is_array($generalConfig['DOCKER_SERVICES']['search_engine'])
-            && $generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'] == 'none') {
-            $generalConfig['DOCKER_SERVICES']['search_engine'] = false;
-        }
+        $defaultConfig = $this->getDefaultGeneralConfig();
+        $generalConfig = ArrayUtil::arrayMergeRecursiveDistinct($defaultConfig, $generalConfig);
 
-        if (is_array($generalConfig['DOCKER_SERVICES']['newrelic'])
-            && $generalConfig['DOCKER_SERVICES']['newrelic']['enabled'] == false) {
-            $generalConfig['DOCKER_SERVICES']['newrelic'] = false;
-        }
+        return $generalConfig;
+    }
 
+    /**
+     * Transform Magento settings configuration
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformMagentoSettingsConfig(array $generalConfig): array
+    {
         /** Set search engine availability */
         $generalConfig['M2_SETTINGS']['SEARCH_ENGINE_AVAILABLE'] =
             $generalConfig['DOCKER_SERVICES']['search_engine'] !== false
             && in_array($generalConfig['DOCKER_SERVICES']['search_engine']['CONNECT_TYPE'], ['internal', 'external']);
 
-        if ($generalConfig['DOCKER_SERVICES']['venia'] ?? false) {
+        return $generalConfig;
+    }
+
+    /**
+     * Transform Magento install configuration
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformMagentoInstallConfig(array $generalConfig): array
+    {
+        /** @TODO make installer optional  */
+        // This method can be extended based on specific requirements
+
+        return $generalConfig;
+    }
+
+    /**
+     * Transform database service
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformDatabaseService(array $generalConfig): array
+    {
+        // This method can be extended based on specific requirements
+
+        return $generalConfig;
+    }
+
+    /**
+     * Transform search engine service
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformSearchEngineService(array $generalConfig): array
+    {
+        $serviceKey = 'search_engine';
+        $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+
+        return $generalConfig;
+    }
+
+    /**
+     * Transform venia service
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformVeniaService(array $generalConfig): array
+    {
+        $serviceKey = 'venia';
+        $isServiceEnabled = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+
+        if ($isServiceEnabled) {
             if (($generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] ?? 'false') !== 'false') {
                 $generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
             }
@@ -92,13 +151,32 @@ class ConfigGenerator implements ConfigGeneratorInterface
     }
 
     /**
-     * Transform PHP containers configuration
-     * @param array $phpContainersConfig
+     * Transform New Relic service
+     *
      * @param array $generalConfig
      * @return array
      */
-    private function transformPhpContainersConfig(array $phpContainersConfig, array $generalConfig): array
+    private function transformNewRelicService(array $generalConfig): array
     {
+        $serviceKey = 'newrelic';
+        $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+
+        return $generalConfig;
+    }
+
+    /**
+     * Transform PHP containers configuration
+     *
+     * @param array $config
+     * @return array
+     */
+    private function transformPhpContainersConfig(array $config): array
+    {
+        $generalConfig = $config['general-config'];
+        $phpContainersConfig = $this->getActivePhpContainersConfig(
+            $config['php-containers'],
+            $config['general-config']
+        );
         foreach ($phpContainersConfig as $name => &$containerConfig) {
             $containerConfig = $this->transformPhpContainer($name, $containerConfig, $generalConfig);
         }
@@ -108,6 +186,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
 
     /**
      * Transform single PHP container configuration
+     *
      * @param string $name
      * @param array $containerConfig
      * @param array $generalConfig
@@ -120,17 +199,8 @@ class ConfigGenerator implements ConfigGeneratorInterface
         $containerConfig['phpVersion'] = $containerConfig['version'];
         $containerConfig['databaseType'] = $generalConfig['DOCKER_SERVICES']['database']['TYPE'];
         $containerConfig['databaseVersion'] = $generalConfig['DOCKER_SERVICES']['database']['VERSION'];
-        if (str_contains($name, 'mcs')) {
-            $containerConfig['specificPackages']['newrelic'] = false;
-        } else {
-            $newrelicConfig = $generalConfig['DOCKER_SERVICES']['newrelic'] ?? false;
 
-            if ($newrelicConfig !== false) {
-                $containerConfig['specificPackages']['newrelic'] = $containerConfig['specificPackages']['newrelic'] ?? true;
-            } else {
-                $containerConfig['specificPackages']['newrelic'] = false;
-            }
-        }
+        $containerConfig = $this->resolveNewRelicConfig($name, $containerConfig, $generalConfig);
 
         if (isset($containerConfig['composerVersion']) && $containerConfig['composerVersion'] === 'latest') {
             $containerConfig['composerVersion'] = $this->resolveComposerVersion($generalConfig);
@@ -144,7 +214,25 @@ class ConfigGenerator implements ConfigGeneratorInterface
     }
 
     /**
+     * @param array $generalConfig
+     * @param string $serviceKey
+     * @return array
+     */
+    protected function transformDockerServiceOnOff(array $generalConfig, string $serviceKey): array
+    {
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        $isServiceEnabled = $serviceConfig !== false && ($serviceConfig['enabled'] ?? true);
+
+        if (!$isServiceEnabled) {
+            $generalConfig['DOCKER_SERVICES'][$serviceKey] = false;
+        }
+
+        return $generalConfig;
+    }
+
+    /**
      * Resolve Composer version
+     *
      * @param array $generalConfig
      * @return string
      */
@@ -165,7 +253,8 @@ class ConfigGenerator implements ConfigGeneratorInterface
     }
 
     /**
-     * Resolve XDebug version
+     * Resolve xDebug version
+     *
      * @param array $generalConfig
      * @return string
      */
@@ -185,7 +274,32 @@ class ConfigGenerator implements ConfigGeneratorInterface
     }
 
     /**
+     * Resolve NewRelic config
+     *
+     * @param string $name
+     * @param array $containerConfig
+     * @param array $generalConfig
+     * @return array
+     */
+    private function resolveNewRelicConfig(string $name, array $containerConfig, array $generalConfig): array
+    {
+        if (str_contains($name, 'mcs')) {
+            $containerConfig['specificPackages']['newrelic'] = false;
+        } else {
+            $newrelicConfig = $generalConfig['DOCKER_SERVICES']['newrelic'] ?? false;
+            if ($newrelicConfig !== false) {
+                $containerConfig['specificPackages']['newrelic'] = $containerConfig['specificPackages']['newrelic'] ?? true;
+            } else {
+                $containerConfig['specificPackages']['newrelic'] = false;
+            }
+        }
+
+        return $containerConfig;
+    }
+
+    /**
      * Get default general configuration
+     *
      * @return array
      */
     private function getDefaultGeneralConfig(): array

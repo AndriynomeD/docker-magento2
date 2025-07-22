@@ -32,7 +32,8 @@
         "VOLUME": "mariadb11"
       },
       "search_engine": {
-        "__note_connect_type__": "available connect_type: external|internal|none",
+        "enabled": true,
+        "__note_connect_type__": "available connect_type: external|internal",
         "CONNECT_TYPE": "external",
         "__note_type__": "available type: elasticsearch|opensearch",
         "TYPE": "opensearch",

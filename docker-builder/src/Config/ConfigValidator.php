@@ -16,6 +16,7 @@ class ConfigValidator implements ConfigValidatorInterface
 
     /**
      * Validate entire configuration
+     *
      * @param array $config
      * @throws Exception
      */
@@ -31,57 +32,62 @@ class ConfigValidator implements ConfigValidatorInterface
         $this->validateDatabaseService($generalConfig);
         $this->validateSearchEngineService($generalConfig);
         $this->validateVeniaService($generalConfig);
+        $this->validateNewRelicService($generalConfig);
         $this->validatePhpContainers($config[self::PHP_CONTAINERS_CONFIG_KEY], $generalConfig);
     }
 
     /**
      * Validate configuration structure
+     *
      * @param array $config
      * @throws Exception
      */
     private function validateStructure(array $config): void
     {
-        if (!array_key_exists(self::GENERAL_CONFIG_KEY, $config)) {
-            throw new Exception("Missing required configuration section: " . self::GENERAL_CONFIG_KEY);
+        if (!array_key_exists(self::GENERAL_CONFIG_KEY, $config)
+            || !is_array($config[self::GENERAL_CONFIG_KEY])) {
+            throw new Exception("Missing or invalid configuration section: " . self::GENERAL_CONFIG_KEY);
         }
 
         if (!array_key_exists(self::PHP_CONTAINERS_CONFIG_KEY, $config) ||
             !is_array($config[self::PHP_CONTAINERS_CONFIG_KEY])) {
             throw new Exception("Missing or invalid configuration section: " . self::PHP_CONTAINERS_CONFIG_KEY);
         }
+
+        $requiredVars = [
+            'M2_PROJECT', 'M2_VIRTUAL_HOSTS', 'M2_DB_NAME',
+            'PHP_VERSION', 'M2_EDITION', 'M2_VERSION', 'M2_SOURCE_VOLUME', 'DOCKER_SERVICES'
+        ];
+
+        foreach ($requiredVars as $variable) {
+            if (empty($config[self::GENERAL_CONFIG_KEY][$variable])) {
+                throw new Exception(sprintf('%s is required.', $variable));
+            }
+        }
+
+        if (!is_array($config[self::GENERAL_CONFIG_KEY]['DOCKER_SERVICES'])) {
+            throw new Exception('DOCKER_SERVICES must be array');
+        }
     }
 
     /**
      * Validate general configuration
+     *
      * @param array $generalConfig
      * @throws Exception
      */
     public function validateGeneralConfig(array $generalConfig): void
     {
-        $requiredVars = [
-            'M2_PROJECT', 'M2_VIRTUAL_HOSTS', 'M2_DB_NAME',
-            'PHP_VERSION', 'M2_EDITION', 'M2_VERSION', 'M2_SOURCE_VOLUME'
-        ];
-
-        foreach ($requiredVars as $variable) {
-            if (empty($generalConfig[$variable])) {
-                throw new Exception(sprintf('%s is required.', $variable));
-            }
-        }
-
         $availableEditions = ['community', 'enterprise', 'cloud', 'mage-os'];
         if (!in_array($generalConfig['M2_EDITION'], $availableEditions)) {
             throw new Exception(sprintf('Incorrect Edition: %s. Available: %s',
                 $generalConfig['M2_EDITION'], implode(', ', $availableEditions)));
         }
-
-        if ($generalConfig['DOCKER_SERVICES']['newrelic'] ?? false) {
-            throw new Exception('New Relic is not supported yet.');
-        }
     }
 
     /**
      * Validate Magento settings configuration
+     *
      * @param array $generalConfig
      * @throws Exception
      */
@@ -93,6 +99,7 @@ class ConfigValidator implements ConfigValidatorInterface
 
     /**
      * Validate Magento install configuration
+     *
      * @param array $generalConfig
      * @throws Exception
      */
@@ -117,84 +124,107 @@ class ConfigValidator implements ConfigValidatorInterface
 
     /**
      * Validate database service
+     *
      * @param array $generalConfig
      * @throws Exception
      */
     public function validateDatabaseService(array $generalConfig): void
     {
-        if (!isset($generalConfig['DOCKER_SERVICES']['database'])) {
-            throw new Exception('Database service configuration is required.');
-        }
+        $serviceName = 'Database';
+        $serviceKey = 'database';
+        $this->validateDockerService(
+            $generalConfig,
+            $serviceName,
+            $serviceKey,
+            true,
+            ['IMAGE', 'TYPE', 'VERSION', 'VOLUME']
+        );
 
-        $databaseConfig = $generalConfig['DOCKER_SERVICES']['database'];
-
-        $requiredKeys = ['IMAGE', 'TYPE', 'VERSION', 'VOLUME'];
-        foreach ($requiredKeys as $key) {
-            if (empty($databaseConfig[$key])) {
-                throw new Exception(sprintf('Database %s is required.', $key));
-            }
-        }
-
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['mariadb', 'mysql', 'percona'];
-        if (!in_array($databaseConfig['TYPE'], $availableTypes)) {
+        if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
             throw new Exception(sprintf('Available database types: %s', implode(', ', $availableTypes)));
         }
     }
 
     /**
      * Validate search engine service
+     *
      * @param array $generalConfig
      * @throws Exception
      */
     public function validateSearchEngineService(array $generalConfig): void
     {
-        if (!isset($generalConfig['DOCKER_SERVICES']['search_engine'])) {
-            return;
-        }
-
-        $searchEngineConfig = $generalConfig['DOCKER_SERVICES']['search_engine'];
-        if ($searchEngineConfig === false) {
-            return;
-        }
-
-        if (($searchEngineConfig['CONNECT_TYPE'] ?? '') === 'none') {
-            $searchEngineConfig = false;
-        }
-
-        $searchEngineAvailable = $searchEngineConfig !== false
-            && in_array($searchEngineConfig['CONNECT_TYPE'] ?? '', ['internal', 'external']);
-
+        $serviceName = 'Search Engine';
+        $serviceKey = 'search_engine';
         $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
-        if (!$searchEngineAvailable && version_compare($magentoVersion, '2.4.0', '>=')) {
-            throw new Exception('External or Internal Search Engine is required for magento 2.4.0+');
-        }
+        $isServiceRequired = version_compare($magentoVersion, '2.4.0', '>=');
+        $this->validateDockerService(
+            $generalConfig,
+            $serviceName,
+            $serviceKey,
+            $isServiceRequired,
+            ['enabled', 'CONNECT_TYPE', 'TYPE', 'VERSION'],
+            'Service %s is required for Magento 2.4.0+'
+        );
 
-        if (is_array($searchEngineConfig)
-            && !in_array($searchEngineConfig['TYPE'] ?? '', ['elasticsearch', 'opensearch'])) {
-            throw new Exception(sprintf('Available search engine types: %s',
-                implode(', ', ['elasticsearch', 'opensearch'])));
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        if (!in_array($serviceConfig['TYPE'] ?? '', ['elasticsearch', 'opensearch'])) {
+            throw new Exception(sprintf('Service %s: Available types: %s',
+                $serviceName, implode(', ', ['elasticsearch', 'opensearch'])));
         }
     }
 
     /**
      * Validate Venia service
+     *
      * @param array $generalConfig
      * @throws Exception
      */
     public function validateVeniaService(array $generalConfig): void
     {
-        $services = $generalConfig['DOCKER_SERVICES'] ?? [];
-        if (!($services['venia'] ?? false)) {
-            return;
-        }
+        $serviceName = 'Venia';
+        $serviceKey = 'venia';
+        $this->validateDockerServiceSimple(
+            $generalConfig,
+            $serviceName,
+            $serviceKey,
+            false
+        );
 
-        if ($services['varnish'] ?? false) {
+        if ($generalConfig['DOCKER_SERVICES']['varnish'] ?? false) {
             throw new Exception('Venia PWA does not need Varnish on Magento backend');
         }
     }
 
     /**
+     * Validate New Relic service
+     *
+     * @param array $generalConfig
+     * @throws Exception
+     */
+    public function validateNewRelicService(array $generalConfig): void
+    {
+        $serviceName = 'New Relic';
+        $serviceKey = 'newrelic';
+        $this->validateDockerService(
+            $generalConfig,
+            $serviceName,
+            $serviceKey,
+            false,
+            ['enabled', 'infrastructure']
+        );
+
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        $isServiceEnabled = $serviceConfig !== false && ($serviceConfig['enabled'] ?? true);
+        if ($isServiceEnabled) {
+            throw new Exception('New Relic is not supported yet.');
+        }
+    }
+
+    /**
      * Validate PHP containers configuration
+     *
      * @param array $phpContainersConfig
      * @param array $generalConfig
      * @throws Exception
@@ -208,12 +238,87 @@ class ConfigValidator implements ConfigValidatorInterface
     }
 
     /**
+     * Docker Service config type:
+     *      $isServiceRequired==false => false|{}|{'enabled' => false|true}
+     *      $isServiceRequired==true => {}|{'enabled' => true}
+     *
+     * @param array $generalConfig
+     * @param string $serviceName
+     * @param string $serviceKey
+     * @param bool $isServiceRequired
+     * @param array $requiredKeys
+     * @param string $requiredMsg
+     * @return void
+     * @throws Exception
+     */
+    protected function validateDockerService(
+        array  $generalConfig,
+        string $serviceName,
+        string $serviceKey,
+        bool   $isServiceRequired,
+        array  $requiredKeys = [],
+        string $requiredMsg = 'Service %s is required.'
+    ): void {
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        if ($serviceConfig !== false && !is_array($serviceConfig)) {
+            throw new Exception('Service %s: bad configuration.', $serviceName);
+        }
+
+        $isServiceEnabled = $serviceConfig !== false && ($serviceConfig['enabled'] ?? true);
+        if (!$isServiceRequired && !$isServiceEnabled) {
+            return;
+        } elseif ($isServiceRequired && !$isServiceEnabled) {
+            throw new Exception(sprintf($requiredMsg, $serviceName));
+        }
+
+        foreach ($requiredKeys as $key) {
+            if (empty($serviceConfig[$key])) {
+                throw new Exception(sprintf('Service %s: %s is required.', $serviceName, $key));
+            }
+        }
+    }
+
+    /**
+     * Docker Service config type:
+     *      $isServiceRequired==false => false|false
+     *      $isServiceRequired==true => true
+     *
+     * @param array $generalConfig
+     * @param string $serviceName
+     * @param string $serviceKey
+     * @param bool $isServiceRequired
+     * @param string $requiredMsg
+     * @return void
+     * @throws Exception
+     */
+    protected function validateDockerServiceSimple(
+        array  $generalConfig,
+        string $serviceName,
+        string $serviceKey,
+        bool   $isServiceRequired,
+        string $requiredMsg = 'Service %s is required.'
+    ): void {
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        if (!is_bool($serviceConfig)) {
+            throw new Exception('Service %s: bad configuration.', $serviceName);
+        }
+
+        $isServiceEnabled = $serviceConfig;
+        if (!$isServiceRequired && !$isServiceEnabled) {
+            return;
+        } elseif ($isServiceRequired && !$isServiceEnabled) {
+            throw new Exception(sprintf($requiredMsg, $serviceName));
+        }
+    }
+
+    /**
      * Get active PHP containers configuration
+     *
      * @param array $allPhpContainersConfig
      * @param array $generalConfig
      * @return array
      */
-    private function getActivePhpContainersConfig(array $allPhpContainersConfig, array $generalConfig): array
+    protected function getActivePhpContainersConfig(array $allPhpContainersConfig, array $generalConfig): array
     {
         $buildPhpVersion = $generalConfig['PHP_VERSION'];
         $needMcsPhpContainer = $generalConfig['DOCKER_SERVICES']['magento-coding-standard'] ?? false;
@@ -235,7 +340,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param array $generalConfig
      * @throws Exception
      */
-    private function validatePhpContainer(string $name, array $containerConfig, array $generalConfig): void
+    protected function validatePhpContainer(string $name, array $containerConfig, array $generalConfig): void
     {
         if ($containerConfig['flavour'] !== 'cli') {
             if ($containerConfig['specificPackages']['grunt'] ?? false) {
