@@ -457,5 +457,187 @@
     }
   },
   "required": ["general-config", "php-containers"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "7.0" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["7.0-cli", "7.0-fpm", "7.0-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "7.1" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["7.1-cli", "7.1-fpm", "7.1-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "7.2" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["7.2-cli", "7.2-fpm", "7.2-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "7.3" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["7.3-cli", "7.3-fpm", "7.3-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "7.4" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["7.4-cli", "7.4-fpm", "7.4-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "8.0" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["8.0-cli", "8.0-fpm", "8.0-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "8.1" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["8.1-cli", "8.1-fpm", "8.1-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "8.2" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["8.2-cli", "8.2-fpm", "8.2-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "8.3" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["8.3-cli", "8.3-fpm", "8.3-mcs"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "general-config": {
+            "properties": {
+              "PHP_VERSION": { "const": "8.4" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "php-containers": {
+            "required": ["8.4-cli", "8.4-fpm", "8.4-mcs"]
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }
