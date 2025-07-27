@@ -1,0 +1,461 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/AndriynomeD/docker-magento2/blob/master/config.schema.json",
+  "title": "M2 Docker Compose env conf Schema",
+  "description": "Schema for Magento 2 Docker Compose environment configuration",
+  "type": "object",
+  "properties": {
+    "$schema": {"type": "string"},
+    "general-config": {
+      "type": "object",
+      "description": "General configuration settings",
+      "properties": {
+        "M2_PROJECT": {
+          "type": "string",
+          "description": "Project name",
+          "minLength": 1
+        },
+        "M2_VIRTUAL_HOSTS": {
+          "type": "string",
+          "description": "Comma-separated list of virtual hosts",
+          "pattern": "^[a-zA-Z0-9.-]+(,[a-zA-Z0-9.-]+)*$"
+        },
+        "M2_DB_NAME": {
+          "type": "string",
+          "description": "Database name",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9_]+$"
+        },
+        "PHP_VERSION": {
+          "type": "string",
+          "description": "PHP version",
+          "enum": ["7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
+        },
+        "M2_EDITION": {
+          "type": "string",
+          "description": "Magento edition",
+          "enum": ["community", "enterprise", "cloud", "mage-os"]
+        },
+        "M2_VERSION": {
+          "type": "string",
+          "description": "Magento 2 or Mage-OS version. Example: 2.4.8, 2.4.*, 2.4.6-p5.",
+          "pattern": "^\\d+\\.\\d+\\.(?:\\d+(?:-[a-zA-Z0-9.-]+)?|\\*)$"
+        },
+        "M2_SOURCE_VOLUME": {
+          "type": "string",
+          "description": "Project folder path for volume mapping",
+          "minLength": 1
+        },
+        "M2_INSTALL": {
+          "type": "object",
+          "description": "Installation parameters for magento-installer script",
+          "properties": {
+            "BASE_URL": {
+              "type": "string",
+              "format": "uri",
+              "description": "Base URL for Magento installation"
+            },
+            "SECURE_BASE_URL": {
+              "type": "string",
+              "format": "uri",
+              "description": "Secure base URL for Magento installation"
+            },
+            "INSTALL_DB": {
+              "type": "string",
+              "enum": ["true", "false"],
+              "description": "Whether to install database"
+            },
+            "USE_SAMPLE_DATA": {
+              "type": "string",
+              "enum": ["false", "true", "venia"],
+              "description": "Sample data installation option"
+            },
+            "ADMIN_EMAIL": {
+              "type": "string",
+              "format": "email",
+              "description": "Admin email address"
+            },
+            "CRYPT_KEY": {
+              "type": "string",
+              "description": "Encryption key (can be empty for auto-generation)"
+            }
+          },
+          "required": ["BASE_URL", "SECURE_BASE_URL", "INSTALL_DB", "USE_SAMPLE_DATA", "ADMIN_EMAIL", "CRYPT_KEY"],
+          "additionalProperties": false
+        },
+        "M2_SETTINGS": {
+          "type": "object",
+          "description": "Magento 2 pre-configuration parameters",
+          "properties": {
+            "SEARCH_ENGINE_SETTINGS": {
+              "type": "string",
+              "description": "Search engine configuration parameters"
+            },
+            "AMQ_SETTINGS": {
+              "type": "string",
+              "description": "RabbitMQ/AMQP configuration parameters"
+            },
+            "REDIS_SETTINGS": {
+              "type": "string",
+              "description": "Redis configuration parameters"
+            },
+            "VARNISH_SETTINGS": {
+              "type": "string",
+              "description": "Varnish configuration parameters"
+            }
+          },
+          "additionalProperties": false
+        },
+        "DOCKER_SERVICES": {
+          "type": "object",
+          "description": "Docker services configuration",
+          "properties": {
+            "database": {
+              "type": "object",
+              "description": "Database service configuration (required - always object type)",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "const": true,
+                  "description": "Database service is always enabled"
+                },
+                "TYPE": {
+                  "type": "string",
+                  "enum": ["mariadb", "mysql", "percona"],
+                  "description": "Database type"
+                },
+                "VERSION": {
+                  "type": "string",
+                  "description": "Database version",
+                  "pattern": "^[0-9.]+$"
+                },
+                "IMAGE": {
+                  "type": "string",
+                  "description": "Docker image name (optional)",
+                  "minLength": 1
+                },
+                "TAG": {
+                  "type": "string",
+                  "description": "Docker image tag (optional)",
+                  "pattern": "^[0-9.]+$"
+                },
+                "VOLUME": {
+                  "type": "string",
+                  "description": "Volume name for database data",
+                  "minLength": 1
+                }
+              },
+              "required": ["TYPE", "VERSION", "VOLUME"],
+              "additionalProperties": true
+            },
+            "search_engine": {
+              "description": "Search engine service (false or object type)",
+              "oneOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Enable/disable Search Engine service"
+                    },
+                    "CONNECT_TYPE": {
+                      "type": "string",
+                      "enum": ["external", "internal"],
+                      "description": "Connection type"
+                    },
+                    "TYPE": {
+                      "type": "string",
+                      "enum": ["elasticsearch", "opensearch"],
+                      "description": "Search engine type"
+                    },
+                    "VERSION": {
+                      "type": "string",
+                      "description": "Search engine version",
+                      "pattern": "^[0-9.]+$"
+                    },
+                    "IMAGE": {
+                      "type": "string",
+                      "description": "Docker image name (optional)",
+                      "minLength": 1
+                    },
+                    "TAG": {
+                      "type": "string",
+                      "description": "Docker image tag (optional)",
+                      "pattern": "^[0-9.]+$"
+                    }
+                  },
+                  "required": ["enabled", "TYPE", "VERSION", "CONNECT_TYPE"],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "redis": {
+              "description": "Redis service (false or object type)",
+              "oneOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Enable/disable Redis service"
+                    },
+                    "TYPE": {
+                      "type": "string",
+                      "enum": ["redis", "valkey"],
+                      "description": "Redis service type"
+                    },
+                    "VERSION": {
+                      "type": "string",
+                      "description": "Redis/Valkey version",
+                      "pattern": "^[0-9.]+$"
+                    },
+                    "IMAGE": {
+                      "type": "string",
+                      "description": "Docker image name (optional)",
+                      "minLength": 1
+                    },
+                    "TAG": {
+                      "type": "string",
+                      "description": "Docker image tag (optional)",
+                      "pattern": "^[0-9.]+$"
+                    }
+                  },
+                  "required": ["enabled", "TYPE", "VERSION"],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "newrelic": {
+              "description": "New Relic service (false or object type)",
+              "oneOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Enable/disable New Relic service"
+                    },
+                    "infrastructure": {
+                      "type": "boolean",
+                      "description": "Enable/disable New Relic infrastructure service"
+                    }
+                  },
+                  "required": ["enabled", "infrastructure"],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "varnish": {
+              "description": "Enable/disable Varnish service",
+              "type": "boolean"
+            },
+            "cron": {
+              "description": "Enable/disable Cron service",
+              "type": "boolean"
+            },
+            "rabbitmq": {
+              "description": "Enable/disable RabbitMQ service",
+              "type": "boolean"
+            },
+            "magento-coding-standard": {
+              "description": "Enable/disable Magento coding standard in separate container",
+              "type": "boolean"
+            },
+            "venia": {
+              "description": "Enable/disable Venia PWA integration",
+              "type": "boolean"
+            }
+          },
+          "required": ["database"],
+          "additionalProperties": {
+            "description": "Additional services (boolean type by default)",
+            "type": "boolean"
+          }
+        }
+      },
+      "required": ["M2_PROJECT", "M2_VIRTUAL_HOSTS", "M2_DB_NAME", "PHP_VERSION", "M2_EDITION", "M2_VERSION", "M2_SOURCE_VOLUME", "M2_INSTALL", "DOCKER_SERVICES"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "M2_VERSION": {
+                "pattern": "^(?:(?:[3-9]\\d*|\\d{2,})\\.\\d+\\.(?:\\d+|\\*)|2\\.(?:[5-9]|\\d{2,})\\.(?:\\d+|\\*)|2\\.4\\.(?:\\d+(?:-[a-zA-Z0-9.-]+)?|\\*))$"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "DOCKER_SERVICES": {
+                "properties": {
+                  "search_engine": {
+                    "not": { "const": false },
+                    "errorMessage": "search_engine cannot be false for Magento >= 2.4.0"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "DOCKER_SERVICES": {
+                "properties": {
+                  "venia": { "const": true }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "M2_INSTALL": {
+                "properties": {
+                  "USE_SAMPLE_DATA": { "enum": ["false", "venia"] }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "M2_EDITION": { "const": "cloud" }
+            }
+          },
+          "then": {
+            "properties": {
+              "M2_INSTALL": {
+                "properties": {
+                  "INSTALL_DB": { "const": "false" },
+                  "USE_SAMPLE_DATA": { "enum": ["false"] }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "php-containers": {
+      "type": "object",
+      "description": "PHP containers configuration",
+      "patternProperties": {
+        "^(7\\.0|7\\.1|7\\.2|7\\.3|7\\.4|8\\.0|8\\.1|8\\.2|8\\.3|8\\.4)-(cli|fpm|mcs)$": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": ["7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
+            },
+            "flavour": {
+              "type": "string",
+              "enum": ["cli", "fpm"]
+            },
+            "files": {
+              "type": "object",
+              "patternProperties": {
+                ".*": {
+                  "type": "object",
+                  "properties": {
+                    "template_name": {
+                      "type": "string"
+                    },
+                    "_enable_variables": {
+                      "type": "boolean"
+                    },
+                    "executable": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "phpExtensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "specificPackages": {
+              "type": "object",
+              "patternProperties": {
+                ".*": {
+                  "oneOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "composerVersion": {
+              "type": "string"
+            },
+            "xdebugVersion": {
+              "type": "string"
+            }
+          },
+          "required": ["version", "flavour", "files", "packages", "phpExtensions", "specificPackages"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "flavour": {
+                    "enum": ["cli"]
+                  }
+                }
+              },
+              "then": {
+                "allOf": [
+                  {
+                    "required": ["composerVersion"]
+                  }
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "flavour": {
+                    "const": "fpm"
+                  }
+                }
+              },
+              "then": {
+                "required": ["xdebugVersion"]
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["general-config", "php-containers"],
+  "additionalProperties": false
+}
