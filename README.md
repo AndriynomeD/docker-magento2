@@ -1,6 +1,6 @@
 # Magento 2 Docker
 
-A collection of Docker images for running multiple Magento 2 projects through nginx-proxy that give available all projects at same time.
+Docker infrastructure for managing multiple Magento 2 projects via nginx-proxy with simultaneous access to all instances.
 Useful for Magento 2 developers.
 
 Magento 2 Docker infrastructure have the following structure:
@@ -13,13 +13,13 @@ nginx-proxy & shared infrastructure
     └── ...
 ```
 
-Inspired by [meanbee/docker-magento2][origin-repo]
+Inspired by [meanbee/docker-magento2][meanbee-docker-magento2]
 
 For Max OS X useful: https://www.meanbee.com/developers/magento2-development-procedure.html  
 
 ### Usage 
 
-1) Install & Configure [nginx-proxy][nginx-proxy]
+1) Install & Configure [docker-magento2-shared-infra][docker-magento2-shared-infra]
 2) Prepare all config files:
    1) Run `make copy-configs` - it will create config files from samples (will create `./envs/composer.env`, `./envs/global.env`, `config.json`).
    ```shell
@@ -492,7 +492,7 @@ networks:
 - [x] Implement configuration for Magento Coding Standard.
 - [x] Implement internal elasticsearch/opensearch service.
 - [x] ~~Implement bash scripts for auto-generate ssl certificate~~
-- [x] Implement auto-generate ssl certificate (`mkcert` from [nginx-proxy][nginx-proxy])
+- [x] Implement auto-generate ssl certificate (`mkcert` from [docker-magento2-shared-infra][docker-magento2-shared-infra])
 - [x] Implement bash scripts for set/update default services configs to env.php
 - [ ] Implement LiveReload
 - [ ] Implement dynamic varnish configs during build docker infrastructure (like it was done for php containers)
@@ -502,15 +502,8 @@ networks:
 - [x] Replace the custom template engine via [Twig templae engine][twig]
 - [x] Implement [SPX][spx] - A simple profiler for PHP
 
-[ico-travis]: https://img.shields.io/travis/meanbee/docker-magento2.svg?style=flat-square
-[ico-dockerbuild]: https://img.shields.io/docker/build/meanbee/magento2-php.svg?style=flat-square
-[ico-downloads]: https://img.shields.io/docker/pulls/meanbee/magento2-php.svg?style=flat-square
-[ico-dockerstars]: https://img.shields.io/docker/stars/meanbee/magento2-php.svg?style=flat-square
-
-[link-travis]: https://travis-ci.org/meanbee/docker-magento2
-[link-dockerhub]: https://hub.docker.com/r/meanbee/magento2-php
-[origin-repo]: https://github.com/meanbee/docker-magento2
-[nginx-proxy]: https://github.com/AndriynomeD/nginx-proxy
+[meanbee-docker-magento2]: https://github.com/meanbee/docker-magento2
+[docker-magento2-shared-infra]: https://github.com/AndriynomeD/docker-magento2-shared-infra
 [magento-coding-standard]: https://github.com/magento/magento-coding-standard
 [magento-system-requirements]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html
 [magento-ngrok]: https://github.com/AndriynomeD/magento-ngrok

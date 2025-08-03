@@ -133,13 +133,17 @@ class ConfigValidator implements ConfigValidatorInterface
     {
         $serviceName = 'Database';
         $serviceKey = 'database';
-        $this->validateDockerService(
+        $isServiceEnabled = $this->validateDockerService(
             $generalConfig,
             $serviceName,
             $serviceKey,
             true,
             ['TYPE', 'VERSION', 'VOLUME']
         );
+
+        if (!$isServiceEnabled) {
+            return;
+        }
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['mariadb', 'mysql', 'percona'];
@@ -161,7 +165,7 @@ class ConfigValidator implements ConfigValidatorInterface
         $serviceKey = 'search_engine';
         $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
         $isServiceRequired = version_compare($magentoVersion, '2.4.0', '>=');
-        $this->validateDockerService(
+        $isServiceEnabled = $this->validateDockerService(
             $generalConfig,
             $serviceName,
             $serviceKey,
@@ -169,6 +173,10 @@ class ConfigValidator implements ConfigValidatorInterface
             ['enabled', 'CONNECT_TYPE', 'TYPE', 'VERSION'],
             'Service %s is required for Magento 2.4.0+'
         );
+
+        if (!$isServiceEnabled) {
+            return;
+        }
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['elasticsearch', 'opensearch'];
@@ -188,13 +196,17 @@ class ConfigValidator implements ConfigValidatorInterface
     {
         $serviceName = 'In-memory datastore';
         $serviceKey = 'redis';
-        $this->validateDockerService(
+        $isServiceEnabled = $this->validateDockerService(
             $generalConfig,
             $serviceName,
             $serviceKey,
             false,
             ['enabled', 'TYPE', 'VERSION']
         );
+
+        if (!$isServiceEnabled) {
+            return;
+        }
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['redis', 'valkey'];
@@ -214,16 +226,18 @@ class ConfigValidator implements ConfigValidatorInterface
     {
         $serviceName = 'Venia';
         $serviceKey = 'venia';
-        $this->validateDockerServiceSimple(
+        $isServiceEnabled = $this->validateDockerServiceSimple(
             $generalConfig,
             $serviceName,
             $serviceKey,
             false
         );
 
-        if ($generalConfig['DOCKER_SERVICES']['varnish'] ?? false) {
-            throw new Exception('Venia PWA does not need Varnish on Magento backend');
+        if (!$isServiceEnabled) {
+            return;
         }
+
+        throw new Exception('Venia PWA does not need Varnish on Magento backend');
     }
 
     /**
@@ -236,7 +250,7 @@ class ConfigValidator implements ConfigValidatorInterface
     {
         $serviceName = 'New Relic';
         $serviceKey = 'newrelic';
-        $this->validateDockerService(
+        $isServiceEnabled = $this->validateDockerService(
             $generalConfig,
             $serviceName,
             $serviceKey,
@@ -244,11 +258,11 @@ class ConfigValidator implements ConfigValidatorInterface
             ['enabled', 'infrastructure']
         );
 
-        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
-        $isServiceEnabled = $serviceConfig !== false && ($serviceConfig['enabled'] ?? true);
-        if ($isServiceEnabled) {
-            throw new Exception('New Relic is not supported yet.');
+        if (!$isServiceEnabled) {
+            return;
         }
+
+        throw new Exception('New Relic is not supported yet.');
     }
 
     /**
@@ -277,7 +291,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param bool $isServiceRequired
      * @param array $requiredKeys
      * @param string $requiredMsg
-     * @return void
+     * @return bool
      * @throws Exception
      */
     private function validateDockerService(
@@ -287,15 +301,15 @@ class ConfigValidator implements ConfigValidatorInterface
         bool   $isServiceRequired,
         array  $requiredKeys = [],
         string $requiredMsg = 'Service %s is required.'
-    ): void {
+    ): bool {
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         if ($serviceConfig !== false && !is_array($serviceConfig)) {
-            throw new Exception('Service %s: bad configuration.', $serviceName);
+            throw new Exception(sprintf('Service %s: bad configuration.', $serviceName));
         }
 
         $isServiceEnabled = $serviceConfig !== false && ($serviceConfig['enabled'] ?? true);
         if (!$isServiceRequired && !$isServiceEnabled) {
-            return;
+            return false;
         } elseif ($isServiceRequired && !$isServiceEnabled) {
             throw new Exception(sprintf($requiredMsg, $serviceName));
         }
@@ -305,6 +319,8 @@ class ConfigValidator implements ConfigValidatorInterface
                 throw new Exception(sprintf('Service %s: %s is required.', $serviceName, $key));
             }
         }
+
+        return $isServiceEnabled;
     }
 
     /**
@@ -317,7 +333,7 @@ class ConfigValidator implements ConfigValidatorInterface
      * @param string $serviceKey
      * @param bool $isServiceRequired
      * @param string $requiredMsg
-     * @return void
+     * @return bool
      * @throws Exception
      */
     private function validateDockerServiceSimple(
@@ -326,18 +342,20 @@ class ConfigValidator implements ConfigValidatorInterface
         string $serviceKey,
         bool   $isServiceRequired,
         string $requiredMsg = 'Service %s is required.'
-    ): void {
+    ): bool {
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         if (!is_bool($serviceConfig)) {
-            throw new Exception('Service %s: bad configuration.', $serviceName);
+            throw new Exception(sprintf('Service %s: bad configuration.', $serviceName));
         }
 
         $isServiceEnabled = $serviceConfig;
         if (!$isServiceRequired && !$isServiceEnabled) {
-            return;
+            return false;
         } elseif ($isServiceRequired && !$isServiceEnabled) {
             throw new Exception(sprintf($requiredMsg, $serviceName));
         }
+
+        return $isServiceEnabled;
     }
 
     /**

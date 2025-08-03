@@ -19,6 +19,9 @@
       - VIRTUAL_HOST={{ M2_VIRTUAL_HOSTS }}
       - VIRTUAL_PORT=80
       - HTTPS_METHOD=noredirect
+{# Multi-domains certificates
+   Specify multiple hosts with a comma delimiter to create multi-domains (SAN) certificates
+   (the first domain in the list will be the base domain). #}
       - CERT_NAME={{ M2_VIRTUAL_HOSTS|split(',')|first|trim }}
 {% endif %}
     networks:
