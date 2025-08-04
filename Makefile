@@ -13,7 +13,7 @@ build: _check_dependencies _check_configs
 
 # Dry-run build docker environment based on configuration
 build-dry-run: _check_dependencies _check_configs
-	@$(DOCKER_BUILDER_CMD) build --dry-run
+	@$(DOCKER_BUILDER_CMD) build --dry-run $(filter-out $@,$(MAKECMDGOALS))
 
 # Remove dry-run files and directories (with confirmation)
 clean-dry-run:

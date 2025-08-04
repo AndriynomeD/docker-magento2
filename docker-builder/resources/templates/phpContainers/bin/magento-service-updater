@@ -2,6 +2,7 @@
 
 [ "$DEBUG" = "true" ] && set -x
 
+exit 1
 source /usr/local/bin/version_compare.sh
 
 MAGENTO_COMMAND="magento-command"
@@ -12,12 +13,12 @@ echo "Creates or modifies the deployment configuration"
 
 UPDATE_DEPLOYMENT_CONFIG_COMMAND="$MAGENTO_COMMAND"
 
-if { [ "$M2SETUP_EDITION" != "mage-os" ] && version_compare "$M2SETUP_VERSION" ">=" "2.4.1"; } \
-    || [ "$M2SETUP_EDITION" = "mage-os" ]; then
+if { [ "$M2_EDITION" != "mage-os" ] && version_compare "$M2_VERSION" ">=" "2.4.1"; } \
+    || [ "$M2_EDITION" = "mage-os" ]; then
     UPDATE_DEPLOYMENT_CONFIG_COMMAND="$UPDATE_DEPLOYMENT_CONFIG_COMMAND setup:config:set --document-root-is-pub=true"
 fi
 
-if version_compare $M2SETUP_VERSION '>=' 2.3.0; then
+if version_compare $M2_VERSION '>=' 2.3.0; then
     UPDATE_DEPLOYMENT_CONFIG_COMMAND="$UPDATE_DEPLOYMENT_CONFIG_COMMAND $M2SETUP_AMQ_SETTINGS"
 fi
 

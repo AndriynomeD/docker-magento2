@@ -163,7 +163,7 @@ class ConfigValidator implements ConfigValidatorInterface
     {
         $serviceName = 'Search Engine';
         $serviceKey = 'search_engine';
-        $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
+        $magentoVersion = str_replace('*', '999', $generalConfig['M2_VERSION']);
         $isServiceRequired = version_compare($magentoVersion, '2.4.0', '>=');
         $isServiceEnabled = $this->validateDockerService(
             $generalConfig,

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DockerBuilder\Core\Template;
 
 use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
@@ -58,6 +60,52 @@ class TemplateRenderer implements TemplateRendererInterface
         }
 
         return null;
+    }
+
+    /**
+     * @param string $directory
+     * @param array $config
+     * @return array
+     * @throws Exception
+     */
+    public function findTemplates(string $directory, array $config): array
+    {
+        $testPath = $this->templatesPath . $config['templateSubDir'] . $directory;
+        if (is_dir($testPath)) {
+            if (!is_readable($testPath)) {
+                throw new Exception(sprintf('Template file %s not readable.', $testPath));
+            }
+
+            return $this->getFiles($testPath);
+        }
+
+        return [];
+    }
+
+    /**
+     * @param string $directoryPath
+     * @return array
+     */
+    private function getFiles(string $directoryPath): array
+    {
+        if (!is_dir($directoryPath)) {
+            throw new Exception(sprintf("Path %s does not a directory", $directoryPath));
+        }
+
+        $directoryPath = rtrim($directoryPath, '/');
+        $parentPath = dirname($directoryPath);
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directoryPath)
+        );
+        foreach ($iterator as $file) {
+            if ($file->isFile() && !in_array($file->getFilename(), ['.', '..'])) {
+                $relativePath = str_replace($parentPath . '/', '', $file->getPathname());
+                $files[] = $relativePath;
+            }
+        }
+
+        sort($files);
+        return $files;
     }
 
     /**

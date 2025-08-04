@@ -35,8 +35,8 @@
       - ./envs/global.env
     environment:
 {# for correct cron setup according to M2_VERSION #}
-      M2SETUP_EDITION: {{ M2_EDITION }}
-      M2SETUP_VERSION: {{ M2_VERSION }}
+      M2_EDITION: {{ M2_EDITION }}
+      M2_VERSION: {{ M2_VERSION }}
 {% if DOCKER_SERVICES.newrelic %}
       NEWRELIC_APPNAME: {{ M2_PROJECT }}
 {% endif %}

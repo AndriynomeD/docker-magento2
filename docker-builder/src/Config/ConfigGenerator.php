@@ -129,6 +129,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
             }
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
         }
+
         if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
             $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
@@ -147,6 +148,9 @@ class ConfigGenerator implements ConfigGeneratorInterface
     {
         $serviceKey = 'search_engine';
         $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+        if (!$generalConfig['DOCKER_SERVICES'][$serviceKey]) {
+            return $generalConfig;
+        }
 
         if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] ?? false)) {
             $image = '';
@@ -160,6 +164,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
             }
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
         }
+
         if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
             $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
@@ -178,6 +183,9 @@ class ConfigGenerator implements ConfigGeneratorInterface
     {
         $serviceKey = 'redis';
         $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+        if (!$generalConfig['DOCKER_SERVICES'][$serviceKey]) {
+            return $generalConfig;
+        }
 
         if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] ?? false)) {
             $image = '';
@@ -191,6 +199,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
             }
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
         }
+
         if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
             $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
@@ -208,12 +217,13 @@ class ConfigGenerator implements ConfigGeneratorInterface
     private function transformVeniaService(array $generalConfig): array
     {
         $serviceKey = 'venia';
-        $isServiceEnabled = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        $generalConfig['DOCKER_SERVICES'][$serviceKey] = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        if (!$generalConfig['DOCKER_SERVICES'][$serviceKey]) {
+            return $generalConfig;
+        }
 
-        if ($isServiceEnabled) {
-            if (($generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] ?? 'false') !== 'false') {
-                $generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
-            }
+        if (($generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] ?? 'false') !== 'false') {
+            $generalConfig['M2_INSTALL']['USE_SAMPLE_DATA'] = 'venia';
         }
 
         return $generalConfig;
@@ -229,6 +239,9 @@ class ConfigGenerator implements ConfigGeneratorInterface
     {
         $serviceKey = 'newrelic';
         $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+        if (!$generalConfig['DOCKER_SERVICES'][$serviceKey]) {
+            return $generalConfig;
+        }
 
         return $generalConfig;
     }
@@ -311,7 +324,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
             return 'latest';
         }
 
-        $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
+        $magentoVersion = str_replace('*', '999', $generalConfig['M2_VERSION']);
         if (version_compare($magentoVersion, '2.4.0', '>=')
             || (version_compare($magentoVersion, '2.3.7', '>=') && version_compare($magentoVersion, '2.4.0', '<'))
         ) {
@@ -333,7 +346,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
             return 'latest';
         }
 
-        $magentoVersion = str_replace('*', '9', $generalConfig['M2_VERSION']);
+        $magentoVersion = str_replace('*', '999', $generalConfig['M2_VERSION']);
         if (version_compare($magentoVersion, '2.3.7', '>=') &&
             version_compare($generalConfig['PHP_VERSION'], '7.1', '>=')) {
             return 'latest';

@@ -248,6 +248,7 @@ class ConfigBuilder
 
         $this->logger->info(sprintf("Building container '%s'...", $containerName), OutputInterface::VERBOSITY_NORMAL);
 
+        $this->fileManager->removeDirectory($containerConfig['destinationDir']);
         /** Prepare data for buildContainerFile */
         $configFiles = $containerConfig['files'] ?? [];
         $commonVariables = $containerConfig;
@@ -281,6 +282,7 @@ class ConfigBuilder
      *      template_name?: string,
      *      _enable_variables?: bool,
      *      executable?: bool,
+     *      is_folder?: bool,
      *  } $fileConfig
      * @param array $commonVariables
      */
@@ -293,8 +295,17 @@ class ConfigBuilder
         $isValid = is_array($fileConfig) &&
             !array_diff($requiredKeys, array_keys($fileConfig));
         if (!$isValid) {
-            throw new Exception(sprintf("File %s Config doesn't have required params: %s",
+            throw new Exception(sprintf("File(s) %s Config doesn't have required params: %s",
                 $filename, implode(', ', $requiredKeys)));
+        }
+
+        if ($fileConfig['is_folder'] ?? false) {
+            unset($fileConfig['is_folder'], $fileConfig['_enable_variables'], $fileConfig['template_name']);
+            $files = $this->templateRenderer->findTemplates($filename, $fileConfig);
+            foreach ($files as $file) {
+                $this->buildFile($file, $fileConfig, $commonVariables);
+            }
+            return;
         }
 
         // set default variables
@@ -308,11 +319,23 @@ class ConfigBuilder
 
         $content = $this->templateRenderer->render($templateFile, $fileConfig, $commonVariables);
         $destinationFile = $fileConfig['destinationDir'] . DIRECTORY_SEPARATOR . $filename;
-        $this->logger->info(sprintf("\tWriting '%s'...", $destinationFile), OutputInterface::VERBOSITY_VERBOSE);
+        $this->logger->info(
+            sprintf(
+                "\tWriting '%s'...",
+                str_replace($this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR, '', $destinationFile)
+            ),
+            OutputInterface::VERBOSITY_VERBOSE
+        );
         $this->fileManager->writeFile($destinationFile, $content);
 
         if ($fileConfig['executable'] ?? false) {
-            $this->logger->info(sprintf("\tSetting executable permissions on '%s'...", $destinationFile), OutputInterface::VERBOSITY_VERBOSE);
+            $this->logger->info(
+                sprintf(
+                    "\tSetting executable permissions on '%s'...",
+                    str_replace($this->getRealPath(self::ROOT_DIR) . DIRECTORY_SEPARATOR, '', $destinationFile)
+                ),
+                OutputInterface::VERBOSITY_VERBOSE
+            );
             $this->fileManager->setPermissions($destinationFile, $this->executablePermissions);
         }
     }

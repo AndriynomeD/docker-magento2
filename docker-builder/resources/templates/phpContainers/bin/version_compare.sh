@@ -10,8 +10,10 @@ function version_compare() # $1-a $2-op $3-$b
 # R3: op can be '=' '==' '!=' '<' '<=' '>' '>=' (lexicographic).
 # R4: Unrestricted number of digits of any item, i.e., 3.0003 > 3.0000004.
 # R5: Unrestricted number of items.
+# R6: Wildcards (*) are replaced with 999 before comparison.
 {
-  local a=$1 op=$2 b=$3 al=${1##*.} bl=${3##*.}
+#  local a=$1 op=$2 b=$3 al=${1##*.} bl=${3##*.}
+  local a=${1/\*/999} op=$2 b=${3/\*/999} al=${a##*.} bl=${b##*.}
   while [[ $al =~ ^[[:digit:]] ]]; do al=${al:1}; done
   while [[ $bl =~ ^[[:digit:]] ]]; do bl=${bl:1}; done
   local ai=${a%$al} bi=${b%$bl}

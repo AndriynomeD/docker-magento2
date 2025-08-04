@@ -20,7 +20,7 @@
       "SEARCH_ENGINE_SETTINGS": "--opensearch-index-prefix=magento2docker --search-engine=opensearch --opensearch-host=opensearch --opensearch-port=9200",
       "AMQ_SETTINGS": "--amqp-host=rabbitmq --amqp-port=5672 --amqp-user=rabbitmq_user --amqp-password=rabbitmq_pass --amqp-virtualhost=rabbitmq",
       "REDIS_SETTINGS": "--session-save=redis --session-save-redis-host=redis --session-save-redis-port=6379",
-      "VARNISH_SETTINGS": "--http-cache-hosts=varnish"
+      "VARNISH_SETTINGS": "--http-cache-hosts=varnish.magento2.docker"
     },
     "DOCKER_SERVICES": {
       "database": {
@@ -90,7 +90,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -171,7 +171,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -248,7 +248,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -321,7 +321,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [],
@@ -396,7 +396,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -474,7 +474,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -552,7 +552,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -633,7 +633,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -718,7 +718,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [
@@ -801,7 +801,7 @@
       "files": {
         "Dockerfile": {"template_name": "php-mcs/Dockerfile.twig", "_enable_variables": true},
         "docker-entrypoint.sh": {"template_name": "php-mcs/docker-entrypoint.sh.twig", "_enable_variables": true, "executable": true},
-        "bin/magento-coding-standard-installer": {"executable": true},
+        "bin/magento-coding-standard-installer": {"template_name": "php-mcs/bin/magento-coding-standard-installer", "executable": true},
         "etc/php-cli.ini": {}
       },
       "packages": [

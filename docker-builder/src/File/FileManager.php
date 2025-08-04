@@ -55,6 +55,30 @@ class FileManager implements FileManagerInterface
     }
 
     /**
+     * Remove a directory with all its inner content
+     *
+     * @param string $path
+     * @throws Exception
+     */
+    public function removeDirectory(string $path): void
+    {
+        if (!is_dir($path)) {
+            return;
+        }
+
+        $files = array_diff(scandir($path), ['.', '..']);
+        foreach ($files as $file) {
+            $filePath = $path . DIRECTORY_SEPARATOR . $file;
+            is_dir($filePath) ? $this->removeDirectory($filePath) : unlink($filePath);
+        }
+
+        $result = rmdir($path);
+        if (!$result) {
+            throw new Exception(sprintf("Failed to remove directory %s", $path));
+        }
+    }
+
+    /**
      * Set file permissions
      * @param string $path
      * @param int|null $permissions

@@ -55,8 +55,8 @@ ENV PHP_MEMORY_LIMIT=4G \
 COPY etc/php-cli.ini /usr/local/etc/php/conf.d/zz-magento.ini
 
 COPY bin/* /usr/local/bin/
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN ["chmod", "+x", "/docker-entrypoint.sh"]
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 #RUN find /usr/local/bin -type f -exec chmod +x {} +
 RUN for file in \
@@ -67,6 +67,6 @@ RUN for file in \
 
 WORKDIR $APP_ROOT
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["bash"]

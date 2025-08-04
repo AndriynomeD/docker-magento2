@@ -26,5 +26,7 @@
 {% endif %}
     networks:
       default:
+{% if not DOCKER_SERVICES.varnish %}
       nginx-proxy:
+{% endif %}
 
