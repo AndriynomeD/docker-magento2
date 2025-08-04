@@ -55,7 +55,7 @@ php bin/console build [options]
 
 ## Configuration
 The builder looks for configuration files in the following order:
-1. `docker-builder-config.json` (current directory)
+1. `config.json` (current directory)
 
 ## Project Structure
 ```
@@ -63,24 +63,24 @@ The builder looks for configuration files in the following order:
 ├── config.json                     # Custom configuration (createt by user)
 ├── compose.yaml                    # Docker Compose file (generated)
 ├── compose-dry-run.yaml            # Dry-run Docker Compose file (generated)
-├── docker-builder-run              # Main executable script
+├── Makefile                        # Main executable script
 ├── containers/                     # Folder for docker containers (static & generated)
 ├── containers-dry-run/             # Dry-run folder for docker containers (generated only)
 └── docker-builder/                 # Core package directory
     ├── composer.json               # Composer dependencies
-    ├── autoload.php                # Standalone autoloader
     ├── bin/
     │   └── console                 # Symfony Console entry point
     ├── resources/                  # Resources: templates, config samples
     │   ├── templates/              # Templates
-    │   │   ├── compose-template.php
-    │   │   ├── phpContainers/
-    │   │   │   ├── Dockerfile
-    │   │   │   └── ...
-    │   │   └── search_engine/
-    │   │       ├── elasticsearch/
-    │   │       └── opensearch/
+    │   │   ├── compose.yaml.twig
+    │   │   ├── ...
+    │   │   └── varnish/
+    │   │       ├── ...
+    │   │       └── Dockerfile.twig
     │   └── samples/                # Config samples
+    │       ├── envs/                
+    │       │   ├── composer.env.sample               
+    │       │   └── global.env.sample               
     │       └── config.json.sample
     └── src/
         ├── Console/                # Symfony Console commands

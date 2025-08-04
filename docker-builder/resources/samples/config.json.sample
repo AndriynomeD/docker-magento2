@@ -34,7 +34,11 @@
         "TYPE": "opensearch",
         "VERSION": "2.19.1"
       },
-      "varnish": false,
+      "varnish": {
+        "enabled": false,
+        "TYPE": "varnish",
+        "VERSION": "6.6"
+      },
       "cron": true,
       "redis": {
         "enabled": false,

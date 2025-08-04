@@ -2,11 +2,11 @@ vcl 4.0;
 
 import std;
 # The minimal Varnish version is 4.0
-# For SSL offloading, pass the following header in your proxy server or load balancer: 'X-Forwarded-Proto: https'
+# For SSL offloading, pass the following header in your proxy server or load balancer: '/* {{ ssl_offloaded_header }} */: https'
 
 backend default {
-    .host = "web";
-    .port = "80";
+    .host = "/* {{ host }} */";
+    .port = "/* {{ port }} */";
     .first_byte_timeout = 600s;
     .probe = {
         .url = "/pub/health_check.php";
@@ -18,7 +18,7 @@ backend default {
 }
 
 acl purge {
-    "web";
+/* {{ ips }} */
 }
 
 sub vcl_recv {
@@ -104,12 +104,12 @@ sub vcl_recv {
 
         # But if you use a few locales and don't use CDN you can enable caching static files by commenting previous line (#return (pass);) and uncommenting next 3 lines
         #unset req.http.Https;
-        #unset req.http.X-Forwarded-Proto;
+        #unset req.http./* {{ ssl_offloaded_header }} */;
         #unset req.http.Cookie;
     }
 
-     # Authenticated GraphQL requests should not be cached by default
-    if (req.url ~ "/graphql" && req.http.Authorization ~ "^Bearer") {
+    # Bypass authenticated GraphQL requests without a X-Magento-Cache-Id
+    if (req.url ~ "/graphql" && !req.http.X-Magento-Cache-Id && req.http.Authorization ~ "^Bearer") {
         return (pass);
     }
 
@@ -117,7 +117,7 @@ sub vcl_recv {
 }
 
 sub vcl_hash {
-    if (req.http.cookie ~ "X-Magento-Vary=") {
+    if ((req.url !~ "/graphql" || !req.http.X-Magento-Cache-Id) && req.http.cookie ~ "X-Magento-Vary=") {
         hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
     }
 
@@ -126,16 +126,26 @@ sub vcl_hash {
     }
 
     # To make sure http users don't see ssl warning
-    if (req.http.X-Forwarded-Proto) {
-        hash_data(req.http.X-Forwarded-Proto);
+    if (req.http./* {{ ssl_offloaded_header }} */) {
+        hash_data(req.http./* {{ ssl_offloaded_header }} */);
     }
-
+    /* {{ design_exceptions_code }} */
 }
 
 sub process_graphql_headers {
+    if (req.http.X-Magento-Cache-Id) {
+        hash_data(req.http.X-Magento-Cache-Id);
+
+        # When the frontend stops sending the auth token, make sure users stop getting results cached for logged-in users
+        if (req.http.Authorization ~ "^Bearer") {
+            hash_data("Authorized");
+        }
+    }
+
     if (req.http.Store) {
         hash_data(req.http.Store);
     }
+
     if (req.http.Content-Currency) {
         hash_data(req.http.Content-Currency);
     }
@@ -159,7 +169,7 @@ sub vcl_backend_response {
 
     # cache only successfully responses and 404s
     if (beresp.status != 200 && beresp.status != 404) {
-        set beresp.ttl = 0s;
+        set beresp.ttl = 120s;
         set beresp.uncacheable = true;
         return (deliver);
     } elsif (beresp.http.Cache-Control ~ "private") {
@@ -184,19 +194,21 @@ sub vcl_backend_response {
         set beresp.uncacheable = true;
     }
 
+   # If the cache key in the Magento response doesn't match the one that was sent in the request, don't cache under the request's key
+   if (bereq.url ~ "/graphql" && bereq.http.X-Magento-Cache-Id && bereq.http.X-Magento-Cache-Id != beresp.http.X-Magento-Cache-Id) {
+      set beresp.ttl = 0s;
+      set beresp.uncacheable = true;
+   }
+
     return (deliver);
 }
 
 sub vcl_deliver {
-    if (resp.http.X-Magento-Debug) {
-        if (resp.http.x-varnish ~ " ") {
-            set resp.http.X-Magento-Cache-Debug = "HIT";
-            set resp.http.Grace = req.http.grace;
-        } else {
-            set resp.http.X-Magento-Cache-Debug = "MISS";
-        }
+    if (resp.http.x-varnish ~ " ") {
+        set resp.http.X-Magento-Cache-Debug = "HIT";
+        set resp.http.Grace = req.http.grace;
     } else {
-        unset resp.http.Age;
+        set resp.http.X-Magento-Cache-Debug = "MISS";
     }
 
     # Not letting browser to cache non-static files.
@@ -206,6 +218,9 @@ sub vcl_deliver {
         set resp.http.Cache-Control = "no-store, no-cache, must-revalidate, max-age=0";
     }
 
+    if (!resp.http.X-Magento-Debug) {
+        unset resp.http.Age;
+    }
     unset resp.http.X-Magento-Debug;
     unset resp.http.X-Magento-Tags;
     unset resp.http.X-Powered-By;
@@ -221,7 +236,7 @@ sub vcl_hit {
         return (deliver);
     }
     if (std.healthy(req.backend_hint)) {
-        if (obj.ttl + 300s > 0s) {
+        if (obj.ttl + /* {{ grace_period }} */s > 0s) {
             # Hit after TTL expiration, but within grace period
             set req.http.grace = "normal (healthy server)";
             return (deliver);

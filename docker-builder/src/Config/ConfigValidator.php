@@ -31,6 +31,7 @@ class ConfigValidator implements ConfigValidatorInterface
         $this->validateMagentoInstallConfig($generalConfig);
         $this->validateDatabaseService($generalConfig);
         $this->validateSearchEngineService($generalConfig);
+        $this->validateVarnishService($generalConfig);
         $this->validateRedisService($generalConfig);
         $this->validateVeniaService($generalConfig);
         $this->validateNewRelicService($generalConfig);
@@ -180,6 +181,36 @@ class ConfigValidator implements ConfigValidatorInterface
 
         $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
         $availableTypes = ['elasticsearch', 'opensearch'];
+        if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
+            throw new Exception(sprintf('Service %s: Available types: %s',
+                $serviceName, implode(', ', $availableTypes)));
+        }
+    }
+
+    /**
+     * Validate varnish service
+     *
+     * @param array $generalConfig
+     * @throws Exception
+     */
+    private function validateVarnishService(array $generalConfig): void
+    {
+        $serviceName = 'Varnish';
+        $serviceKey = 'varnish';
+        $isServiceEnabled = $this->validateDockerService(
+            $generalConfig,
+            $serviceName,
+            $serviceKey,
+            false,
+            ['enabled', 'TYPE', 'VERSION']
+        );
+
+        if (!$isServiceEnabled) {
+            return;
+        }
+
+        $serviceConfig = $generalConfig['DOCKER_SERVICES'][$serviceKey] ?? false;
+        $availableTypes = ['varnish'];
         if (!in_array($serviceConfig['TYPE'], $availableTypes)) {
             throw new Exception(sprintf('Service %s: Available types: %s',
                 $serviceName, implode(', ', $availableTypes)));

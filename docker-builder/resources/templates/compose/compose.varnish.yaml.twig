@@ -4,7 +4,13 @@
 {% if DOCKER_SERVICES.varnish %}
   varnish:
     hostname: varnish.{{ M2_PROJECT }}
-    image: meanbee/magento2-varnish:latest
+    build:
+        context: containers/varnish/
+    ports:
+      - 80
+    depends_on:
+      web:
+        condition: service_started #service_healthy
     environment:
       - VIRTUAL_HOST={{ M2_VIRTUAL_HOSTS }}
       - VIRTUAL_PORT=80
@@ -13,11 +19,17 @@
    Specify multiple hosts with a comma delimiter to create multi-domains (SAN) certificates
    (the first domain in the list will be the base domain). #}
       - CERT_NAME={{ M2_VIRTUAL_HOSTS|split(',')|first|trim }}
-    ports:
-      - 80
-    depends_on:
-      web:
-        condition: service_started #service_healthy
+      
+      - M2_VERSION={{ M2_VERSION }}
+      - M2_EDITION={{ M2_EDITION }}
+      - VARNISH_VERSION={{ DOCKER_SERVICES.varnish.VERSION }}
+
+      - VARNISH_BACKEND_HOST=web.{{ M2_PROJECT }}
+      - VARNISH_BACKEND_PORT=80
+      - SSL_OFFLOADED_HEADER={{ DOCKER_SERVICES.varnish.SSL_OFFLOADED_HEADER }}
+      - VARNISH_PURGE_IPS=web.{{ M2_PROJECT }}
+      - DESIGN_EXCEPTIONS_CODE={{ DOCKER_SERVICES.varnish.DESIGN_EXCEPTIONS_CODE }}
+      - GRACE_PERIOD={{ DOCKER_SERVICES.varnish.GRACE_PERIOD }}
     networks:
       default:
       nginx-proxy:

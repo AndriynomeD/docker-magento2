@@ -1,0 +1,25 @@
+#!/bin/bash
+
+[ "$DEBUG" = "true" ] && set -x
+
+source /usr/local/bin/vcl_generator.sh
+
+if [ -z "$M2_EDITION" ] || [ -z "$M2_VERSION" ] || [ -z "$VARNISH_VERSION" ]; then
+    echo "ERROR: M2_EDITION, M2_VERSION and VARNISH_VERSION must be set" >&2
+    exit 1
+fi
+
+VCL_RENDERED="/etc/varnish/default.vcl"
+declare -A vcl_vars=$(getReplacements \
+    "${SSL_OFFLOADED_HEADER:-X-Forwarded-Proto}" \
+    "${VARNISH_BACKEND_HOST:-web}" \
+    "${VARNISH_BACKEND_PORT:-8080}" \
+    "${VARNISH_PURGE_IPS:-127.0.0.1,localhost}" \
+    "${DESIGN_EXCEPTIONS_CODE:-}" \
+    "${GRACE_PERIOD:-300s}" \
+)
+if ! generateVcl "$M2_EDITION" "$M2_VERSION" "$VARNISH_VERSION" "$VCL_RENDERED" vcl_vars; then
+    exit 1
+fi
+
+exec /usr/local/bin/docker-varnish-entrypoint "$@"

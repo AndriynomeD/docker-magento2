@@ -120,6 +120,7 @@ class ConfigBuilder
             $this->buildPhpContainers();
             $this->buildNginxContainer();
             $this->buildSearchEngineContainer();
+            $this->buildVarnishContainer();
             $this->buildDockerCompose();
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
@@ -193,6 +194,32 @@ class ConfigBuilder
             $containerConfig = array_merge($searchEngineConfig, $containerConfig);
 
             $this->buildContainer($searchEngineType, $containerConfig);
+        }
+    }
+
+    /**
+     * Build Varnish container
+     */
+    private function buildVarnishContainer(): void
+    {
+        $generalConfig = $this->config['general-config'];
+        $varnishConfig = $generalConfig['DOCKER_SERVICES']['varnish'] ?? false;
+
+        if ($varnishConfig !== false) {
+            $containerConfig = [
+                'templateSubDir' => 'varnish' . DIRECTORY_SEPARATOR,
+                'destinationDir' => $this->getContainersDirPath('varnish'),
+                'files' => [
+                    'Dockerfile' => ['_enable_variables' => true],
+                    'docker-entrypoint.sh' => ['_enable_variables' => true, 'executable' => true],
+                    'bin/vcl_template_locator.sh' => ['executable' => false],
+                    'bin/vcl_generator.sh' => ['executable' => false],
+                    'config' => ['is_folder' => true],
+                ],
+            ];
+            $containerConfig = array_merge($varnishConfig, $containerConfig);
+
+            $this->buildContainer('varnish', $containerConfig);
         }
     }
 

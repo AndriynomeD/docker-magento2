@@ -1,0 +1,18 @@
+#
+#--------------------------------------------------------------------------
+# {{ generated_by_builder }}
+#--------------------------------------------------------------------------
+
+FROM varnish:{{ TAG }}
+
+LABEL maintainer="AndriynomeD <andriynomed.work@gmail.com>"
+
+COPY config/ /etc/varnish/config/
+
+COPY bin/* /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+

@@ -258,8 +258,44 @@
               ]
             },
             "varnish": {
-              "description": "Enable/disable Varnish service",
-              "type": "boolean"
+              "description": "Varnish service (false or object type)",
+              "oneOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Enable/disable Redis service"
+                    },
+                    "TYPE": {
+                      "type": "string",
+                      "enum": ["varnish"],
+                      "description": "Varnish service type"
+                    },
+                    "VERSION": {
+                      "type": "string",
+                      "description": "Varnish version",
+                      "pattern": "^[0-9.]+$"
+                    },
+                    "IMAGE": {
+                      "type": "string",
+                      "description": "Docker image name (optional)",
+                      "minLength": 1
+                    },
+                    "TAG": {
+                      "type": "string",
+                      "description": "Docker image tag (optional)",
+                      "pattern": "^[0-9.]+$"
+                    }
+                  },
+                  "required": ["enabled", "TYPE", "VERSION"],
+                  "additionalProperties": false
+                }
+              ]
             },
             "cron": {
               "description": "Enable/disable Cron service",

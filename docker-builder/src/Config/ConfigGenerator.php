@@ -30,6 +30,7 @@ class ConfigGenerator implements ConfigGeneratorInterface
         $config['general-config'] = $this->transformMagentoInstallConfig($config['general-config']);
         $config['general-config'] = $this->transformDatabaseService($config['general-config']);
         $config['general-config'] = $this->transformSearchEngineService($config['general-config']);
+        $config['general-config'] = $this->transformVarnishService($config['general-config']);
         $config['general-config'] = $this->transformRedisService($config['general-config']);
         $config['general-config'] = $this->transformVeniaService($config['general-config']);
         $config['general-config'] = $this->transformNewRelicService($config['general-config']);
@@ -169,6 +170,47 @@ class ConfigGenerator implements ConfigGeneratorInterface
             $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
             $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
         }
+
+        return $generalConfig;
+    }
+
+    /**
+     * Transform varnish service
+     *
+     * @param array $generalConfig
+     * @return array
+     */
+    private function transformVarnishService(array $generalConfig): array
+    {
+        $serviceKey = 'varnish';
+        $generalConfig = $this->transformDockerServiceOnOff($generalConfig, $serviceKey);
+        if (!$generalConfig['DOCKER_SERVICES'][$serviceKey]) {
+            return $generalConfig;
+        }
+
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] ?? false)) {
+            $image = '';
+            switch($generalConfig['DOCKER_SERVICES'][$serviceKey]['TYPE']) {
+                case 'varnish':
+                    $image = 'varnish';
+                    break;
+            }
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['IMAGE'] = $image;
+        }
+
+        if (!($generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] ?? false)) {
+            $tag = $generalConfig['DOCKER_SERVICES'][$serviceKey]['VERSION'];
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['TAG'] = $tag;
+        }
+
+        $magentoVersion = str_replace('*', '999', $generalConfig['M2_VERSION']);
+        if (version_compare($magentoVersion, '2.1.0', '>=')) {
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['SSL_OFFLOADED_HEADER'] = 'X-Forwarded-Proto';
+        } else {
+            $generalConfig['DOCKER_SERVICES'][$serviceKey]['SSL_OFFLOADED_HEADER'] = 'SSL_OFFLOADED';
+        }
+        $generalConfig['DOCKER_SERVICES'][$serviceKey]['DESIGN_EXCEPTIONS_CODE'] = '';
+        $generalConfig['DOCKER_SERVICES'][$serviceKey]['GRACE_PERIOD'] = '300';
 
         return $generalConfig;
     }
