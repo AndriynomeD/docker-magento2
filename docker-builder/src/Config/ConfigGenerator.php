@@ -205,12 +205,16 @@ class ConfigGenerator implements ConfigGeneratorInterface
 
         $magentoVersion = str_replace('*', '999', $generalConfig['M2_VERSION']);
         if (version_compare($magentoVersion, '2.1.0', '>=')) {
-            $generalConfig['DOCKER_SERVICES'][$serviceKey]['SSL_OFFLOADED_HEADER'] = 'X-Forwarded-Proto';
+            $sslOffloadedHeader = 'X-Forwarded-Proto';
         } else {
-            $generalConfig['DOCKER_SERVICES'][$serviceKey]['SSL_OFFLOADED_HEADER'] = 'SSL_OFFLOADED';
+            $sslOffloadedHeader = 'SSL_OFFLOADED';
         }
-        $generalConfig['DOCKER_SERVICES'][$serviceKey]['DESIGN_EXCEPTIONS_CODE'] = '';
-        $generalConfig['DOCKER_SERVICES'][$serviceKey]['GRACE_PERIOD'] = '300';
+        $generalConfig['DOCKER_SERVICES'][$serviceKey]['SSL_OFFLOADED_HEADER'] = $generalConfig['DOCKER_SERVICES'][$serviceKey]['SSL_OFFLOADED_HEADER']
+            ?? $sslOffloadedHeader;
+        $generalConfig['DOCKER_SERVICES'][$serviceKey]['DESIGN_EXCEPTIONS_CODE'] = $generalConfig['DOCKER_SERVICES'][$serviceKey]['DESIGN_EXCEPTIONS_CODE']
+            ?? '';
+        $generalConfig['DOCKER_SERVICES'][$serviceKey]['GRACE_PERIOD'] = $generalConfig['DOCKER_SERVICES'][$serviceKey]['GRACE_PERIOD']
+            ?? '300';
 
         return $generalConfig;
     }

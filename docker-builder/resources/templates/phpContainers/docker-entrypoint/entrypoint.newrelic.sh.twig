@@ -11,5 +11,7 @@ if [ "$NEWRELIC_ENABLED" = "true" ]; then
     echo "New Relic configured successfully"
 else
     echo "New Relic disabled"
-    sed -i 's/newrelic.enabled[[:space:]]*=[[:space:]]*.*/newrelic.enabled = false/' /usr/local/etc/php/conf.d/zz-newrelic.ini
+    if [ -f /usr/local/etc/php/conf.d/zz-newrelic.ini ]; then
+        sed -i 's/newrelic.enabled[[:space:]]*=[[:space:]]*.*/newrelic.enabled = false/' /usr/local/etc/php/conf.d/zz-newrelic.ini
+    fi
 fi
