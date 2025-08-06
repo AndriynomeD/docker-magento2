@@ -27,7 +27,7 @@ chown www-data:www-data $MAGENTO_ROOT && chmod -R g+w $MAGENTO_ROOT
 [ ! -z "${UPLOAD_MAX_FILESIZE}" ] && sed -i "s/!UPLOAD_MAX_FILESIZE!/${UPLOAD_MAX_FILESIZE}/" /usr/local/etc/php/conf.d/zz-magento.ini
 
 {% include "phpContainers/docker-entrypoint/entrypoint.xdebug.sh.twig" %}
-{% include "phpContainers/docker-entrypoint/entrypoint.newrelic.sh.twig" %}
+{#{% include "phpContainers/docker-entrypoint/entrypoint.newrelic.sh.twig" %}#}
 
 {% include "phpContainers/docker-entrypoint/entrypoint.cron.sh.twig" %}
 {% include "phpContainers/docker-entrypoint/entrypoint.xdebug-cli.sh.twig" %}
